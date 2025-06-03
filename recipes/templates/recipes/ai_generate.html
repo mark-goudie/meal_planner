@@ -1,0 +1,33 @@
+<h1>AI Recipe Generator</h1>
+
+<form method="post">
+  {% csrf_token %}
+  <label>Enter ingredients or an idea:</label><br />
+  <textarea
+    name="prompt"
+    rows="3"
+    cols="50"
+    placeholder="e.g. chicken, broccoli, rice"
+  ></textarea
+  ><br />
+  <button type="submit">Generate Recipe</button>
+</form>
+
+{% if error %}
+<p style="color: red">Error: {{ error }}</p>
+{% endif %} {% if generated_recipe %}
+<h2>Generated Recipe</h2>
+<pre>{{ generated_recipe }}</pre>
+
+<form method="post">
+  {% csrf_token %}
+  <input
+    type="hidden"
+    name="generated_recipe"
+    value="{{ generated_recipe|escape }}"
+  />
+  <button type="submit" name="use_recipe" value="true">Use this Recipe</button>
+</form>
+{% endif %}
+
+<p><a href="{% url 'recipe_list' %}">Back to Recipes</a></p>

@@ -1,0 +1,21 @@
+<h1>{{ recipe.title }}</h1>
+<p><strong>Author:</strong> {{ recipe.author }}</p>
+<p><strong>Description:</strong> {{ recipe.description }}</p>
+<p><strong>Ingredients:</strong></p>
+<pre>{{ recipe.ingredients }}</pre>
+<p><strong>Steps:</strong></p>
+<pre>{{ recipe.steps }}</pre>
+{% if recipe.notes %}
+<p><strong>Notes:</strong></p>
+<pre>{{ recipe.notes }}</pre>
+{% endif %}
+<p>
+  <strong>AI Generated:</strong> {{ recipe.is_ai_generated|yesno:"Yes,No" }}
+</p>
+
+<p>
+  <a href="{% url 'recipe_update' recipe.pk %}">Edit</a> |
+  <a href="{% url 'recipe_delete' recipe.pk %}">Delete</a>
+</p>
+
+<p><a href="{% url 'recipe_list' %}">Back to list</a></p>
