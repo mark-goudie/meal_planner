@@ -1,13 +1,17 @@
 from django.shortcuts import render, get_object_or_404, redirect
-from .models import Recipe
-from .forms import RecipeForm
+from .models import Recipe, MealPlan
+from .forms import RecipeForm, MealPlanForm
 
 import openai
 from django.conf import settings
 
 def recipe_list(request):
     recipes = Recipe.objects.all()
-    return render(request, 'recipes/recipe_list.html', {'recipes': recipes})
+    meal_plans = MealPlan.objects.order_by('date', 'meal_type')
+    return render(request, 'recipes/recipe_list.html', {
+        'recipes': recipes,
+        'meal_plans': meal_plans,
+    })
 
 def recipe_create(request):
     form = RecipeForm(request.POST or None)
@@ -139,4 +143,14 @@ def recipe_create_from_ai(request):
 
     return render(request, 'recipes/recipe_form.html', {'form': form, 'update': False})
 
+def meal_plan_list(request):
+    plans = MealPlan.objects.order_by('date', 'meal_type')
+    return render(request, 'recipes/meal_plan_list.html', {'plans': plans})
+
+def meal_plan_create(request):
+    form = MealPlanForm(request.POST or None)
+    if form.is_valid():
+        form.save()
+        return redirect('meal_plan_list')
+    return render(request, 'recipes/meal_plan_form.html', {'form': form})
 

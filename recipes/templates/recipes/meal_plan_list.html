@@ -1,0 +1,15 @@
+<h1>Meal Plan</h1>
+<a href="{% url 'meal_plan_create' %}">Add Meal</a>
+<ul>
+  {% for plan in plans %}
+  <li>
+    {{ plan.date }} - {{ plan.get_meal_type_display }}:
+    <a href="{% url 'recipe_detail' plan.recipe.pk %}">
+      {{ plan.recipe.title }}
+    </a>
+  </li>
+  {% empty %}
+  <li>No meals planned yet.</li>
+  {% endfor %}
+</ul>
+<a href="{% url 'recipe_list' %}">Back to Recipes</a>

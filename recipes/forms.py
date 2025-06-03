@@ -46,3 +46,13 @@ class RecipeForm(forms.ModelForm):
                 'required': "Cooking steps are required.",
             },
         }
+
+from .models import MealPlan
+
+class MealPlanForm(forms.ModelForm):
+    class Meta:
+        model = MealPlan
+        fields = ['date', 'meal_type', 'recipe']
+        widgets = {
+            'date': forms.DateInput(attrs={'type': 'date'}),
+        }

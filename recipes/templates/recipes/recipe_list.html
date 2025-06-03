@@ -1,9 +1,42 @@
 <h1>My Recipes</h1>
-<a href="{% url 'recipe_create' %}">Add Recipe</a>
+
+<div style="margin-bottom: 20px">
+  <a href="{% url 'recipe_create' %}" style="margin-right: 15px">
+    ➕ Create a Recipe Manually
+  </a>
+  <a href="{% url 'ai_generate_recipe' %}"> 🤖 Generate a Recipe with AI </a>
+</div>
+
+<hr />
+
+<h2>Saved Recipes</h2>
 <ul>
   {% for recipe in recipes %}
   <li>
-    <a href="{% url 'recipe_detail' recipe.pk %}">{{ recipe.title }}</a>
+    <a href="{% url 'recipe_detail' recipe.pk %}"> {{ recipe.title }} </a>
+  </li>
+  {% empty %}
+  <li>No recipes yet.</li>
+  {% endfor %}
+</ul>
+
+<h2>Upcoming Meal Plan</h2>
+
+{% if meal_plans %}
+<ul>
+  {% for plan in meal_plans %}
+  <li>
+    {{ plan.date }} - {{ plan.get_meal_type_display }}:
+    <a href="{% url 'recipe_detail' plan.recipe.pk %}">
+      {{ plan.recipe.title }}
+    </a>
   </li>
   {% endfor %}
 </ul>
+{% else %}
+<p>No meals planned yet.</p>
+{% endif %}
+
+<p>
+  <a href="{% url 'meal_plan_create' %}">➕ Plan a Meal</a>
+</p>
