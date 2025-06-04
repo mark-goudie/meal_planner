@@ -1,4 +1,4 @@
-from django.shortcuts import render, get_object_or_404, redirect
+from django.shortcuts import render, get_object_or_404, redirect, get_list_or_404
 from django.db.models import Q, Count
 from django.conf import settings
 from django.contrib.auth import login
@@ -250,3 +250,24 @@ def toggle_favourite(request, recipe_id):
     else:
         recipe.favourited_by.add(request.user)
     return HttpResponseRedirect(reverse('recipe_detail', args=[recipe.pk]))
+
+@login_required
+def generate_shopping_list(request):
+    if request.method == "POST":
+        recipe_ids = request.POST.getlist('recipe_ids')
+        recipes = Recipe.objects.filter(id__in=recipe_ids)
+        # Combine ingredients (assuming ingredients are stored as text, one per line)
+        ingredient_set = set()
+        for recipe in recipes:
+            if recipe.ingredients:
+                for line in recipe.ingredients.splitlines():
+                    line = line.strip()
+                    if line:
+                        ingredient_set.add(line)
+        shopping_list = sorted(ingredient_set)
+        return render(request, 'recipes/shopping_list.html', {
+            'shopping_list': shopping_list,
+            'recipes': recipes,
+        })
+    # If GET or no recipes selected, redirect or show empty
+    return render(request, 'recipes/shopping_list.html', {'shopping_list': [], 'recipes': []})

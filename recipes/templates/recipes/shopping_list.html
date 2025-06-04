@@ -1,0 +1,105 @@
+<!-- filepath: /Users/mgoudie/Desktop/Projects/meal_planner/recipes/templates/recipes/shopping_list.html -->
+{% extends "base.html" %}
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-lg-6">
+    <div class="card shadow-sm mb-4">
+      <div class="card-body">
+        <h2 class="card-title mb-4" style="color: var(--primary);">🛒 Shopping List</h2>
+        {% if shopping_list %}
+          <ul class="list-group mb-3" id="shopping-list">
+            {% for item in shopping_list %}
+              <li class="list-group-item d-flex justify-content-between align-items-center shopping-item">
+                <div class="form-check flex-grow-1">
+                  <input class="form-check-input me-2 check-off" type="checkbox" id="item{{ forloop.counter }}">
+                  <label class="form-check-label w-100" for="item{{ forloop.counter }}">
+                    <span class="ingredient-text">{{ item }}</span>
+                  </label>
+                </div>
+                <button type="button" class="btn btn-sm btn-outline-danger remove-item ms-2" title="Remove">
+                  <i class="bi bi-x-lg"></i>
+                </button>
+              </li>
+            {% endfor %}
+          </ul>
+          <p class="text-muted small">
+            Based on:
+            {% for recipe in recipes %}
+              <span class="badge bg-info me-1">{{ recipe.title }}</span>
+            {% endfor %}
+          </p>
+        {% else %}
+          <div class="alert alert-info">No recipes selected.</div>
+        {% endif %}
+        <div class="d-flex flex-column flex-md-row gap-2 mt-3">
+          <a href="{% url 'recipe_list' %}" class="btn btn-outline-secondary flex-fill">
+            ⬅️ Back to Recipes
+          </a>
+          <button onclick="window.print()" class="btn btn-outline-primary flex-fill" type="button">
+            <i class="bi bi-printer"></i> Print Shopping List
+          </button>
+          <button id="export-csv" class="btn btn-outline-success flex-fill" type="button">
+            <i class="bi bi-file-earmark-spreadsheet"></i> Export as CSV
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+/* Checked-off style */
+.shopping-item.checked .ingredient-text {
+  text-decoration: line-through;
+  color: var(--text-muted) !important;
+  opacity: 0.6;
+}
+@media (max-width: 767px) {
+  .d-flex.flex-column.flex-md-row.gap-2.mt-3 > * {
+    min-width: 0;
+    width: 100%;
+  }
+}
+</style>
+
+<script>
+  // Remove shopping list item on click
+  document.addEventListener('DOMContentLoaded', function () {
+    document.querySelectorAll('.remove-item').forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        this.closest('li').remove();
+      });
+    });
+
+    // Ingredient check-off functionality
+    document.querySelectorAll('.check-off').forEach(function(checkbox) {
+      checkbox.addEventListener('change', function() {
+        const li = this.closest('.shopping-item');
+        if (this.checked) {
+          li.classList.add('checked');
+        } else {
+          li.classList.remove('checked');
+        }
+      });
+    });
+
+    // CSV Export
+    document.getElementById('export-csv').addEventListener('click', function() {
+      let items = [];
+      document.querySelectorAll('#shopping-list li .ingredient-text').forEach(function(span) {
+        if (!span.closest('.shopping-item').classList.contains('checked')) {
+          items.push('"' + span.textContent.replace(/"/g, '""') + '"');
+        }
+      });
+      let csvContent = "data:text/csv;charset=utf-8," + items.join("\n");
+      let encodedUri = encodeURI(csvContent);
+      let link = document.createElement("a");
+      link.setAttribute("href", encodedUri);
+      link.setAttribute("download", "shopping_list.csv");
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    });
+  });
+</script>
+{% endblock %}
