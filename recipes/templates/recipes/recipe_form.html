@@ -1,7 +1,59 @@
-<h1>{% if update %}Edit{% else %}New{% endif %} Recipe</h1>
-<form method="post">
-  {% csrf_token %} {{ form.as_p }}
-  <button type="submit">Save</button>
+{% extends 'base.html' %}
+
+{% load widget_tweaks %}
+
+{% block title %}{{ update|yesno:"Edit Recipe,New Recipe" }}{% endblock %}
+{% block content %}
+
+<h1 class="mb-4">{{ update|yesno:"Edit Recipe,Create New Recipe" }}</h1>
+
+<form method="post" class="needs-validation" novalidate>
+  {% csrf_token %}
+  <div class="row mb-3">
+    <div class="col-md-6">
+      <label for="{{ form.title.id_for_label }}" class="form-label">Title</label>
+      {{ form.title|add_class:"form-control" }}
+    </div>
+    <div class="col-md-6">
+      <label for="{{ form.author.id_for_label }}" class="form-label">Author</label>
+      {{ form.author|add_class:"form-control" }}
+    </div>
+  </div>
+
+  <div class="mb-3">
+    <label for="{{ form.description.id_for_label }}" class="form-label">Description</label>
+    {{ form.description|add_class:"form-control" }}
+  </div>
+
+  <div class="mb-3">
+    <label for="{{ form.ingredients.id_for_label }}" class="form-label">Ingredients</label>
+    {{ form.ingredients|add_class:"form-control" }}
+  </div>
+
+  <div class="mb-3">
+    <label for="{{ form.steps.id_for_label }}" class="form-label">Steps</label>
+    {{ form.steps|add_class:"form-control" }}
+  </div>
+
+  <div class="mb-3">
+    <label for="{{ form.notes.id_for_label }}" class="form-label">Notes</label>
+    {{ form.notes|add_class:"form-control" }}
+  </div>
+
+  <div class="mb-3">
+    <label for="{{ form.tags.id_for_label }}" class="form-label">Tags</label>
+    {{ form.tags|add_class:"form-select" }}
+  </div>
+
+  <div class="form-check mb-3">
+    {{ form.is_ai_generated }}
+    <label class="form-check-label" for="{{ form.is_ai_generated.id_for_label }}">
+      AI Generated
+    </label>
+  </div>
+
+  <button type="submit" class="btn btn-success">Save</button>
+  <a href="{% url 'recipe_list' %}" class="btn btn-secondary">Cancel</a>
 </form>
 
-<p><a href="{% url 'recipe_list' %}">Back to list</a></p>
+{% endblock %}

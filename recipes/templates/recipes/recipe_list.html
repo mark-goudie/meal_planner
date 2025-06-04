@@ -1,68 +1,114 @@
-<h1>My Recipes</h1>
+{% extends "base.html" %}
+{% load widget_tweaks %}
+{% block content %}
 
-<div style="margin-bottom: 20px">
-  <a href="{% url 'recipe_create' %}" style="margin-right: 15px">
-    ➕ Create a Recipe Manually
-  </a>
-  <a href="{% url 'ai_generate_recipe' %}"> 🤖 Generate a Recipe with AI </a>
+<h1 class="mb-4">🍽️ My Recipes</h1>
+
+<!-- Top Actions -->
+<div class="mb-4 d-flex gap-3 flex-wrap">
+  <a href="{% url 'recipe_create' %}" class="btn btn-primary">➕ New Recipe</a>
+  <a href="{% url 'ai_generate_recipe' %}" class="btn btn-success">🤖 Generate with AI</a>
+  <a href="{% url 'meal_plan_create' %}" class="btn btn-outline-secondary">🗓️ Plan a Meal</a>
 </div>
 
-<hr />
-
-<h2>Search Recipes</h2>
-<form method="get" style="margin-bottom: 1em">
-  <input
-    type="text"
-    name="q"
-    placeholder="Search recipes..."
-    value="{{ query }}"
-  />
-  <button type="submit">Search</button>
+<!-- Search Bar -->
+<h4 class="mt-4">Search Recipes</h4>
+<form method="get" class="row g-2 mb-4 align-items-end">
+  <div class="col-md-4">
+    <input type="text" class="form-control" name="q" placeholder="Search..." value="{{ query }}">
+  </div>
+  <div class="col-auto">
+    <button type="submit" class="btn btn-primary">Search</button>
+  </div>
   {% if query %}
-  <a href="{% url 'recipe_list' %}" style="margin-left: 10px">Reset</a>
+  <div class="col-auto">
+    <a href="{% url 'recipe_list' %}" class="btn btn-outline-secondary">Reset</a>
+  </div>
   {% endif %}
 </form>
 
-<h2>Filter by Tag</h2>
-<div style="margin-bottom: 1em">
-  <a href="{% url 'recipe_list' %}">All</a>
-  {% for tag in tags %} {% if tag.id == selected_tag %}
-  <strong>{{ tag.name }}</strong>
-  {% else %}
-  <a href="?tag={{ tag.id }}{% if query %}&q={{ query }}{% endif %}"
-    >{{ tag.name }}</a
-  >
-  {% endif %} {% if not forloop.last %} | {% endif %} {% endfor %}
+<!-- Filter by Tag -->
+<h4>Filter by Tag</h4>
+<div class="mb-4">
+  <a href="{% url 'recipe_list' %}" class="badge bg-secondary text-decoration-none me-1">All</a>
+  {% for tag in tags %}
+    <a href="?tag={{ tag.id }}{% if query %}&q={{ query }}{% endif %}" class="badge bg-info text-dark text-decoration-none me-1">
+      {{ tag.name }}
+    </a>
+  {% endfor %}
 </div>
 
-<h2>Saved Recipes</h2>
-<ul>
+<!-- Filter by Family Preference -->
+<h4>Filter by Family Preference</h4>
+<form method="get" class="row g-2 mb-5">
+  <div class="col-md-4">
+    <select name="member" class="form-select" onchange="this.form.submit()">
+      <option value="">-- All --</option>
+      {% for member in family_members %}
+        <option value="{{ member }}" {% if member == selected_member %}selected{% endif %}>
+          {{ member }}
+        </option>
+      {% endfor %}
+    </select>
+  </div>
+  <input type="hidden" name="q" value="{{ query }}">
+  {% if selected_tag %}
+    <input type="hidden" name="tag" value="{{ selected_tag }}">
+  {% endif %}
+</form>
+
+<!-- Saved Recipes -->
+<h4 class="mb-3">Saved Recipes</h4>
+<div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4 mb-5">
   {% for recipe in recipes %}
-  <li>
-    <a href="{% url 'recipe_detail' recipe.pk %}"> {{ recipe.title }} </a>
-  </li>
+    <div class="col">
+      <div class="card h-100 shadow-sm border-0">
+        <!-- Optional: Static or dynamic image -->
+        <img src="https://picsum.photos/600/300?random={{ recipe.id }}" class="card-img-top" alt="{{ recipe.title }}">
+
+        <div class="card-body">
+          <h5 class="card-title">
+            <a href="{% url 'recipe_detail' recipe.pk %}" class="text-decoration-none text-dark">{{ recipe.title }}</a>
+          </h5>
+
+          {% if recipe.description %}
+            <p class="card-text text-muted small">{{ recipe.description|truncatewords:18 }}</p>
+          {% endif %}
+
+          {% if recipe.tags.exists %}
+            <div class="mt-2">
+              {% for tag in recipe.tags.all %}
+                <span class="badge bg-info text-dark me-1">{{ tag.name }}</span>
+              {% endfor %}
+            </div>
+          {% endif %}
+
+          {% if recipe.is_ai_generated %}
+            <span class="badge bg-warning text-dark mt-3 d-inline-block">🤖 AI Generated</span>
+          {% endif %}
+        </div>
+
+        <div class="card-footer bg-transparent border-top-0">
+          <a href="{% url 'recipe_detail' recipe.pk %}" class="btn btn-outline-primary w-100">View Recipe</a>
+        </div>
+      </div>
+    </div>
   {% empty %}
-  <li>No recipes yet.</li>
+    <p class="text-muted">No recipes found.</p>
   {% endfor %}
-</ul>
+</div>
 
-<h2>Upcoming Meal Plan</h2>
-
-{% if meal_plans %}
-<ul>
+<!-- Upcoming Meal Plan -->
+<h4>Upcoming Meal Plan</h4>
+<div class="list-group mb-3">
   {% for plan in meal_plans %}
-  <li>
-    {{ plan.date }} - {{ plan.get_meal_type_display }}:
-    <a href="{% url 'recipe_detail' plan.recipe.pk %}">
-      {{ plan.recipe.title }}
-    </a>
-  </li>
+    <div class="list-group-item">
+      <strong>{{ plan.date }} – {{ plan.get_meal_type_display }}:</strong>
+      <a href="{% url 'recipe_detail' plan.recipe.pk %}" class="ms-1">{{ plan.recipe.title }}</a>
+    </div>
+  {% empty %}
+    <div class="list-group-item">No meals planned.</div>
   {% endfor %}
-</ul>
-{% else %}
-<p>No meals planned yet.</p>
-{% endif %}
+</div>
 
-<p>
-  <a href="{% url 'meal_plan_create' %}">➕ Plan a Meal</a>
-</p>
+{% endblock %}

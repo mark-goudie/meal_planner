@@ -1,3 +1,5 @@
+{% extends "base.html" %} {% block content %}
+
 <h1>Meal Plan</h1>
 <a href="{% url 'meal_plan_create' %}">Add Meal</a>
 <ul>
@@ -13,3 +15,5 @@
   {% endfor %}
 </ul>
 <a href="{% url 'recipe_list' %}">Back to Recipes</a>
+
+{% endblock %}

@@ -9,6 +9,7 @@ from django.conf import settings
 def recipe_list(request):
     query = request.GET.get('q')
     tag_id = request.GET.get('tag')
+    family_member = request.GET.get('member')
 
     recipes = Recipe.objects.all()
 
@@ -21,8 +22,15 @@ def recipe_list(request):
     if tag_id:
         recipes = recipes.filter(tags__id=tag_id)
 
+    if family_member:
+        recipes = recipes.filter(
+            familypreference__family_member__iexact=family_member,
+            familypreference__preference=3
+        ).distinct()
+
     meal_plans = MealPlan.objects.order_by('date', 'meal_type')
     tags = Tag.objects.all()
+    family_members = FamilyPreference.objects.values_list('family_member', flat=True).distinct()
 
     return render(request, 'recipes/recipe_list.html', {
         'recipes': recipes,
@@ -30,7 +38,10 @@ def recipe_list(request):
         'tags': tags,
         'query': query,
         'selected_tag': int(tag_id) if tag_id else None,
+        'family_members': family_members,
+        'selected_member': family_member,
     })
+
 
 
 def recipe_create(request):

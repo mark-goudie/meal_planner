@@ -1,32 +1,71 @@
-<h1>{{ recipe.title }}</h1>
-<p><strong>Author:</strong> {{ recipe.author }}</p>
-<p><strong>Description:</strong> {{ recipe.description }}</p>
-<p><strong>Ingredients:</strong></p>
-<pre>{{ recipe.ingredients }}</pre>
-<p><strong>Steps:</strong></p>
-<pre>{{ recipe.steps }}</pre>
-{% if recipe.notes %}
-<p><strong>Notes:</strong></p>
-<pre>{{ recipe.notes }}</pre>
-{% endif %}
-<p>
-  <strong>AI Generated:</strong> {{ recipe.is_ai_generated|yesno:"Yes,No" }}
-</p>
-<p><strong>Family Preferences</strong>:</p>
-<ul>
-  {% for pref in recipe.familypreference_set.all %}
-  <li>{{ pref.family_member }}: {{ pref.get_preference_display }}</li>
-  {% empty %}
-  <li>No ratings yet.</li>
-  {% endfor %}
-</ul>
+{% extends "base.html" %}
+{% block content %}
 
-<p>
-  <a href="{% url 'recipe_update' recipe.pk %}">Edit</a> |
-  <a href="{% url 'recipe_delete' recipe.pk %}">Delete</a>
-</p>
-<p>
-  <a href="{% url 'add_preference' recipe.pk %}">❤️ Add/Update Family Rating</a>
-</p>
+<div class="card shadow-sm mb-4">
+  <div class="card-body">
+    <h2 class="card-title">{{ recipe.title }}</h2>
 
-<p><a href="{% url 'recipe_list' %}">Back to list</a></p>
+    {% if recipe.author %}
+      <p class="text-muted mb-1"><strong>Author:</strong> {{ recipe.author }}</p>
+    {% endif %}
+
+    {% if recipe.description %}
+      <p class="mb-3"><strong>Description:</strong> {{ recipe.description }}</p>
+    {% endif %}
+
+    <div class="mb-3">
+      <h5>Ingredients</h5>
+      <pre class="bg-light p-3 border rounded">{{ recipe.ingredients }}</pre>
+    </div>
+
+    <div class="mb-3">
+      <h5>Steps</h5>
+      <pre class="bg-light p-3 border rounded">{{ recipe.steps }}</pre>
+    </div>
+
+    {% if recipe.notes %}
+    <div class="mb-3">
+      <h5>Notes</h5>
+      <pre class="bg-light p-3 border rounded">{{ recipe.notes }}</pre>
+    </div>
+    {% endif %}
+
+    <p><strong>AI Generated:</strong> {{ recipe.is_ai_generated|yesno:"Yes,No" }}</p>
+
+    {% if recipe.tags.exists %}
+    <div class="mb-3">
+      <strong>Tags:</strong>
+      {% for tag in recipe.tags.all %}
+        <span class="badge bg-secondary me-1">{{ tag.name }}</span>
+      {% endfor %}
+    </div>
+    {% endif %}
+  </div>
+</div>
+
+<!-- Family Preferences -->
+<div class="card mb-4">
+  <div class="card-body">
+    <h5 class="card-title">Family Preferences</h5>
+    <ul class="list-group list-group-flush">
+      {% for pref in recipe.familypreference_set.all %}
+        <li class="list-group-item d-flex justify-content-between">
+          <span>{{ pref.family_member }}</span>
+          <span class="badge bg-primary">{{ pref.get_preference_display }}</span>
+        </li>
+      {% empty %}
+        <li class="list-group-item text-muted">No ratings yet.</li>
+      {% endfor %}
+    </ul>
+    <a href="{% url 'add_preference' recipe.pk %}" class="btn btn-outline-danger mt-3">❤️ Add/Update Family Rating</a>
+  </div>
+</div>
+
+<!-- Action Buttons -->
+<div class="d-flex gap-2 flex-wrap mb-4">
+  <a href="{% url 'recipe_update' recipe.pk %}" class="btn btn-warning">✏️ Edit</a>
+  <a href="{% url 'recipe_delete' recipe.pk %}" class="btn btn-danger">🗑️ Delete</a>
+  <a href="{% url 'recipe_list' %}" class="btn btn-secondary">⬅️ Back to Recipes</a>
+</div>
+
+{% endblock %}
