@@ -3,7 +3,7 @@
 
 <div class="card shadow-sm mb-4">
   <div class="card-body">
-    <h2 class="card-title">{{ recipe.title }}</h2>
+    <h2 class="card-title" style="color: var(--primary)">{{ recipe.title }}</h2>
 
     {% if recipe.author %}
       <p class="text-muted mb-1"><strong>Author:</strong> {{ recipe.author }}</p>
@@ -14,29 +14,33 @@
     {% endif %}
 
     <div class="mb-3">
-      <h5>Ingredients</h5>
+      <h5 class="fw-semibold" style="color: var(--primary)">Ingredients</h5>
       <pre class="bg-light p-3 border rounded">{{ recipe.ingredients }}</pre>
     </div>
 
     <div class="mb-3">
-      <h5>Steps</h5>
+      <h5 class="fw-semibold" style="color: var(--primary)">Steps</h5>
       <pre class="bg-light p-3 border rounded">{{ recipe.steps }}</pre>
     </div>
 
     {% if recipe.notes %}
     <div class="mb-3">
-      <h5>Notes</h5>
+      <h5 class="fw-semibold" style="color: var(--primary)">Notes</h5>
       <pre class="bg-light p-3 border rounded">{{ recipe.notes }}</pre>
     </div>
     {% endif %}
 
-    <p><strong>AI Generated:</strong> {{ recipe.is_ai_generated|yesno:"Yes,No" }}</p>
+    <p><strong>AI Generated:</strong> 
+      <span class="badge {% if recipe.is_ai_generated %}bg-warning text-dark{% else %}bg-secondary{% endif %}">
+        {{ recipe.is_ai_generated|yesno:"Yes,No" }}
+      </span>
+    </p>
 
     {% if recipe.tags.exists %}
     <div class="mb-3">
       <strong>Tags:</strong>
       {% for tag in recipe.tags.all %}
-        <span class="badge bg-secondary me-1">{{ tag.name }}</span>
+        <span class="badge bg-info me-1">{{ tag.name }}</span>
       {% endfor %}
     </div>
     {% endif %}
@@ -44,12 +48,12 @@
 </div>
 
 <!-- Family Preferences -->
-<div class="card mb-4">
+<div class="card mb-4 shadow-sm">
   <div class="card-body">
-    <h5 class="card-title">Family Preferences</h5>
+    <h5 class="card-title" style="color: var(--primary)">Family Preferences</h5>
     <ul class="list-group list-group-flush">
       {% for pref in recipe.familypreference_set.all %}
-        <li class="list-group-item d-flex justify-content-between">
+        <li class="list-group-item d-flex justify-content-between align-items-center">
           <span>{{ pref.family_member }}</span>
           <span class="badge bg-primary">{{ pref.get_preference_display }}</span>
         </li>
@@ -57,7 +61,7 @@
         <li class="list-group-item text-muted">No ratings yet.</li>
       {% endfor %}
     </ul>
-    <a href="{% url 'add_preference' recipe.pk %}" class="btn btn-outline-danger mt-3">❤️ Add/Update Family Rating</a>
+    <a href="{% url 'add_preference' recipe.pk %}" class="btn btn-outline-primary mt-3">❤️ Add/Update Family Rating</a>
   </div>
 </div>
 
@@ -66,16 +70,15 @@
   <a href="{% url 'recipe_update' recipe.pk %}" class="btn btn-warning">✏️ Edit</a>
   <a href="{% url 'recipe_delete' recipe.pk %}" class="btn btn-danger">🗑️ Delete</a>
   {% if user.is_authenticated %}
-  <form method="post" action="{% url 'toggle_favourite' recipe.id %}">
-    {% csrf_token %}
-    {% if user in recipe.favourited_by.all %}
-      <button type="submit" class="btn btn-sm btn-outline-danger">❤️ Remove from Favourites</button>
-    {% else %}
-      <button type="submit" class="btn btn-sm btn-outline-primary">🤍 Add to Favourites</button>
-    {% endif %}
-  </form>
-{% endif %}
-
+    <form method="post" action="{% url 'toggle_favourite' recipe.id %}">
+      {% csrf_token %}
+      {% if user in recipe.favourited_by.all %}
+        <button type="submit" class="btn btn-outline-danger">❤️ Remove from Favourites</button>
+      {% else %}
+        <button type="submit" class="btn btn-outline-primary">🤍 Add to Favourites</button>
+      {% endif %}
+    </form>
+  {% endif %}
   <a href="{% url 'recipe_list' %}" class="btn btn-secondary">⬅️ Back to Recipes</a>
 </div>
 

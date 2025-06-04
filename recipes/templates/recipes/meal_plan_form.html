@@ -1,10 +1,22 @@
-{% extends "base.html" %} {% block content %}
+{% extends "base.html" %}
+{% block content %}
 
-<h1>Plan a Meal</h1>
-<form method="post">
-  {% csrf_token %} {{ form.as_p }}
-  <button type="submit">Save</button>
-</form>
-<a href="{% url 'meal_plan_list' %}">Back to Meal Plan</a>
+<div class="row justify-content-center">
+  <div class="col-lg-6">
+    <div class="card shadow-sm mb-4">
+      <div class="card-body">
+        <h1 class="card-title mb-4" style="color: var(--primary);">Plan a Meal</h1>
+        <form method="post">
+          {% csrf_token %}
+          <div class="mb-3">
+            {{ form.as_p }}
+          </div>
+          <button type="submit" class="btn btn-success">Save</button>
+          <a href="{% url 'meal_plan_list' %}" class="btn btn-outline-secondary ms-2">Back to Meal Plan</a>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
 
 {% endblock %}

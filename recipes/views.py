@@ -1,5 +1,5 @@
 from django.shortcuts import render, get_object_or_404, redirect
-from django.db.models import Q
+from django.db.models import Q, Count
 from django.conf import settings
 from django.contrib.auth import login
 from django.contrib.auth.forms import UserCreationForm
@@ -27,6 +27,7 @@ def register(request):
         form = UserCreationForm()
     return render(request, 'registration/register.html', {'form': form})
 
+
 # --------------------------
 # Authenticated Views
 # --------------------------
@@ -35,7 +36,7 @@ def register(request):
 def recipe_list(request):
     query = request.GET.get('q')
     tag_id = request.GET.get('tag')
-    family_member = request.GET.get('member')
+    selected_members = request.GET.getlist('member')
     favourites_only = request.GET.get('favourites') == '1'
 
     recipes = Recipe.objects.all()
@@ -49,14 +50,25 @@ def recipe_list(request):
     if tag_id:
         recipes = recipes.filter(tags__id=tag_id)
 
-    if family_member:
-        recipes = recipes.filter(
-            familypreference__family_member__iexact=family_member,
-            familypreference__preference=3
-        ).distinct()
+    if selected_members:
+        recipes = recipes.annotate(
+            matching_likes=Count(
+                'familypreference',
+                filter=Q(familypreference__preference=3, familypreference__family_member__in=selected_members),
+                distinct=True
+            )
+        ).filter(matching_likes=len(selected_members))
 
     if favourites_only:
         recipes = recipes.filter(favourited_by=request.user)
+
+    recipes = recipes.annotate(
+        total_likes=Count(
+            'familypreference',
+            filter=Q(familypreference__preference=3),
+            distinct=True
+        )
+    ).distinct()
 
     meal_plans = MealPlan.objects.order_by('date', 'meal_type')
     tags = Tag.objects.all()
@@ -69,9 +81,10 @@ def recipe_list(request):
         'query': query,
         'selected_tag': int(tag_id) if tag_id else None,
         'family_members': family_members,
-        'selected_member': family_member,
+        'selected_members': selected_members,
         'favourites_only': favourites_only,
     })
+
 
 @login_required
 def recipe_create(request):
