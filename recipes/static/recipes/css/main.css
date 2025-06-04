@@ -215,3 +215,47 @@ body.dark-mode .alert-danger {
 .form-switch .form-check-input:checked {
   background-color: var(--primary);
 }
+
+/* Custom checkbox styling with high specificity */
+input[type="checkbox"].form-check-input,
+.form-check-input[type="checkbox"] {
+  border-color: var(--primary) !important;
+  background-color: var(--secondary) !important;
+  width: 1.1em;
+  height: 1.1em;
+  margin-top: 0.1em;
+  transition: background 0.2s, border 0.2s;
+  box-shadow: none !important;
+}
+
+/* Checked state */
+input[type="checkbox"].form-check-input:checked,
+.form-check-input[type="checkbox"]:checked {
+  background-color: var(--primary) !important;
+  border-color: var(--primary) !important;
+  box-shadow: 0 0 0 0.15rem rgba(124, 185, 168, 0.25) !important;
+}
+
+/* Focus state */
+input[type="checkbox"].form-check-input:focus,
+.form-check-input[type="checkbox"]:focus {
+  border-color: var(--primary-hover) !important;
+  box-shadow: 0 0 0 0.15rem rgba(124, 185, 168, 0.25) !important;
+}
+
+/* Change the checkmark color for WebKit browsers */
+input[type="checkbox"].form-check-input:checked {
+  accent-color: var(--primary);
+}
+
+/* For dark mode, ensure checkboxes are visible */
+body.dark-mode input[type="checkbox"].form-check-input,
+body.dark-mode .form-check-input[type="checkbox"] {
+  background-color: var(--secondary) !important;
+  border-color: var(--primary) !important;
+}
+body.dark-mode input[type="checkbox"].form-check-input:checked,
+body.dark-mode .form-check-input[type="checkbox"]:checked {
+  background-color: var(--primary) !important;
+  border-color: var(--primary) !important;
+}
