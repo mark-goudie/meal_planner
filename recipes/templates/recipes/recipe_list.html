@@ -111,4 +111,12 @@
   {% endfor %}
 </div>
 
+{% if user.is_authenticated %}
+  <div class="mb-3">
+    <a href="?favourites=1" class="btn btn-sm btn-warning">⭐ Show My Favourites</a>
+    <a href="{% url 'recipe_list' %}" class="btn btn-sm btn-secondary">Show All</a>
+  </div>
+{% endif %}
+
+
 {% endblock %}

@@ -1,6 +1,7 @@
 from django.db import models
 from datetime import date
 from django.conf import settings
+from django.contrib.auth.models import User
 
 # Create your models here.
 
@@ -14,6 +15,7 @@ class Recipe(models.Model):
     is_ai_generated = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
     tags = models.ManyToManyField('Tag', blank=True)
+    favourited_by = models.ManyToManyField(User, related_name='favourites', blank=True)
 
     def __str__(self):
         return self.title
