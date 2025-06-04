@@ -1,5 +1,6 @@
 from django import forms
-from .models import Recipe
+from .models import Recipe, FamilyPreference
+
 class RecipeForm(forms.ModelForm):
     class Meta:
         model = Recipe
@@ -10,12 +11,14 @@ class RecipeForm(forms.ModelForm):
             'ingredients',
             'steps',
             'notes',
-            'is_ai_generated'
+            'is_ai_generated',
+            'tags'
         ]
         widgets = {
             'ingredients': forms.Textarea(attrs={'rows': 4, 'cols': 40}),
             'steps': forms.Textarea(attrs={'rows': 4, 'cols': 40}),
             'notes': forms.Textarea(attrs={'rows': 2, 'cols': 40}),
+            'tags': forms.CheckboxSelectMultiple()
         }
         labels = {
             'title': 'Recipe Title',
@@ -55,4 +58,31 @@ class MealPlanForm(forms.ModelForm):
         fields = ['date', 'meal_type', 'recipe']
         widgets = {
             'date': forms.DateInput(attrs={'type': 'date'}),
+        }
+
+from .models import FamilyPreference
+
+class FamilyPreferenceForm(forms.ModelForm):
+    class Meta:
+        model = FamilyPreference
+        fields = ['family_member', 'preference']
+        widgets = {
+            'family_member': forms.TextInput(attrs={'placeholder': 'e.g. Nina'}),
+            'preference': forms.Select
+        }
+        labels = {
+            'family_member': 'Family Member',
+            'preference': 'Preference Level',
+        }
+        help_texts = {
+            'family_member': 'Enter the name of the family member.',
+            'preference': 'Select the preference level for this recipe.',
+        }
+        error_messages = {
+            'family_member': {
+                'required': "Family member name is required.",
+            },
+            'preference': {
+                'required': "Preference level is required.",
+            },
         }

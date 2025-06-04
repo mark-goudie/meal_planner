@@ -9,6 +9,32 @@
 
 <hr />
 
+<h2>Search Recipes</h2>
+<form method="get" style="margin-bottom: 1em">
+  <input
+    type="text"
+    name="q"
+    placeholder="Search recipes..."
+    value="{{ query }}"
+  />
+  <button type="submit">Search</button>
+  {% if query %}
+  <a href="{% url 'recipe_list' %}" style="margin-left: 10px">Reset</a>
+  {% endif %}
+</form>
+
+<h2>Filter by Tag</h2>
+<div style="margin-bottom: 1em">
+  <a href="{% url 'recipe_list' %}">All</a>
+  {% for tag in tags %} {% if tag.id == selected_tag %}
+  <strong>{{ tag.name }}</strong>
+  {% else %}
+  <a href="?tag={{ tag.id }}{% if query %}&q={{ query }}{% endif %}"
+    >{{ tag.name }}</a
+  >
+  {% endif %} {% if not forloop.last %} | {% endif %} {% endfor %}
+</div>
+
 <h2>Saved Recipes</h2>
 <ul>
   {% for recipe in recipes %}

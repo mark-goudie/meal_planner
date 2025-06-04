@@ -1,0 +1,8 @@
+<h1>Rate Recipe: {{ recipe.title }}</h1>
+
+<form method="post">
+  {% csrf_token %} {{ form.as_p }}
+  <button type="submit">Save Rating</button>
+</form>
+
+<p><a href="{% url 'recipe_detail' recipe.pk %}">Back to Recipe</a></p>

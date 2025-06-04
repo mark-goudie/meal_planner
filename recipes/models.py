@@ -1,5 +1,6 @@
 from django.db import models
 from datetime import date
+from django.conf import settings
 
 # Create your models here.
 
@@ -12,12 +13,16 @@ class Recipe(models.Model):
     notes = models.TextField(blank=True)
     is_ai_generated = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
+    tags = models.ManyToManyField('Tag', blank=True)
 
     def __str__(self):
         return self.title
 
-from django.db import models
-from datetime import date
+class Tag(models.Model):
+    name = models.CharField(max_length=50, unique=True)
+
+    def __str__(self):
+        return self.name
 
 MEAL_CHOICES = [
     ('breakfast', 'Breakfast'),
@@ -33,3 +38,21 @@ class MealPlan(models.Model):
     def __str__(self):
         meal_type_display = dict(MEAL_CHOICES).get(self.meal_type, self.meal_type)
         return f"{meal_type_display} on {self.date}: {self.recipe.title}"
+
+PREFERENCE_CHOICES = [
+    (1, "Dislike"),
+    (2, "Neutral"),
+    (3, "Like"),
+]
+
+class FamilyPreference(models.Model):
+    family_member = models.CharField(max_length=50)
+    recipe = models.ForeignKey('Recipe', on_delete=models.CASCADE)
+    preference = models.IntegerField(choices=PREFERENCE_CHOICES)
+
+    class Meta:
+        unique_together = ('family_member', 'recipe')
+
+    def __str__(self):
+        preference_display = dict(PREFERENCE_CHOICES).get(self.preference, self.preference)
+        return f"{self.family_member} - {self.recipe.title}: {preference_display}"

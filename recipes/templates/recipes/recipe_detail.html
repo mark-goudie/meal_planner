@@ -12,10 +12,21 @@
 <p>
   <strong>AI Generated:</strong> {{ recipe.is_ai_generated|yesno:"Yes,No" }}
 </p>
+<p><strong>Family Preferences</strong>:</p>
+<ul>
+  {% for pref in recipe.familypreference_set.all %}
+  <li>{{ pref.family_member }}: {{ pref.get_preference_display }}</li>
+  {% empty %}
+  <li>No ratings yet.</li>
+  {% endfor %}
+</ul>
 
 <p>
   <a href="{% url 'recipe_update' recipe.pk %}">Edit</a> |
   <a href="{% url 'recipe_delete' recipe.pk %}">Delete</a>
+</p>
+<p>
+  <a href="{% url 'add_preference' recipe.pk %}">❤️ Add/Update Family Rating</a>
 </p>
 
 <p><a href="{% url 'recipe_list' %}">Back to list</a></p>

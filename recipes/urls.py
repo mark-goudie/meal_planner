@@ -1,5 +1,5 @@
 from django.urls import path
-from .views import recipe_list, recipe_create, recipe_detail, recipe_update, recipe_delete, ai_generate_recipe, recipe_create_from_ai, meal_plan_list, meal_plan_create
+from .views import recipe_list, recipe_create, recipe_detail, recipe_update, recipe_delete, ai_generate_recipe, recipe_create_from_ai, meal_plan_list, meal_plan_create, add_preference
 
 urlpatterns = [
     path('', recipe_list, name='recipe_list'),
@@ -12,6 +12,7 @@ urlpatterns = [
     path('ai-create/', recipe_create_from_ai, name='recipe_create_from_ai'),
     path('meal-plan/', meal_plan_list, name='meal_plan_list'),
     path('meal-plan/new/', meal_plan_create, name='meal_plan_create'),
+    path('<int:recipe_id>/rate/', add_preference, name='add_preference')
 
 
 ]

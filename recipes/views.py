@@ -1,17 +1,37 @@
 from django.shortcuts import render, get_object_or_404, redirect
-from .models import Recipe, MealPlan
-from .forms import RecipeForm, MealPlanForm
+from .models import Recipe, MealPlan, Tag, FamilyPreference
+from .forms import RecipeForm, MealPlanForm, FamilyPreferenceForm
 
+from django.db.models import Q
 import openai
 from django.conf import settings
 
 def recipe_list(request):
+    query = request.GET.get('q')
+    tag_id = request.GET.get('tag')
+
     recipes = Recipe.objects.all()
+
+    if query:
+        recipes = recipes.filter(
+            Q(title__icontains=query) |
+            Q(ingredients__icontains=query)
+        )
+
+    if tag_id:
+        recipes = recipes.filter(tags__id=tag_id)
+
     meal_plans = MealPlan.objects.order_by('date', 'meal_type')
+    tags = Tag.objects.all()
+
     return render(request, 'recipes/recipe_list.html', {
         'recipes': recipes,
         'meal_plans': meal_plans,
+        'tags': tags,
+        'query': query,
+        'selected_tag': int(tag_id) if tag_id else None,
     })
+
 
 def recipe_create(request):
     form = RecipeForm(request.POST or None)
@@ -154,3 +174,22 @@ def meal_plan_create(request):
         return redirect('meal_plan_list')
     return render(request, 'recipes/meal_plan_form.html', {'form': form})
 
+def add_preference(request, recipe_id):
+    recipe = get_object_or_404(Recipe, pk=recipe_id)
+    form = FamilyPreferenceForm(request.POST or None)
+
+    if form.is_valid():
+        pref = form.save(commit=False)
+        pref.recipe = recipe
+        try:
+            existing = FamilyPreference.objects.get(recipe=recipe, family_member=pref.family_member)
+            existing.preference = pref.preference
+            existing.save()
+        except FamilyPreference.DoesNotExist:
+            pref.save()
+        return redirect('recipe_detail', pk=recipe_id)
+
+    return render(request, 'recipes/add_preference.html', {
+        'form': form,
+        'recipe': recipe,
+    })
