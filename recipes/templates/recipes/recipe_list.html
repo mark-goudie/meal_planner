@@ -85,8 +85,9 @@
           <div class="list-group">
             {% for plan in meal_plans %}
               <div class="list-group-item">
-                <strong>{{ plan.date }} – {{ plan.get_meal_type_display }}:</strong>
-                <a href="{% url 'recipe_detail' plan.recipe.pk %}" class="ms-1 text-decoration-none" style="color: var(--primary);">
+                <strong style="font-size: 0.9rem;">{{ plan.date }} – {{ plan.get_meal_type_display }}:</strong>
+                <br/>
+                <a href="{% url 'recipe_detail' plan.recipe.pk %}" class="ms-1 text-decoration-none" style="font-size: 0.9rem; color: var(--primary);">
                   {{ plan.recipe.title }}
                 </a>
               </div>

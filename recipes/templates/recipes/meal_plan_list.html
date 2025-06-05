@@ -1,18 +1,23 @@
-{% extends "base.html" %}
-{% block content %}
+{% extends "base.html" %} {% load recipe_extras %} {% block content %}
 
 <div class="row justify-content-center">
   <div class="col-lg-10">
     <div class="card shadow-sm mb-4">
       <div class="card-body">
         <div class="d-flex justify-content-between align-items-center mb-4">
-          <h1 class="card-title mb-0" style="color: var(--primary);">
+          <h1 class="card-title mb-0" style="color: var(--primary)">
             🗓️ Meal Plan
           </h1>
-          <a href="{% url 'meal_plan_create' %}" class="btn btn-primary">➕ Add Meal</a>
+          <a href="{% url 'meal_plan_create' %}" class="btn btn-primary"
+            >➕ Add Meal</a
+          >
         </div>
+
         <div class="table-responsive">
-          <table class="table align-middle table-bordered mb-3" style="background: var(--card-bg)">
+          <table
+            class="table align-middle table-bordered mb-3"
+            style="background: var(--card-bg)"
+          >
             <thead class="table-light">
               <tr>
                 <th style="min-width: 120px">Date</th>
@@ -24,68 +29,68 @@
             <tbody>
               {% regroup plans by date as date_list %}
               {% for day in date_list %}
-                <tr>
-                  <td class="fw-semibold">{{ day.grouper }}</td>
-                  {# Breakfast #}
-                  <td class="text-center">
-                    {% with found=False %}
-                      {% for plan in day.list %}
-                        {% if plan.meal_type == "breakfast" and not found %}
-                          <a href="{% url 'recipe_detail' plan.recipe.pk %}" class="text-decoration-none" style="color: var(--primary)">
-                            {{ plan.recipe.title }}
-                          </a>
-                          {% with found=True %}{% endwith %}
-                        {% endif %}
-                      {% endfor %}
-                      {% if not day.list|dictsort:"meal_type"|yesno:"breakfast," %}
-                        <span class="text-muted small">—</span>
-                      {% endif %}
-                    {% endwith %}
-                  </td>
-                  {# Lunch #}
-                  <td class="text-center">
-                    {% with found=False %}
-                      {% for plan in day.list %}
-                        {% if plan.meal_type == "lunch" and not found %}
-                          <a href="{% url 'recipe_detail' plan.recipe.pk %}" class="text-decoration-none" style="color: var(--primary)">
-                            {{ plan.recipe.title }}
-                          </a>
-                          {% with found=True %}{% endwith %}
-                        {% endif %}
-                      {% endfor %}
-                      {% if not day.list|dictsort:"meal_type"|yesno:"lunch," %}
-                        <span class="text-muted small">—</span>
-                      {% endif %}
-                    {% endwith %}
-                  </td>
-                  {# Dinner #}
-                  <td class="text-center">
-                    {% with found=False %}
-                      {% for plan in day.list %}
-                        {% if plan.meal_type == "dinner" and not found %}
-                          <a href="{% url 'recipe_detail' plan.recipe.pk %}" class="text-decoration-none" style="color: var(--primary)">
-                            {{ plan.recipe.title }}
-                          </a>
-                          {% with found=True %}{% endwith %}
-                        {% endif %}
-                      {% endfor %}
-                      {% if not day.list|dictsort:"meal_type"|yesno:"dinner," %}
-                        <span class="text-muted small">—</span>
-                      {% endif %}
-                    {% endwith %}
-                  </td>
-                </tr>
+              <tr>
+                <td class="fw-semibold">{{ day.grouper }}</td>
+
+                {# Breakfast #}
+                <td class="text-center">
+                  {% with plan=day.list|get_meal:"breakfast" %} {% if plan %}
+                  <a
+                    href="{% url 'recipe_detail' plan.recipe.pk %}"
+                    class="text-decoration-none"
+                    style="color: var(--primary)"
+                  >
+                    {{ plan.recipe.title }}
+                  </a>
+                  {% else %}
+                  <span class="text-muted small">—</span>
+                  {% endif %} {% endwith %}
+                </td>
+
+                {# Lunch #}
+                <td class="text-center">
+                  {% with plan=day.list|get_meal:"lunch" %} {% if plan %}
+                  <a
+                    href="{% url 'recipe_detail' plan.recipe.pk %}"
+                    class="text-decoration-none"
+                    style="color: var(--primary)"
+                  >
+                    {{ plan.recipe.title }}
+                  </a>
+                  {% else %}
+                  <span class="text-muted small">—</span>
+                  {% endif %} {% endwith %}
+                </td>
+
+                {# Dinner #}
+                <td class="text-center">
+                  {% with plan=day.list|get_meal:"dinner" %} {% if plan %}
+                  <a
+                    href="{% url 'recipe_detail' plan.recipe.pk %}"
+                    class="text-decoration-none"
+                    style="color: var(--primary)"
+                  >
+                    {{ plan.recipe.title }}
+                  </a>
+                  {% else %}
+                  <span class="text-muted small">—</span>
+                  {% endif %} {% endwith %}
+                </td>
+              </tr>
               {% empty %}
-                <tr>
-                  <td colspan="4" class="text-center text-muted">
-                    No meals planned yet.
-                  </td>
-                </tr>
+              <tr>
+                <td colspan="4" class="text-center text-muted">
+                  No meals planned yet.
+                </td>
+              </tr>
               {% endfor %}
             </tbody>
           </table>
         </div>
-        <a href="{% url 'recipe_list' %}" class="btn btn-outline-secondary">⬅️ Back to Recipes</a>
+
+        <a href="{% url 'recipe_list' %}" class="btn btn-outline-secondary"
+          >⬅️ Back to Recipes</a
+        >
       </div>
     </div>
   </div>

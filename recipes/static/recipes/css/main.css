@@ -259,3 +259,9 @@ body.dark-mode .form-check-input[type="checkbox"]:checked {
   background-color: var(--primary) !important;
   border-color: var(--primary) !important;
 }
+.card-title {
+  font-family: "Inter", sans-serif !important;
+  color: var(--primary) !important;
+  font-weight: 600;
+  letter-spacing: -0.5px;
+}
