@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% load widget_tweaks %}
+{% block content %}
+<div class="container d-flex justify-content-center align-items-center" style="min-height: 70vh;">
+  <div class="card shadow-sm p-4" style="max-width: 400px; width: 100%;">
+    <div class="text-center mb-4">
+      <h2 class="card-title mb-1" style="color: var(--primary); font-family: 'Inter', sans-serif;">
+        <i class="bi bi-person-plus" style="font-size: 2rem; vertical-align: -4px;"></i>
+        Create Account
+      </h2>
+      <div class="text-muted" style="font-size: 1rem;">Sign up to start planning your meals!</div>
+    </div>
+    <form method="post" novalidate>
+      {% csrf_token %}
+      <div class="mb-3">
+        <label for="id_username" class="form-label">Username</label>
+        {{ form.username|add_class:"form-control" }}
+      </div>
+      <div class="mb-3">
+        <label for="id_email" class="form-label">Email</label>
+        {{ form.email|add_class:"form-control" }}
+      </div>
+      <div class="mb-3">
+        <label for="id_password1" class="form-label">Password</label>
+        {{ form.password1|add_class:"form-control" }}
+      </div>
+      <div class="mb-3">
+        <label for="id_password2" class="form-label">Confirm Password</label>
+        {{ form.password2|add_class:"form-control" }}
+      </div>
+      <button type="submit" class="btn btn-success w-100">Sign Up</button>
+    </form>
+    <div class="mt-3 text-center">
+      <span class="text-muted" style="font-size: 0.95rem;">Already have an account?</span>
+      <a href="{% url 'login' %}" class="text-decoration-none" style="color: var(--primary); font-size: 0.95rem;">Login</a>
+    </div>
+  </div>
+</div>
+{% endblock %}
