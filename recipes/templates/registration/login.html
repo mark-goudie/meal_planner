@@ -1,11 +1,33 @@
 {% extends "base.html" %}
+
+{% load widget_tweaks %}
+
 {% block content %}
-<div class="container mt-5" style="max-width: 400px;">
-  <h2 class="mb-4">🔐 Login</h2>
-  <form method="post">
-    {% csrf_token %}
-    {{ form.as_p }}
-    <button type="submit" class="btn btn-primary w-100">Login</button>
-  </form>
+
+<div class="container d-flex justify-content-center align-items-center" style="min-height: 70vh;">
+  <div class="card shadow-sm p-4" style="max-width: 400px; width: 100%;">
+    <div class="text-center mb-4">
+      <h2 class="card-title mb-1" style="color: var(--primary); font-family: 'Inter', sans-serif;">
+        <i class="bi bi-person-circle" style="font-size: 2rem; vertical-align: -4px;"></i>
+        Login
+      </h2>
+      <div class="text-muted" style="font-size: 1rem;">Welcome back! Please sign in to continue.</div>
+    </div>
+    <form method="post" novalidate>
+      {% csrf_token %}
+      <div class="mb-3">
+        <label for="id_username" class="form-label">Username</label>
+        {{ form.username|add_class:"form-control" }}
+      </div>
+      <div class="mb-3">
+        <label for="id_password" class="form-label">Password</label>
+        {{ form.password|add_class:"form-control" }}
+      </div>
+      <button type="submit" class="btn btn-primary w-100">Login</button>
+    </form>
+    <div class="mt-3 text-center">
+      <a href="{% url 'password_reset' %}" class="text-decoration-none" style="color: var(--primary); font-size: 0.95rem;">Forgot password?</a>
+    </div>
+  </div>
 </div>
 {% endblock %}

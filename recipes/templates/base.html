@@ -82,7 +82,13 @@
                 aria-labelledby="userDropdown"
               >
                 <li>
-                  <a class="dropdown-item" href="{% url 'logout' %}">Logout</a>
+                  <form method="post" action="{% url 'logout' %}" style="display: inline;">
+                    {% csrf_token %}
+                    <button type="submit" class="dropdown-item d-flex align-items-center gap-2 text-danger logout-btn" style="background: none; border: none; padding: 0.5rem 1rem; width: 100%; text-align: left;">
+                      <i class="bi bi-box-arrow-right"></i>
+                      Logout
+                    </button>
+                  </form>
                 </li>
               </ul>
             </li>

@@ -6,6 +6,7 @@ from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponseRedirect
 from django.urls import reverse
+from django.core.paginator import Paginator
 
 from .models import Recipe, MealPlan, Tag, FamilyPreference
 from .forms import RecipeForm, MealPlanForm, FamilyPreferenceForm
@@ -70,12 +71,18 @@ def recipe_list(request):
         )
     ).distinct()
 
+    # Pagination
+    paginator = Paginator(recipes, 12)  # 12 recipes per page
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+
     meal_plans = MealPlan.objects.order_by('date', 'meal_type')
     tags = Tag.objects.all()
     family_members = FamilyPreference.objects.values_list('family_member', flat=True).distinct()
 
     return render(request, 'recipes/recipe_list.html', {
-        'recipes': recipes,
+        'page_obj': page_obj,
+        'recipes': page_obj.object_list,
         'meal_plans': meal_plans,
         'tags': tags,
         'query': query,

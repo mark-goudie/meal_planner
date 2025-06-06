@@ -4,7 +4,7 @@
 <div class="row justify-content-center">
   <div class="col-lg-8">
     <div class="card shadow-sm mb-4">
-      <div class="card-body">
+      <div class="card-body position-relative">
         <h1 class="card-title mb-4" style="color: var(--primary)">🤖 AI Recipe Generator</h1>
 
         <form method="post" class="mb-4">
@@ -45,9 +45,31 @@
         {% endif %}
 
         <a href="{% url 'recipe_list' %}" class="btn btn-outline-secondary mt-2">⬅️ Back to Recipes</a>
+
+        <div id="ai-loading-overlay"
+             class="d-none position-absolute top-0 start-0 w-100 h-100 d-flex flex-column justify-content-center align-items-center"
+             style="background: rgba(249,250,251,0.92); border-radius: 0.75rem; z-index: 10;">
+          <div class="spinner-border" role="status" style="width: 2.5rem; height: 2.5rem; color: var(--primary); border-width: 0.25em;">
+            <span class="visually-hidden">Loading...</span>
+          </div>
+          <div class="fw-semibold" style="color: var(--primary); font-size: 1.1rem; margin-top: 1rem;">
+            Generating your recipe...
+          </div>
+        </div>
       </div>
     </div>
   </div>
 </div>
+
+<script>
+  document.addEventListener("DOMContentLoaded", function() {
+    const form = document.querySelector("form");
+    if (form) {
+      form.addEventListener("submit", function() {
+        document.getElementById("ai-loading-overlay").classList.remove("d-none");
+      });
+    }
+  });
+</script>
 
 {% endblock %}

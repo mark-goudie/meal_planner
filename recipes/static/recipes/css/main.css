@@ -265,3 +265,37 @@ body.dark-mode .form-check-input[type="checkbox"]:checked {
   font-weight: 600;
   letter-spacing: -0.5px;
 }
+.spinner-border {
+  color: var(--primary) !important;
+  border-color: var(--primary) transparent var(--primary) transparent !important;
+}
+.pagination .page-item.active .page-link {
+  background-color: var(--primary);
+  border-color: var(--primary);
+  color: #fff;
+}
+.pagination .page-link {
+  color: var(--primary);
+  border-radius: 0.5rem;
+  transition: background 0.15s, color 0.15s;
+}
+.pagination .page-link:hover {
+  background-color: var(--primary-hover);
+  color: #fff;
+}
+
+/* Modern logout dropdown styling */
+
+.logout-btn {
+  color: #b02a37 !important;
+  font-weight: 500;
+  transition: background 0.15s, color 0.15s;
+  margin-right: 0.5rem;
+}
+
+.logout-btn:hover,
+.logout-btn:focus {
+  background: #ffe5e5 !important;
+  color: #b02a37 !important;
+  border-radius: 0.5rem;
+}
