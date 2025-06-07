@@ -90,11 +90,7 @@ class FamilyPreferenceForm(forms.ModelForm):
         }
 
 class CustomUserCreationForm(UserCreationForm):
-    email = forms.EmailField(
-        required=True,
-        widget=forms.EmailInput(attrs={'class': 'form-control'}),
-        label="Email"
-    )
+    email = forms.EmailField(required=True, widget=forms.EmailInput(attrs={'class': 'form-control'}))
 
     class Meta:
         model = User

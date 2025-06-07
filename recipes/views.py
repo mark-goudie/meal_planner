@@ -1,15 +1,14 @@
-from django.shortcuts import render, get_object_or_404, redirect, get_list_or_404
+from django.shortcuts import render, get_object_or_404, redirect
 from django.db.models import Q, Count
 from django.conf import settings
 from django.contrib.auth import login
-from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponseRedirect
 from django.urls import reverse
 from django.core.paginator import Paginator
 
 from .models import Recipe, MealPlan, Tag, FamilyPreference
-from .forms import RecipeForm, MealPlanForm, FamilyPreferenceForm
+from .forms import RecipeForm, MealPlanForm, FamilyPreferenceForm, CustomUserCreationForm
 
 import openai
 
@@ -19,13 +18,13 @@ import openai
 
 def register(request):
     if request.method == "POST":
-        form = UserCreationForm(request.POST)
+        form = CustomUserCreationForm(request.POST)
         if form.is_valid():
             user = form.save()
             login(request, user)
             return redirect("recipe_list")
     else:
-        form = UserCreationForm()
+        form = CustomUserCreationForm()
     return render(request, "registration/register.html", {"form": form})
 
 
@@ -40,7 +39,7 @@ def recipe_list(request):
     selected_members = request.GET.getlist('member')
     favourites_only = request.GET.get('favourites') == '1'
 
-    recipes = Recipe.objects.all()
+    recipes = Recipe.objects.filter(user=request.user)
 
     if query:
         recipes = recipes.filter(
@@ -55,7 +54,7 @@ def recipe_list(request):
         recipes = recipes.annotate(
             matching_likes=Count(
                 'familypreference',
-                filter=Q(familypreference__preference=3, familypreference__family_member__in=selected_members),
+                filter=Q(familypreference__preference=3, familypreference__family_member__in=selected_members, familypreference__user=request.user),
                 distinct=True
             )
         ).filter(matching_likes=len(selected_members))
@@ -66,7 +65,7 @@ def recipe_list(request):
     recipes = recipes.annotate(
         total_likes=Count(
             'familypreference',
-            filter=Q(familypreference__preference=3),
+            filter=Q(familypreference__preference=3, familypreference__user=request.user),
             distinct=True
         )
     ).distinct()
@@ -76,9 +75,9 @@ def recipe_list(request):
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
 
-    meal_plans = MealPlan.objects.order_by('date', 'meal_type')
+    meal_plans = MealPlan.objects.filter(user=request.user).order_by('date', 'meal_type')
     tags = Tag.objects.all()
-    family_members = FamilyPreference.objects.values_list('family_member', flat=True).distinct()
+    family_members = FamilyPreference.objects.filter(user=request.user).values_list('family_member', flat=True).distinct()
 
     return render(request, 'recipes/recipe_list.html', {
         'page_obj': page_obj,
@@ -92,12 +91,14 @@ def recipe_list(request):
         'favourites_only': favourites_only,
     })
 
-
 @login_required
 def recipe_create(request):
     form = RecipeForm(request.POST or None)
     if form.is_valid():
-        form.save()
+        recipe = form.save(commit=False)
+        recipe.user = request.user
+        recipe.save()
+        form.save_m2m()
         return redirect('recipe_list')
     return render(request, 'recipes/recipe_form.html', {'form': form})
 
@@ -109,7 +110,10 @@ def recipe_create_from_ai(request):
     if request.method == 'POST':
         form = RecipeForm(request.POST)
         if form.is_valid():
-            form.save()
+            recipe = form.save(commit=False)
+            recipe.user = request.user
+            recipe.save()
+            form.save_m2m()
             request.session.pop('ai_recipe_data', None)
             return redirect('recipe_list')
 
@@ -117,12 +121,12 @@ def recipe_create_from_ai(request):
 
 @login_required
 def recipe_detail(request, pk):
-    recipe = get_object_or_404(Recipe, pk=pk)
+    recipe = get_object_or_404(Recipe, pk=pk, user=request.user)
     return render(request, 'recipes/recipe_detail.html', {'recipe': recipe})
 
 @login_required
 def recipe_update(request, pk):
-    recipe = get_object_or_404(Recipe, pk=pk)
+    recipe = get_object_or_404(Recipe, pk=pk, user=request.user)
     form = RecipeForm(request.POST or None, instance=recipe)
     if form.is_valid():
         form.save()
@@ -131,7 +135,7 @@ def recipe_update(request, pk):
 
 @login_required
 def recipe_delete(request, pk):
-    recipe = get_object_or_404(Recipe, pk=pk)
+    recipe = get_object_or_404(Recipe, pk=pk, user=request.user)
     if request.method == 'POST':
         recipe.delete()
         return redirect('recipe_list')
@@ -217,27 +221,30 @@ def parse_generated_recipe(text):
 
 @login_required
 def meal_plan_list(request):
-    plans = MealPlan.objects.order_by('date', 'meal_type')
+    plans = MealPlan.objects.filter(user=request.user).order_by('date', 'meal_type')
     return render(request, 'recipes/meal_plan_list.html', {'plans': plans})
 
 @login_required
 def meal_plan_create(request):
     form = MealPlanForm(request.POST or None)
     if form.is_valid():
-        form.save()
+        meal_plan = form.save(commit=False)
+        meal_plan.user = request.user
+        meal_plan.save()
         return redirect('meal_plan_list')
     return render(request, 'recipes/meal_plan_form.html', {'form': form})
 
 @login_required
 def add_preference(request, recipe_id):
-    recipe = get_object_or_404(Recipe, pk=recipe_id)
+    recipe = get_object_or_404(Recipe, pk=recipe_id, user=request.user)
     form = FamilyPreferenceForm(request.POST or None)
 
     if form.is_valid():
         pref = form.save(commit=False)
         pref.recipe = recipe
+        pref.user = request.user
         try:
-            existing = FamilyPreference.objects.get(recipe=recipe, family_member=pref.family_member)
+            existing = FamilyPreference.objects.get(recipe=recipe, family_member=pref.family_member, user=request.user)
             existing.preference = pref.preference
             existing.save()
         except FamilyPreference.DoesNotExist:
@@ -251,7 +258,7 @@ def add_preference(request, recipe_id):
 
 @login_required
 def toggle_favourite(request, recipe_id):
-    recipe = get_object_or_404(Recipe, id=recipe_id)
+    recipe = get_object_or_404(Recipe, id=recipe_id, user=request.user)
     if request.user in recipe.favourited_by.all():
         recipe.favourited_by.remove(request.user)
     else:
@@ -262,7 +269,7 @@ def toggle_favourite(request, recipe_id):
 def generate_shopping_list(request):
     if request.method == "POST":
         recipe_ids = request.POST.getlist('recipe_ids')
-        recipes = Recipe.objects.filter(id__in=recipe_ids)
+        recipes = Recipe.objects.filter(id__in=recipe_ids, user=request.user)
         # Combine ingredients (assuming ingredients are stored as text, one per line)
         ingredient_set = set()
         for recipe in recipes:

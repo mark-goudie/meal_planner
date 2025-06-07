@@ -14,7 +14,7 @@ urlpatterns = [
     path('meal-plan/', meal_plan_list, name='meal_plan_list'),
     path('meal-plan/new/', meal_plan_create, name='meal_plan_create'),
     path('<int:recipe_id>/rate/', add_preference, name='add_preference'),
-    path('register/', register, name='register'),
+    path('register/', views.register, name='register'),
     path('<int:recipe_id>/favourite/', toggle_favourite, name='toggle_favourite'),
     path('shopping-list/', views.generate_shopping_list, name='generate_shopping_list')
 ]
