@@ -296,3 +296,6 @@ def generate_shopping_list(request):
         })
     # If GET or no recipes selected, redirect or show empty
     return render(request, 'recipes/shopping_list.html', {'shopping_list': [], 'recipes': []})
+
+def getting_started(request):
+    return render(request, "recipes/getting_started.html")

@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container py-4">
+  <h2 class="mb-3" style="color: var(--primary);">Getting Started</h2>
+  <p>Welcome to Meal Planner! Here’s how to make the most of your new account:</p>
+  <ol>
+    <li><strong>Explore Example Recipes:</strong> Check out the demo recipes added to your account.</li>
+    <li><strong>Add Your Own Recipes:</strong> Use the “Add Recipe” button to save your favourites.</li>
+    <li><strong>Plan Your Meals:</strong> Create a meal plan for the week using your recipes.</li>
+    <li><strong>Generate a Shopping List:</strong> Instantly create a shopping list from your meal plan.</li>
+    <li><strong>Try AI Features:</strong> Use the AI generator to discover new recipes based on your ingredients.</li>
+    <li><strong>Review Legal & Privacy:</strong> See our <a href="{% url 'privacy' %}">Privacy Policy</a> and <a href="{% url 'disclaimer' %}">Disclaimer</a>.</li>
+  </ol>
+  <p>If you have questions or feedback, <a href="mailto:contact@yourdomain.com">contact us</a> any time.</p>
+</div>
+{% endblock %}
