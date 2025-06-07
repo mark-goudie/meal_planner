@@ -16,5 +16,8 @@ urlpatterns = [
     path('<int:recipe_id>/rate/', add_preference, name='add_preference'),
     path('register/', views.register, name='register'),
     path('<int:recipe_id>/favourite/', toggle_favourite, name='toggle_favourite'),
-    path('shopping-list/', views.generate_shopping_list, name='generate_shopping_list')
+    path('shopping-list/', views.generate_shopping_list, name='generate_shopping_list'),
+    path('privacy/', views.privacy, name='privacy'),
+    path('terms/', views.terms, name='terms'),
+    path('disclaimer/', views.disclaimer, name='disclaimer'),
 ]

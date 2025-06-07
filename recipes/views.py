@@ -27,6 +27,14 @@ def register(request):
         form = CustomUserCreationForm()
     return render(request, "registration/register.html", {"form": form})
 
+def privacy(request):
+    return render(request, "legal/privacy.html")
+
+def terms(request):
+    return render(request, "legal/terms.html")
+
+def disclaimer(request):
+    return render(request, "legal/disclaimer.html")
 
 # --------------------------
 # Authenticated Views
