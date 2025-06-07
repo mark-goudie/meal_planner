@@ -1,5 +1,5 @@
 from django import forms
-from .models import Recipe, FamilyPreference
+from .models import Recipe, FamilyPreference, MealPlan
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User
 
@@ -17,6 +17,7 @@ class RecipeForm(forms.ModelForm):
             'tags'
         ]
         widgets = {
+            'description': forms.Textarea(attrs={'rows': 4, 'cols': 40}),
             'ingredients': forms.Textarea(attrs={'rows': 4, 'cols': 40}),
             'steps': forms.Textarea(attrs={'rows': 4, 'cols': 40}),
             'notes': forms.Textarea(attrs={'rows': 2, 'cols': 40}),
@@ -52,17 +53,23 @@ class RecipeForm(forms.ModelForm):
             },
         }
 
-from .models import MealPlan
-
 class MealPlanForm(forms.ModelForm):
     class Meta:
         model = MealPlan
         fields = ['date', 'meal_type', 'recipe']
         widgets = {
-            'date': forms.DateInput(attrs={'type': 'date'}),
+            'date': forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}),
         }
 
-from .models import FamilyPreference
+    def __init__(self, *args, **kwargs):
+        user = kwargs.pop('user', None)
+        super().__init__(*args, **kwargs)
+        recipe_field = self.fields.get('recipe')
+        if isinstance(recipe_field, forms.ModelChoiceField):
+            if user is not None:
+                recipe_field.queryset = Recipe.objects.filter(user=user)
+            else:
+                recipe_field.queryset = Recipe.objects.none()
 
 class FamilyPreferenceForm(forms.ModelForm):
     class Meta:

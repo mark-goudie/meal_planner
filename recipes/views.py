@@ -226,12 +226,15 @@ def meal_plan_list(request):
 
 @login_required
 def meal_plan_create(request):
-    form = MealPlanForm(request.POST or None)
-    if form.is_valid():
-        meal_plan = form.save(commit=False)
-        meal_plan.user = request.user
-        meal_plan.save()
-        return redirect('meal_plan_list')
+    if request.method == "POST":
+        form = MealPlanForm(request.POST, user=request.user)
+        if form.is_valid():
+            meal_plan = form.save(commit=False)
+            meal_plan.user = request.user
+            meal_plan.save()
+            return redirect('meal_plan_list')
+    else:
+        form = MealPlanForm(user=request.user)
     return render(request, 'recipes/meal_plan_form.html', {'form': form})
 
 @login_required
