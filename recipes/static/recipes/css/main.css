@@ -171,6 +171,18 @@ footer {
 .container.py-4 {
   min-height: 80vh;
 }
+
+/* Modern background */
+body {
+  background: linear-gradient(135deg, #f9fafb 0%, #e0f2f1 60%, #7cb9a8 100%);
+  min-height: 100vh;
+}
+
+/* Dark mode: override gradient with a solid background */
+body.dark-mode {
+  background: var(--bg) !important;
+}
+
 /* Dark mode for tables and forms */
 body.dark-mode .table,
 body.dark-mode .table-bordered,
@@ -282,6 +294,16 @@ body.dark-mode .form-check-input[type="checkbox"]:checked {
 .pagination .page-link:hover {
   background-color: var(--primary-hover);
   color: #fff;
+}
+
+/* Sticky navbar */
+.navbar {
+  position: sticky;
+  top: 0;
+  z-index: 1030; /* higher than .card, .dropdown, etc. */
+  background-color: var(--card-bg) !important;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.03);
+  transition: background 0.2s, color 0.2s;
 }
 
 /* Modern logout dropdown styling */
