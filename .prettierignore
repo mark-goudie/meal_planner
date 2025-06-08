@@ -12,3 +12,7 @@ disclaimer.html
 privacy.html
 terms.html
 getting_started.html
+password_reset_form.html
+password_reset_done.html
+password_reset_confirm.html
+password_reset_complete.html
