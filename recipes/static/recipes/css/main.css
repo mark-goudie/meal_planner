@@ -302,7 +302,7 @@ body.dark-mode .form-check-input[type="checkbox"]:checked {
   top: 0;
   z-index: 1030; /* higher than .card, .dropdown, etc. */
   background-color: var(--card-bg) !important;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.03);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
   transition: background 0.2s, color 0.2s;
 }
 
@@ -332,4 +332,80 @@ footer a:hover,
 footer a:focus {
   color: var(--primary) !important;
   text-decoration: underline;
+}
+
+/* Modern recipe card appearance */
+.card.recipe-card-hover {
+  background: linear-gradient(120deg, #f8fafc 80%, #e3e4e8 100%);
+  border-radius: 1rem;
+  box-shadow: 0 2px 16px rgba(0, 0, 0, 0.07);
+  border: none;
+  transition: box-shadow 0.2s, background 0.2s, transform 0.2s;
+  min-width: 0;
+  max-width: 100%;
+  width: 100%;
+}
+.card-accent {
+  border-left: 6px solid var(--primary);
+}
+.card-title,
+.card-title a {
+  color: var(--primary) !important;
+  font-weight: 700;
+  font-size: 1.3rem;
+  letter-spacing: -0.5px;
+}
+.card-text {
+  color: var(--text-muted);
+  font-size: 0.85rem; /* Reduced from 1.08rem */
+  font-style: italic;
+  margin-bottom: 0.5rem;
+}
+.recipe-card-hover:hover {
+  box-shadow: 0 6px 24px rgba(124, 185, 168, 0.13);
+  transform: translateY(-4px) scale(1.02);
+}
+
+/* Family filter section improvements */
+.family-filter-label {
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: #5a6c6d;
+  margin-bottom: 0.25rem;
+  letter-spacing: 0.01em;
+  display: flex;
+  align-items: center;
+  gap: 0.4em;
+}
+
+.family-filter-select {
+  font-size: 0.9rem;
+  padding: 0.6em 1em;
+  border-radius: 0.7em;
+  border: 1px solid var(--border);
+  background: var(--secondary);
+  color: var(--text-main);
+  margin-bottom: 0.3em;
+  width: 100%;
+}
+
+.family-filter-hint {
+  color: var(--text-muted);
+  font-size: 0.8rem;
+  margin-bottom: 0.7em;
+  margin-left: 0.1em;
+}
+.btn-reset-strong {
+  border-width: 2px;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  background: #fffbe7;
+  color: var(--primary) !important;
+  border-color: var(--primary) !important;
+  transition: background 0.15s, color 0.15s;
+}
+.btn-reset-strong:hover,
+.btn-reset-strong:focus {
+  background: var(--primary) !important;
+  color: #fff !important;
 }

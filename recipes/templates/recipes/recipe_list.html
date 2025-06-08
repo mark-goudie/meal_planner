@@ -27,7 +27,7 @@
             </div>
             {% if query %}
               <div class="mt-2">
-                <a href="{% url 'recipe_list' %}" class="btn btn-outline-secondary btn-sm">Reset</a>
+                <a href="{% url 'recipe_list' %}" class="btn btn-outline-primary w-100 fw-bold mb-2">Reset</a>
               </div>
             {% endif %}
           </form>
@@ -44,14 +44,14 @@
           </div>
 
           <!-- Family Preference Filter -->
-          <h6 class="mt-4 mb-2">👨‍👩‍👧 Family</h6>
+          <h6 class="family-filter-label mt-4 mb-2">👨‍👩‍👧 Family</h6>
           <form method="get" class="mb-3">
-            <select name="member" class="form-select mb-2" multiple onchange="this.form.submit()">
+            <select name="member" class="family-filter-select mb-2" multiple onchange="this.form.submit()">
               {% for member in family_members %}
                 <option value="{{ member }}" {% if member in selected_members %}selected{% endif %}>{{ member }}</option>
               {% endfor %}
             </select>
-            <small class="text-muted">Select one or more family members.</small>
+            <small class="family-filter-hint">Select one or more family members.</small>
             <input type="hidden" name="q" value="{{ query }}">
             {% if selected_tag %}
               <input type="hidden" name="tag" value="{{ selected_tag }}">
@@ -115,7 +115,7 @@
         <div class="row row-cols-1 row-cols-md-2 row-cols-lg-4 g-4 mb-5">
           {% for recipe in recipes %}
             <div class="col">
-              <div class="card h-100 shadow-sm border-0 recipe-card-hover">
+              <div class="card h-100 shadow-sm border-0 recipe-card-hover card-accent">
                 <div class="card-body p-3">
                   <div class="form-check mb-2">
                     <input class="form-check-input" type="checkbox" name="recipe_ids" value="{{ recipe.id }}" id="recipe{{ recipe.id }}">
@@ -125,7 +125,7 @@
                   </div>
 
                   {% if recipe.description %}
-                    <p class="card-text text-muted small mb-2" style="font-size: 0.95rem;">{{ recipe.description|truncatewords:14 }}</p>
+                    <p class="card-text">{{ recipe.description|truncatewords:14 }}</p>
                   {% endif %}
 
                   {% if recipe.tags.exists %}
