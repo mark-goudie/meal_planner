@@ -5,7 +5,8 @@
   <div class="col-lg-8">
     <div class="card shadow-sm mb-4">
       <div class="card-body position-relative">
-        <h1 class="card-title mb-4" style="color: var(--primary)">🤖 AI Recipe Generator</h1>
+        <h1 class="card-title mb-4" style="color: var(--primary)">
+          <i class="bi bi-robot"></i> AI Recipe Generator</h1>
 
         <form method="post" class="mb-4">
           {% csrf_token %}
@@ -44,7 +45,8 @@
           </div>
         {% endif %}
 
-        <a href="{% url 'recipe_list' %}" class="btn btn-outline-secondary mt-2">⬅️ Back to Recipes</a>
+        <a href="{% url 'recipe_list' %}" class="btn btn-secondary mt-2">
+          <i class="bi bi-skip-backward-fill"></i> Back to Recipes</a>
 
         <div id="ai-loading-overlay"
              class="d-none position-absolute top-0 start-0 w-100 h-100 d-flex flex-column justify-content-center align-items-center"

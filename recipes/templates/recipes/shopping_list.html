@@ -5,7 +5,7 @@
     <div class="card shadow-sm mb-4">
       <div class="card-body">
         <h2 class="card-title mb-4" style="color: var(--primary)">
-          🛒 Shopping List
+          <i class="bi bi-card-checklist"></i> Shopping List
         </h2>
         {% if shopping_list %}
         <ul class="list-group mb-3" id="shopping-list">
@@ -42,11 +42,8 @@
         <div class="alert alert-info">No recipes selected.</div>
         {% endif %}
         <div class="d-flex flex-column flex-md-row gap-2 mt-3">
-          <a
-            href="{% url 'recipe_list' %}"
-            class="btn btn-outline-secondary flex-fill"
-          >
-            ⬅️ Back to Recipes
+          <a href="{% url 'recipe_list' %}" class="btn btn-secondary flex-fill">
+            <i class="bi bi-skip-backward-fill"></i> Back to Recipes
           </a>
           <button
             onclick="window.print()"

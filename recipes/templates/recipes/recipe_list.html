@@ -5,11 +5,19 @@
 <div class="container py-4">
 
   <div class="d-flex justify-content-between align-items-center mb-4">
-    <h1 class="fw-bold mb-0">🍽️ My Recipes</h1>
+    <h1 class="fw-bold mb-0">
+      <i class="bi bi-egg-fried"></i> My Recipes
+    </h1>
     <div class="d-flex gap-2">
-      <a href="{% url 'recipe_create' %}" class="btn btn-primary">➕ New Recipe</a>
-      <a href="{% url 'ai_generate_recipe' %}" class="btn btn-success">🤖 Generate with AI</a>
-      <a href="{% url 'meal_plan_create' %}" class="btn btn-outline-secondary">🗓️ Plan a Meal</a>
+      <a href="{% url 'recipe_create' %}" class="btn btn-primary">
+        <i class="bi bi-plus-circle"></i> New Recipe
+      </a>
+      <a href="{% url 'ai_generate_recipe' %}" class="btn btn-success">
+        <i class="bi bi-robot"></i> Generate with AI
+      </a>
+      <a href="{% url 'meal_plan_create' %}" class="btn btn-secondary">
+        <i class="bi bi-calendar-event"></i> Plan a Meal
+      </a>
     </div>
   </div>
 
@@ -19,21 +27,29 @@
       <div class="card shadow-sm mb-4">
         <div class="card-body">
           <!-- Search -->
-          <h5 class="card-title mb-3">🔍 Search</h5>
+          <h5 class="card-title mb-3">
+            <i class="bi bi-search"></i> Search
+          </h5>
           <form method="get" class="mb-3">
             <div class="input-group">
               <input type="text" class="form-control" name="q" placeholder="Search recipes..." value="{{ query|default:'' }}">
-              <button type="submit" class="btn btn-primary">Search</button>
+              <button type="submit" class="btn btn-primary">
+                <i class="bi bi-search"></i> Search
+              </button>
             </div>
             {% if query %}
               <div class="mt-2">
-                <a href="{% url 'recipe_list' %}" class="btn btn-outline-primary w-100 fw-bold mb-2">Reset</a>
+                <a href="{% url 'recipe_list' %}" class="btn btn-outline-primary w-100 fw-bold mb-2">
+                  <i class="bi bi-arrow-counterclockwise"></i> Reset
+                </a>
               </div>
             {% endif %}
           </form>
 
           <!-- Tag Filter -->
-          <h6 class="mt-4 mb-2">🏷️ Tags</h6>
+          <h6 class="mt-4 mb-2">
+            <i class="bi bi-tags"></i> Tags
+          </h6>
           <div class="mb-3">
             <a href="{% url 'recipe_list' %}" class="badge bg-secondary text-decoration-none me-1 mb-1">All</a>
             {% for tag in tags %}
@@ -44,7 +60,9 @@
           </div>
 
           <!-- Family Preference Filter -->
-          <h6 class="family-filter-label mt-4 mb-2">👨‍👩‍👧 Family</h6>
+          <h6 class="family-filter-label mt-4 mb-2">
+            <i class="bi bi-people"></i> Family
+          </h6>
           <form method="get" class="mb-3">
             <select name="member" class="family-filter-select mb-2" multiple onchange="this.form.submit()">
               {% for member in family_members %}
@@ -63,12 +81,18 @@
 
           <!-- Favourites Toggle -->
           {% if user.is_authenticated %}
-            <h6 class="mt-4 mb-2">⭐ Favourites</h6>
+            <h6 class="mt-4 mb-2">
+              <i class="bi bi-star"></i> Favourites
+            </h6>
             <div>
               {% if favourites_only %}
-                <a href="{% url 'recipe_list' %}?{% for member in selected_members %}member={{ member }}&{% endfor %}{% if query %}q={{ query }}&{% endif %}{% if selected_tag %}tag={{ selected_tag }}&{% endif %}" class="btn btn-outline-secondary btn-sm w-100">Show All Recipes</a>
+                <a href="{% url 'recipe_list' %}?{% for member in selected_members %}member={{ member }}&{% endfor %}{% if query %}q={{ query }}&{% endif %}{% if selected_tag %}tag={{ selected_tag }}&{% endif %}" class="btn btn-outline-secondary btn-sm w-100">
+                  <i class="bi bi-arrow-counterclockwise"></i> Show All Recipes
+                </a>
               {% else %}
-                <a href="?favourites=1{% for member in selected_members %}&member={{ member }}{% endfor %}{% if query %}&q={{ query }}{% endif %}{% if selected_tag %}&tag={{ selected_tag }}{% endif %}" class="btn btn-warning btn-sm w-100">⭐ Show My Favourites</a>
+                <a href="?favourites=1{% for member in selected_members %}&member={{ member }}{% endfor %}{% if query %}&q={{ query }}{% endif %}{% if selected_tag %}&tag={{ selected_tag }}{% endif %}" class="btn btn-warning btn-sm w-100">
+                  <i class="bi bi-star-fill"></i> Show My Favourites
+                </a>
               {% endif %}
             </div>
           {% endif %}
