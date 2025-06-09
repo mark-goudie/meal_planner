@@ -6,6 +6,7 @@ from django.contrib.auth.decorators import login_required
 from django.http import HttpResponseRedirect
 from django.urls import reverse
 from django.core.paginator import Paginator
+from django.utils.dateparse import parse_date
 from datetime import date, timedelta
 
 from .models import Recipe, MealPlan, Tag, FamilyPreference
@@ -235,15 +236,29 @@ def meal_plan_list(request):
 
 @login_required
 def meal_plan_create(request):
-    if request.method == "POST":
+    initial = {}
+    # Pre-populate date and meal_type from query params if present
+    if 'date' in request.GET:
+        initial['date'] = request.GET['date']
+    if 'meal_type' in request.GET:
+        initial['meal_type'] = request.GET['meal_type']
+    
+    # Determine the week offset for redirect
+    selected_date = parse_date(request.GET.get('date', str(date.today())))
+    if selected_date is None:
+        selected_date = date.today()
+    week_offset = (selected_date - date.today()).days // 7
+
+    if request.method == 'POST':
         form = MealPlanForm(request.POST, user=request.user)
         if form.is_valid():
             meal_plan = form.save(commit=False)
             meal_plan.user = request.user
             meal_plan.save()
-            return redirect('meal_plan_list')
+            # Redirect back to the weekly meal plan with the correct week offset
+            return redirect(f"{reverse('meal_plan_week')}?week={week_offset}")
     else:
-        form = MealPlanForm(user=request.user)
+        form = MealPlanForm(initial=initial, user=request.user)
     return render(request, 'recipes/meal_plan_form.html', {'form': form})
 
 @login_required

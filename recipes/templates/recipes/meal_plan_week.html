@@ -8,8 +8,12 @@
     <h2 class="mb-0">Meal Plan: {{ week_start|date:"M d" }} – {{ week_end|date:"M d, Y" }}</h2>
     <a href="?week={{ next_week }}" class="btn btn-primary btn-sm">Next Week &raquo;</a>
   </div>
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <a href="{% url 'meal_plan_create' %}" class="btn btn-primary">➕ Add Meal</a>
+    <a href="{% url 'meal_plan_list' %}" class="btn btn-outline-secondary">Meal Plan History</a>
+  </div>
   <div class="text-center mb-3">
-    <a href="?week={{ this_week }}" class="btn btn-outline-primary btn-sm">This Week</a>
+    <a href="?week={{ this_week }}" class="btn btn-accent btn-sm">This Week</a>
   </div>
   <div class="table-responsive">
     <table class="table table-bordered align-middle text-center">
@@ -34,7 +38,11 @@
                 {% if recipe %}
                   <a href="{% url 'recipe_detail' recipe.pk %}" class="meal-link">{{ recipe.title }}</a>
                 {% else %}
-                  <span class="text-muted small">—</span>
+                  <a href="{% url 'meal_plan_create' %}?date={{ day.date|date:'Y-m-d' }}&meal_type={{ meal }}"
+                     class="btn btn-link btn-sm p-0 text-muted"
+                     title="Add meal for {{ day.name }} {{ day.date|date:'M d' }} ({{ meal|title }})">
+                    <span style="font-size:1.2em;">＋</span>
+                  </a>
                 {% endif %}
               {% endwith %}
             </td>
@@ -44,8 +52,5 @@
       </tbody>
     </table>
   </div>
-  <div class="mt-4">
-    <a href="{% url 'recipe_list' %}" class="btn btn-outline-primary">⬅️ Back to Recipes</a>
-  </div>
 </div>
-{% endblock %}
+{% endblock content %}

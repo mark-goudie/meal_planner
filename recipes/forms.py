@@ -54,22 +54,18 @@ class RecipeForm(forms.ModelForm):
         }
 
 class MealPlanForm(forms.ModelForm):
+    recipe = forms.ModelChoiceField(queryset=Recipe.objects.none())  # Correctly define the field
+
     class Meta:
         model = MealPlan
         fields = ['date', 'meal_type', 'recipe']
-        widgets = {
-            'date': forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}),
-        }
 
     def __init__(self, *args, **kwargs):
         user = kwargs.pop('user', None)
         super().__init__(*args, **kwargs)
-        recipe_field = self.fields.get('recipe')
-        if isinstance(recipe_field, forms.ModelChoiceField):
-            if user is not None:
-                recipe_field.queryset = Recipe.objects.filter(user=user)
-            else:
-                recipe_field.queryset = Recipe.objects.none()
+        if user:
+            # Filter recipes by the logged-in user
+            self.fields['recipe'].queryset = Recipe.objects.filter(user=user) # type: ignore
 
 class FamilyPreferenceForm(forms.ModelForm):
     class Meta:
@@ -102,5 +98,7 @@ class CustomUserCreationForm(UserCreationForm):
     class Meta:
         model = User
         fields = ("username", "email", "password1", "password2")
+
+
 
 
