@@ -65,12 +65,11 @@
 
 <script>
   document.addEventListener("DOMContentLoaded", function() {
-    const form = document.querySelector("form");
-    if (form) {
+    document.querySelectorAll("form").forEach(function(form) {
       form.addEventListener("submit", function() {
         document.getElementById("ai-loading-overlay").classList.remove("d-none");
       });
-    }
+    });
   });
 </script>
 
