@@ -6,6 +6,7 @@ from django.contrib.auth.decorators import login_required
 from django.http import HttpResponseRedirect
 from django.urls import reverse
 from django.core.paginator import Paginator
+from datetime import date, timedelta
 
 from .models import Recipe, MealPlan, Tag, FamilyPreference
 from .forms import RecipeForm, MealPlanForm, FamilyPreferenceForm, CustomUserCreationForm
@@ -299,3 +300,43 @@ def generate_shopping_list(request):
 
 def getting_started(request):
     return render(request, "recipes/getting_started.html")
+
+@login_required
+def meal_plan_week(request):
+    # Get week offset from query param (?week=0 for current, -1 for prev, 1 for next)
+    week_offset = int(request.GET.get('week', 0))
+    today = date.today()
+    start_of_week = today - timedelta(days=today.weekday()) + timedelta(weeks=week_offset)
+    end_of_week = start_of_week + timedelta(days=6)
+
+    # Fetch meal plans for this week
+    plans = MealPlan.objects.filter(
+        user=request.user,
+        date__range=[start_of_week, end_of_week]
+    ).order_by('date', 'meal_type')
+
+    # Build a structure: {date: {breakfast: ..., lunch: ..., dinner: ...}}
+    week_days = []
+    meal_types = ['breakfast', 'lunch', 'dinner']
+    for i in range(7):
+        day_date = start_of_week + timedelta(days=i)
+        day_plan = {mt: None for mt in meal_types}
+        for plan in plans.filter(date=day_date):
+            day_plan[plan.meal_type] = plan.recipe
+        week_days.append({
+            'date': day_date,
+            'name': day_date.strftime('%A'),
+            'is_today': (day_date == today),
+            **day_plan
+        })
+
+    context = {
+        'week_days': week_days,
+        'week_start': start_of_week,
+        'week_end': end_of_week,
+        'prev_week': week_offset - 1,
+        'next_week': week_offset + 1,
+        'this_week': 0,
+        'meal_types': meal_types,
+    }
+    return render(request, 'recipes/meal_plan_week.html', context)

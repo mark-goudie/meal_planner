@@ -13,6 +13,7 @@ urlpatterns = [
     path('ai-create/', recipe_create_from_ai, name='recipe_create_from_ai'),
     path('meal-plan/', meal_plan_list, name='meal_plan_list'),
     path('meal-plan/new/', meal_plan_create, name='meal_plan_create'),
+    path('meal-plan/week/', views.meal_plan_week, name='meal_plan_week'),
     path('<int:recipe_id>/rate/', add_preference, name='add_preference'),
     path('register/', views.register, name='register'),
     path('<int:recipe_id>/favourite/', toggle_favourite, name='toggle_favourite'),

@@ -259,7 +259,11 @@ body.dark-mode .alert-danger {
     padding-left: 0.25rem;
     padding-right: 0.25rem;
   }
-  h1, h2, h3, h4, h5 {
+  h1,
+  h2,
+  h3,
+  h4,
+  h5 {
     font-size: 1.1em;
   }
   .card-title {
@@ -460,4 +464,18 @@ footer a:focus {
 .btn-reset-strong:focus {
   background: var(--primary) !important;
   color: #fff !important;
+}
+.table-success {
+  background-color: var(--accent, #a7c957) !important;
+  color: var(--text-main, #222b26) !important;
+}
+.meal-link {
+  color: var(--primary) !important;
+  font-weight: 500;
+  text-decoration: none;
+  transition: color 0.15s;
+}
+.meal-link:hover {
+  color: var(--primary-hover) !important;
+  text-decoration: underline;
 }

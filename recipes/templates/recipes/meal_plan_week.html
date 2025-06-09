@@ -1,0 +1,51 @@
+<!-- filepath: /Users/mgoudie/Desktop/Projects/meal_planner/recipes/templates/recipes/meal_plan_week.html -->
+{% extends "base.html" %}
+{% load recipe_extras %}
+{% block content %}
+<div class="container py-4">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <a href="?week={{ prev_week }}" class="btn btn-primary btn-sm">&laquo; Previous Week</a>
+    <h2 class="mb-0">Meal Plan: {{ week_start|date:"M d" }} – {{ week_end|date:"M d, Y" }}</h2>
+    <a href="?week={{ next_week }}" class="btn btn-primary btn-sm">Next Week &raquo;</a>
+  </div>
+  <div class="text-center mb-3">
+    <a href="?week={{ this_week }}" class="btn btn-outline-primary btn-sm">This Week</a>
+  </div>
+  <div class="table-responsive">
+    <table class="table table-bordered align-middle text-center">
+      <thead>
+        <tr>
+          <th>Day</th>
+          {% for meal in meal_types %}
+            <th>{{ meal|title }}</th>
+          {% endfor %}
+        </tr>
+      </thead>
+      <tbody>
+        {% for day in week_days %}
+        <tr{% if day.is_today %} class="table-success"{% endif %}>
+          <td>
+            <strong>{{ day.name }}</strong><br>
+            <small>{{ day.date|date:"M d" }}</small>
+          </td>
+          {% for meal in meal_types %}
+            <td>
+              {% with recipe=day|get:meal %}
+                {% if recipe %}
+                  <a href="{% url 'recipe_detail' recipe.pk %}" class="meal-link">{{ recipe.title }}</a>
+                {% else %}
+                  <span class="text-muted small">—</span>
+                {% endif %}
+              {% endwith %}
+            </td>
+          {% endfor %}
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  <div class="mt-4">
+    <a href="{% url 'recipe_list' %}" class="btn btn-outline-primary">⬅️ Back to Recipes</a>
+  </div>
+</div>
+{% endblock %}

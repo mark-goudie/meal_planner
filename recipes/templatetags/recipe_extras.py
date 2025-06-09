@@ -11,3 +11,7 @@ def get_meal(plans, meal_type):
         if getattr(plan, 'meal_type', None) == meal_type:
             return plan
     return None
+
+@register.filter
+def get(dict_obj, key):
+    return dict_obj.get(key)
