@@ -479,3 +479,22 @@ footer a:focus {
   color: var(--primary-hover) !important;
   text-decoration: underline;
 }
+body,
+.card,
+.section-title,
+pre {
+  font-family: "Roboto", "Inter", Arial, sans-serif;
+}
+.table-bordered th,
+.table-bordered td {
+  width: 20%; /* Adjust as needed for balance */
+  min-width: 120px; /* Prevents columns from getting too narrow */
+  max-width: 220px; /* Prevents columns from getting too wide */
+  text-align: center;
+  vertical-align: middle;
+  word-break: break-word;
+}
+.table-bordered th:first-child,
+.table-bordered td:first-child {
+  width: 12%; /* Slightly less for the Day column if you want */
+}

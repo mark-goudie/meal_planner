@@ -67,19 +67,29 @@
 
 <!-- Action Buttons -->
 <div class="d-flex gap-2 flex-wrap mb-4">
-  <a href="{% url 'recipe_update' recipe.pk %}" class="btn btn-warning">✏️ Edit</a>
-  <a href="{% url 'recipe_delete' recipe.pk %}" class="btn btn-danger">🗑️ Delete</a>
+  <a href="{% url 'recipe_update' recipe.pk %}" class="btn btn-warning">
+    <i class="bi bi-pencil-square"></i> Edit
+  </a>
+  <a href="{% url 'recipe_delete' recipe.pk %}" class="btn btn-danger">
+    <i class="bi bi-trash"></i> Delete
+  </a>
   {% if user.is_authenticated %}
     <form method="post" action="{% url 'toggle_favourite' recipe.id %}">
       {% csrf_token %}
       {% if user in recipe.favourited_by.all %}
-        <button type="submit" class="btn btn-outline-danger">❤️ Remove from Favourites</button>
+        <button type="submit" class="btn btn-outline-danger">
+          <i class="bi bi-heart-fill"></i> Remove from Favourites
+        </button>
       {% else %}
-        <button type="submit" class="btn btn-outline-primary">🤍 Add to Favourites</button>
+        <button type="submit" class="btn btn-outline-primary">
+          <i class="bi bi-heart"></i> Add to Favourites
+        </button>
       {% endif %}
     </form>
   {% endif %}
-  <a href="{% url 'recipe_list' %}" class="btn btn-secondary">⬅️ Back to Recipes</a>
+  <a href="{% url 'recipe_list' %}" class="btn btn-secondary">
+    <i class="bi bi-skip-backward"></i> Back to Recipes
+  </a>
 </div>
 
 {% endblock %}
