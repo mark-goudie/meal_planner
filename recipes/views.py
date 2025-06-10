@@ -85,7 +85,12 @@ def recipe_list(request):
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
 
-    meal_plans = MealPlan.objects.filter(user=request.user).order_by('date', 'meal_type')
+    # Only show upcoming meal plans (today and future)
+    today = date.today()
+    meal_plans = MealPlan.objects.filter(
+        user=request.user,
+        date__gte=today
+    ).order_by('date', 'meal_type')
     tags = Tag.objects.all()
     family_members = FamilyPreference.objects.filter(user=request.user).values_list('family_member', flat=True).distinct()
 
