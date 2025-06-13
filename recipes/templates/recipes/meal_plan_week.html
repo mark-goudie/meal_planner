@@ -15,6 +15,17 @@
   <div class="text-center mb-3">
     <a href="?week={{ this_week }}" class="btn btn-secondary outline">This Week</a>
   </div>
+  <form method="get" class="mb-3 search-form-mobile">
+    <div class="input-group">
+      <input type="text" class="form-control" name="q" placeholder="Search recipes..." value="{{ query|default:'' }}">
+    </div>
+    <button type="submit" class="btn btn-primary btn-block">
+      <i class="bi bi-search"></i> Search
+    </button>
+    <a href="{% url 'recipe_list' %}" class="btn btn-outline-primary btn-block">
+      <i class="bi bi-arrow-counterclockwise"></i> Reset
+    </a>
+  </form>
   <div class="table-responsive">
     <table class="table table-bordered align-middle text-center">
       <thead>

@@ -1,5 +1,6 @@
-/* Styles for the Recipes App */
-
+/* ===========================
+   Variables & Root
+   =========================== */
 :root {
   --primary: #7cb9a8;
   --primary-hover: #5fa393;
@@ -22,16 +23,86 @@ body.dark-mode {
   --text-main: #e6e6e6;
   --text-muted: #b0b8b8;
 }
+
+/* ===========================
+   Base Styles & Typography
+   =========================== */
 html,
 body {
   background: var(--bg);
   color: var(--text-main);
-  font-family: "Inter", sans-serif;
+  font-family: "Inter", "Roboto", Arial, sans-serif;
   font-size: 1rem;
   min-height: 100vh;
   transition: background 0.2s, color 0.2s;
 }
-.navbar,
+body,
+.card,
+.section-title,
+pre {
+  font-family: "Roboto", "Inter", Arial, sans-serif;
+}
+.text-muted,
+.form-text,
+.small,
+.badge.bg-secondary {
+  color: var(--text-muted) !important;
+}
+
+/* ===========================
+   Layout & Containers
+   =========================== */
+.container.py-4 {
+  min-height: 80vh;
+}
+body {
+  background: linear-gradient(135deg, #f9fafb 0%, #e0f2f1 60%, #7cb9a8 100%);
+  min-height: 100vh;
+}
+body.dark-mode {
+  background: var(--bg) !important;
+}
+
+/* ===========================
+   Navbar & Footer
+   =========================== */
+.navbar {
+  position: sticky;
+  top: 0;
+  z-index: 1030;
+  background-color: var(--card-bg) !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
+  transition: background 0.2s, color 0.2s;
+}
+.navbar-brand {
+  font-weight: 700;
+  font-size: 1.7rem;
+  color: var(--primary) !important;
+  letter-spacing: -1px;
+}
+footer {
+  background: var(--card-bg);
+  border-top: 1px solid var(--border);
+  margin-top: 4rem;
+  color: var(--text-muted);
+  font-size: 0.98rem;
+  letter-spacing: 0.01em;
+  transition: background 0.2s, color 0.2s;
+}
+footer a {
+  color: var(--text-muted);
+  text-decoration: none;
+  transition: color 0.15s;
+}
+footer a:hover,
+footer a:focus {
+  color: var(--primary) !important;
+  text-decoration: underline;
+}
+
+/* ===========================
+   Cards & Components
+   =========================== */
 .card,
 .card-body,
 .card-title,
@@ -50,40 +121,39 @@ body {
   transition: background 0.2s, color 0.2s;
 }
 .card-title,
-.card-title a,
-.form-label,
-label,
-.nav-link,
-.dropdown-item,
-.list-group-item,
-.table,
-.table th,
-.table td,
-.alert,
-.modal-content {
-  color: var(--text-main) !important;
-}
-.text-muted,
-.form-text,
-.small,
-.badge.bg-secondary {
-  color: var(--text-muted) !important;
-}
-.navbar-brand {
+.card-title a {
+  color: var(--primary) !important;
   font-weight: 700;
-  font-size: 1.7rem;
-  color: var(--primary) !important;
-  letter-spacing: -1px;
+  font-size: 1.3rem;
+  letter-spacing: -0.5px;
+  font-family: "Inter", sans-serif !important;
 }
-.nav-link {
-  color: var(--text-main) !important;
-  font-weight: 500;
-  transition: color 0.15s;
+.card.recipe-card-hover {
+  border-radius: 1rem;
+  box-shadow: 0 2px 16px rgba(0, 0, 0, 0.07);
+  border: none;
+  transition: box-shadow 0.2s, background 0.2s, transform 0.2s;
+  min-width: 0;
+  max-width: 100%;
+  width: 100%;
 }
-.nav-link:hover,
-.nav-link.active {
-  color: var(--primary) !important;
+.recipe-card-hover:hover {
+  box-shadow: 0 6px 24px rgba(124, 185, 168, 0.13);
+  transform: translateY(-4px) scale(1.02);
 }
+.card-accent {
+  border-left: 6px solid var(--primary);
+}
+.card-text {
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  font-style: italic;
+  margin-bottom: 0.5rem;
+}
+
+/* ===========================
+   Buttons & Badges
+   =========================== */
 .btn-primary,
 .btn-success,
 .btn-warning {
@@ -126,6 +196,20 @@ label,
   color: var(--primary) !important;
   border-color: var(--primary) !important;
 }
+.btn-reset-strong {
+  border-width: 2px;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  background: #fffbe7;
+  color: var(--primary) !important;
+  border-color: var(--primary) !important;
+  transition: background 0.15s, color 0.15s;
+}
+.btn-reset-strong:hover,
+.btn-reset-strong:focus {
+  background: var(--primary) !important;
+  color: #fff !important;
+}
 .badge.bg-info {
   background: var(--accent) !important;
   color: var(--text-main) !important;
@@ -134,6 +218,32 @@ label,
   background: var(--secondary) !important;
   color: var(--text-muted) !important;
 }
+
+/* ===========================
+   Tables
+   =========================== */
+.table-success {
+  background-color: var(--accent, #a7c957) !important;
+  color: var(--text-main, #222b26) !important;
+}
+.table-bordered th,
+.table-bordered td {
+  width: 20%;
+  min-width: 120px;
+  max-width: 220px;
+  text-align: center;
+  vertical-align: middle;
+  word-break: break-word;
+}
+.table-bordered th:first-child,
+.table-bordered td:first-child {
+  width: 12%;
+}
+
+/* ===========================
+   Forms & Inputs
+   =========================== */
+/* Removed empty ruleset for input, select, textarea, .form-control */
 .select2-container--default .select2-selection--multiple {
   border-radius: 0.5rem;
   border-color: var(--border);
@@ -159,179 +269,19 @@ label,
   background: var(--primary);
   color: #fff;
 }
-footer {
-  background: var(--card-bg);
-  border-top: 1px solid var(--border);
-  margin-top: 4rem;
-  color: var(--text-muted);
-  font-size: 0.98rem;
-  letter-spacing: 0.01em;
-  transition: background 0.2s, color 0.2s;
-}
-.container.py-4 {
-  min-height: 80vh;
-}
 
-/* Modern background */
-body {
-  background: linear-gradient(135deg, #f9fafb 0%, #e0f2f1 60%, #7cb9a8 100%);
-  min-height: 100vh;
-}
-
-/* Dark mode: override gradient with a solid background */
-body.dark-mode {
-  background: var(--bg) !important;
-}
-
-/* Dark mode for tables and forms */
-body.dark-mode .table,
-body.dark-mode .table-bordered,
-body.dark-mode .table-light,
-body.dark-mode .form-control,
-body.dark-mode .form-select,
-body.dark-mode .dropdown-menu,
-body.dark-mode .modal-content {
-  background-color: var(--card-bg) !important;
-  color: var(--text-main) !important;
-  border-color: var(--border) !important;
-}
-body.dark-mode .table-light th {
-  background-color: #23272b !important;
-  color: var(--text-main) !important;
-}
-body.dark-mode .form-label,
-body.dark-mode label {
-  color: var(--text-main) !important;
-}
-body.dark-mode .alert-info,
-body.dark-mode .alert-danger {
-  background-color: #23272b !important;
-  color: var(--text-main) !important;
-  border-color: var(--border) !important;
-}
-/* Responsive tweaks */
-@media (max-width: 991px) {
-  .navbar-brand {
-    font-size: 1.3rem;
-  }
-  /* Collapse sidebar and stack content on small screens */
-  .container.py-4 {
-    padding-left: 0.5rem;
-    padding-right: 0.5rem;
-  }
-  .row.g-4 {
-    gap: 1.5rem 0;
-  }
-  .col-lg-3,
-  .col-lg-9 {
-    flex: 0 0 100%;
-    max-width: 100%;
-  }
-  .card {
-    margin-bottom: 1.5rem;
-  }
-}
-
-/* Adjust recipe card grid for mobile */
-@media (max-width: 767px) {
-  .row.row-cols-1.row-cols-md-2.row-cols-lg-4 > .col {
-    flex: 0 0 100%;
-    max-width: 100%;
-  }
-  .d-flex.gap-2 {
-    flex-direction: column;
-    gap: 0.5rem !important;
-  }
-  .btn,
-  .btn-accent,
-  .btn-primary {
-    width: 100%;
-    margin-bottom: 0.5rem;
-  }
-  .navbar-brand {
-    font-size: 1.1rem;
-  }
-}
-
-/* Reduce padding and font size for small screens */
-@media (max-width: 575px) {
-  .container.py-4 {
-    padding-left: 0.25rem;
-    padding-right: 0.25rem;
-  }
-  h1,
-  h2,
-  h3,
-  h4,
-  h5 {
-    font-size: 1.1em;
-  }
-  .card-title {
-    font-size: 1.1rem;
-  }
-}
-
-/* Toggle Switch */
-.form-switch .form-check-input {
-  width: 2.5em;
-  height: 1.25em;
-  margin-left: 0;
-  background-color: var(--border);
-  border: none;
-  transition: background 0.2s;
-}
-.form-switch .form-check-input:checked {
-  background-color: var(--primary);
-}
-
-/* Custom checkbox styling with high specificity */
-input[type="checkbox"].form-check-input,
-.form-check-input[type="checkbox"] {
-  border-color: var(--primary) !important;
-  background-color: var(--secondary) !important;
-  width: 1.1em;
-  height: 1.1em;
-  margin-top: 0.1em;
-  transition: background 0.2s, border 0.2s;
-  box-shadow: none !important;
-}
-
-/* Checked state */
-input[type="checkbox"].form-check-input:checked,
-.form-check-input[type="checkbox"]:checked {
-  background-color: var(--primary) !important;
-  border-color: var(--primary) !important;
-  box-shadow: 0 0 0 0.15rem rgba(124, 185, 168, 0.25) !important;
-}
-
-/* Focus state */
-input[type="checkbox"].form-check-input:focus,
-.form-check-input[type="checkbox"]:focus {
-  border-color: var(--primary-hover) !important;
-  box-shadow: 0 0 0 0.15rem rgba(124, 185, 168, 0.25) !important;
-}
-
-/* Change the checkmark color for WebKit browsers */
-input[type="checkbox"].form-check-input:checked {
-  accent-color: var(--primary);
-}
-
-/* For dark mode, ensure checkboxes are visible */
-body.dark-mode input[type="checkbox"].form-check-input,
-body.dark-mode .form-check-input[type="checkbox"] {
-  background-color: var(--secondary) !important;
-  border-color: var(--primary) !important;
-}
-body.dark-mode input[type="checkbox"].form-check-input:checked,
-body.dark-mode .form-check-input[type="checkbox"]:checked {
-  background-color: var(--primary) !important;
-  border-color: var(--primary) !important;
-}
-.card-title {
-  font-family: "Inter", sans-serif !important;
+/* ===========================
+   Utilities & Misc
+   =========================== */
+.meal-link {
   color: var(--primary) !important;
-  font-weight: 600;
-  letter-spacing: -0.5px;
+  font-weight: 500;
+  text-decoration: none;
+  transition: color 0.15s;
+}
+.meal-link:hover {
+  color: var(--primary-hover) !important;
+  text-decoration: underline;
 }
 .spinner-border {
   color: var(--primary) !important;
@@ -351,26 +301,12 @@ body.dark-mode .form-check-input[type="checkbox"]:checked {
   background-color: var(--primary-hover);
   color: #fff;
 }
-
-/* Sticky navbar */
-.navbar {
-  position: sticky;
-  top: 0;
-  z-index: 1030; /* higher than .card, .dropdown, etc. */
-  background-color: var(--card-bg) !important;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
-  transition: background 0.2s, color 0.2s;
-}
-
-/* Modern logout dropdown styling */
-
 .logout-btn {
   color: #b02a37 !important;
   font-weight: 500;
   transition: background 0.15s, color 0.15s;
   margin-right: 0.5rem;
 }
-
 .logout-btn:hover,
 .logout-btn:focus {
   background: #ffe5e5 !important;
@@ -378,51 +314,9 @@ body.dark-mode .form-check-input[type="checkbox"]:checked {
   border-radius: 0.5rem;
 }
 
-/* Footer link hover styling */
-footer a {
-  color: var(--text-muted);
-  text-decoration: none;
-  transition: color 0.15s;
-}
-footer a:hover,
-footer a:focus {
-  color: var(--primary) !important;
-  text-decoration: underline;
-}
-
-/* Modern recipe card appearance */
-.card.recipe-card-hover {
-  /* background: linear-gradient(120deg, #f9fafb 80%, #e3e4e8 100%); */
-  border-radius: 1rem;
-  box-shadow: 0 2px 16px rgba(0, 0, 0, 0.07);
-  border: none;
-  transition: box-shadow 0.2s, background 0.2s, transform 0.2s;
-  min-width: 0;
-  max-width: 100%;
-  width: 100%;
-}
-.card-accent {
-  border-left: 6px solid var(--primary);
-}
-.card-title,
-.card-title a {
-  color: var(--primary) !important;
-  font-weight: 700;
-  font-size: 1.3rem;
-  letter-spacing: -0.5px;
-}
-.card-text {
-  color: var(--text-muted);
-  font-size: 0.85rem;
-  font-style: italic;
-  margin-bottom: 0.5rem;
-}
-.recipe-card-hover:hover {
-  box-shadow: 0 6px 24px rgba(124, 185, 168, 0.13);
-  transform: translateY(-4px) scale(1.02);
-}
-
-/* Family filter section improvements */
+/* ===========================
+   Family Filter Section
+   =========================== */
 .family-filter-label {
   font-size: 1.05rem;
   font-weight: 600;
@@ -433,7 +327,6 @@ footer a:focus {
   align-items: center;
   gap: 0.4em;
 }
-
 .family-filter-select {
   font-size: 0.9rem;
   padding: 0.6em 1em;
@@ -444,57 +337,204 @@ footer a:focus {
   margin-bottom: 0.3em;
   width: 100%;
 }
-
 .family-filter-hint {
   color: var(--text-muted);
   font-size: 0.8rem;
   margin-bottom: 0.7em;
   margin-left: 0.1em;
 }
-.btn-reset-strong {
-  border-width: 2px;
-  font-weight: 700;
-  letter-spacing: 0.03em;
-  background: #fffbe7;
-  color: var(--primary) !important;
+
+/* ===========================
+   Custom Checkbox & Switches
+   =========================== */
+.form-switch .form-check-input {
+  width: 2.5em;
+  height: 1.25em;
+  margin-left: 0;
+  background-color: var(--border);
+  border: none;
+  transition: background 0.2s;
+}
+.form-switch .form-check-input:checked {
+  background-color: var(--primary);
+}
+input[type="checkbox"].form-check-input,
+.form-check-input[type="checkbox"] {
   border-color: var(--primary) !important;
-  transition: background 0.15s, color 0.15s;
+  background-color: var(--secondary) !important;
+  width: 1.1em;
+  height: 1.1em;
+  margin-top: 0.1em;
+  transition: background 0.2s, border 0.2s;
+  box-shadow: none !important;
 }
-.btn-reset-strong:hover,
-.btn-reset-strong:focus {
-  background: var(--primary) !important;
-  color: #fff !important;
+input[type="checkbox"].form-check-input:checked,
+.form-check-input[type="checkbox"]:checked {
+  background-color: var(--primary) !important;
+  border-color: var(--primary) !important;
+  box-shadow: 0 0 0 0.15rem rgba(124, 185, 168, 0.25) !important;
 }
-.table-success {
-  background-color: var(--accent, #a7c957) !important;
-  color: var(--text-main, #222b26) !important;
+input[type="checkbox"].form-check-input:focus,
+.form-check-input[type="checkbox"]:focus {
+  border-color: var(--primary-hover) !important;
+  box-shadow: 0 0 0 0.15rem rgba(124, 185, 168, 0.25) !important;
 }
-.meal-link {
-  color: var(--primary) !important;
-  font-weight: 500;
-  text-decoration: none;
-  transition: color 0.15s;
+input[type="checkbox"].form-check-input:checked {
+  accent-color: var(--primary);
 }
-.meal-link:hover {
-  color: var(--primary-hover) !important;
-  text-decoration: underline;
+body.dark-mode input[type="checkbox"].form-check-input,
+body.dark-mode .form-check-input[type="checkbox"] {
+  background-color: var(--secondary) !important;
+  border-color: var(--primary) !important;
 }
-body,
-.card,
-.section-title,
-pre {
-  font-family: "Roboto", "Inter", Arial, sans-serif;
+body.dark-mode input[type="checkbox"].form-check-input:checked,
+body.dark-mode .form-check-input[type="checkbox"]:checked {
+  background-color: var(--primary) !important;
+  border-color: var(--primary) !important;
 }
-.table-bordered th,
-.table-bordered td {
-  width: 20%; /* Adjust as needed for balance */
-  min-width: 120px; /* Prevents columns from getting too narrow */
-  max-width: 220px; /* Prevents columns from getting too wide */
-  text-align: center;
-  vertical-align: middle;
-  word-break: break-word;
+
+/* ===========================
+   Responsive Styles
+   =========================== */
+@media (max-width: 991px) {
+  .navbar-brand {
+    font-size: 1.3rem;
+  }
+  .container.py-4 {
+    padding-left: 0.5rem;
+    padding-right: 0.5rem;
+  }
+  .row.g-4 {
+    gap: 1.5rem 0;
+  }
+  .col-lg-3,
+  .col-lg-9 {
+    flex: 0 0 100%;
+    max-width: 100%;
+  }
+  .card {
+    margin-bottom: 1.5rem;
+  }
 }
-.table-bordered th:first-child,
-.table-bordered td:first-child {
-  width: 12%; /* Slightly less for the Day column if you want */
+@media (max-width: 767px) {
+  .row.row-cols-1.row-cols-md-2.row-cols-lg-4 > .col {
+    flex: 0 0 100%;
+    max-width: 100%;
+  }
+  .d-flex.gap-2 {
+    flex-direction: column;
+    gap: 0.5rem !important;
+  }
+  .btn,
+  .btn-accent,
+  .btn-primary {
+    width: 100%;
+    margin-bottom: 0.5rem;
+  }
+  .navbar-brand {
+    font-size: 1.1rem;
+  }
+}
+@media (max-width: 575px) {
+  .container.py-4 {
+    padding-left: 0.25rem;
+    padding-right: 0.25rem;
+  }
+  h1,
+  h2,
+  h3,
+  h4,
+  h5 {
+    font-size: 1.1em;
+  }
+  .card-title {
+    font-size: 1.1rem;
+  }
+}
+@media (max-width: 600px) {
+  .container {
+    padding-left: 8px !important;
+    padding-right: 8px !important;
+  }
+  .table-responsive td,
+  .table-responsive th {
+    padding: 0.7rem 0.4rem !important;
+    font-size: 1.08rem;
+  }
+  .btn,
+  .btn-sm {
+    font-size: 1.05rem;
+    padding: 0.7rem 1rem;
+  }
+  h2,
+  .fw-bold {
+    font-size: 1.25rem !important;
+  }
+  .search-form-mobile {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  .search-form-mobile .input-group,
+  .search-form-mobile .btn,
+  .search-form-mobile .btn-block {
+    width: 100% !important;
+    display: block;
+    margin-top: 1rem;
+  }
+  .search-form-mobile .input-group {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  .search-form-mobile input[type="text"] {
+    width: 100%;
+    margin-bottom: 0.5rem;
+  }
+}
+@media (max-width: 430px) {
+  body,
+  html {
+    font-size: 13px;
+  }
+  .container {
+    padding-left: 4px !important;
+    padding-right: 4px !important;
+  }
+  .table-responsive td,
+  .table-responsive th {
+    padding: 0.5rem 0.25rem !important;
+    font-size: 1rem;
+  }
+  .table-responsive td {
+    min-height: 38px;
+    padding-left: 44%;
+  }
+  .table-responsive td:before {
+    font-size: 0.98rem;
+    padding-left: 6px;
+  }
+  .btn,
+  .btn-sm {
+    font-size: 0.98rem;
+    padding: 0.6rem 0.8rem;
+    min-width: 36px;
+  }
+  .meal-link {
+    font-size: 1rem;
+    word-break: break-word;
+  }
+  h2,
+  .fw-bold {
+    font-size: 1.15rem !important;
+  }
+  .d-flex.gap-2 > * {
+    margin-bottom: 0.5rem;
+  }
+  .mb-3,
+  .mb-4 {
+    margin-bottom: 0.7rem !important;
+  }
+  .table-responsive tr {
+    margin-bottom: 0.7rem;
+  }
 }
