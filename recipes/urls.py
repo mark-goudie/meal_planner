@@ -22,4 +22,5 @@ urlpatterns = [
     path('terms/', views.terms, name='terms'),
     path('disclaimer/', views.disclaimer, name='disclaimer'),
     path('getting-started/', views.getting_started, name='getting_started'),
+    path('ai-surprise-me/', views.ai_surprise_me, name='ai_surprise_me'),
 ]

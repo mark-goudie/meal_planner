@@ -6,7 +6,8 @@
     <div class="card shadow-sm mb-4">
       <div class="card-body position-relative">
         <h1 class="card-title mb-4" style="color: var(--primary)">
-          <i class="bi bi-robot"></i> AI Recipe Generator</h1>
+          <i class="bi bi-robot"></i> AI Recipe Generator
+        </h1>
 
         <form method="post" class="mb-4">
           {% csrf_token %}
@@ -20,7 +21,20 @@
               placeholder="e.g. chicken, broccoli, rice"
             >{{ request.POST.prompt }}</textarea>
           </div>
-          <button type="submit" class="btn btn-primary">Generate Recipe</button>
+          <div class="d-flex flex-column flex-md-row align-items-stretch gap-3 mb-2">
+            <button type="submit" class="btn btn-primary ai-gen-btn flex-fill">
+              <i class="bi bi-lightbulb"></i> Generate Recipe
+            </button>
+            <div class="d-flex align-items-center justify-content-center fw-semibold text-muted" style="min-width: 60px;">
+              <span class="d-none d-md-block">or</span>
+            </div>
+            <form method="post" action="{% url 'ai_surprise_me' %}" class="flex-fill">
+              {% csrf_token %}
+              <button type="submit" class="btn ai-gen-btn ai-surprise-btn flex-fill">
+                <i class="bi bi-stars"></i> Surprise Me (AI)!
+              </button>
+            </form>
+          </div>
         </form>
 
         {% if error %}
@@ -57,6 +71,7 @@
           <div class="fw-semibold" style="color: var(--primary); font-size: 1.1rem; margin-top: 1rem;">
             Generating your recipe...
           </div>
+          <div id="ai-loading-tip" class="fw-semibold" style="color: var(--primary); font-size: 1rem; margin-top: 0.5rem;"></div>
         </div>
       </div>
     </div>
@@ -70,6 +85,20 @@
         document.getElementById("ai-loading-overlay").classList.remove("d-none");
       });
     });
+
+    const tips = [
+      "Chopping veggies...",
+      "Simmering ideas...",
+      "Mixing flavors...",
+      "Plating your recipe...",
+      "Almost ready!"
+    ];
+    let tipIndex = 0;
+    const tipElem = document.getElementById("ai-loading-tip");
+    setInterval(() => {
+      tipElem.textContent = tips[tipIndex % tips.length];
+      tipIndex++;
+    }, 3000);
   });
 </script>
 

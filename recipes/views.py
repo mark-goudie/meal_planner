@@ -12,6 +12,7 @@ from datetime import date, timedelta
 
 from .models import Recipe, MealPlan, Tag, FamilyPreference
 from .forms import RecipeForm, MealPlanForm, FamilyPreferenceForm, CustomUserCreationForm
+from .templatetags.recipe_extras import ai_generate_surprise_recipe
 
 import openai
 
@@ -207,31 +208,29 @@ def ai_generate_recipe(request):
     })
 
 def parse_generated_recipe(text):
-    title, ingredients, steps = "", "", ""
-    section, buffer = None, []
+    import re
 
-    for line in text.splitlines():
-        stripped = line.strip()
-        if stripped.lower().startswith("title:"):
-            if buffer and section == "steps":
-                steps = "\n".join(buffer).strip()
-            buffer = []
-            section = "title"
-        elif stripped.lower().startswith("ingredients:"):
-            if buffer and section == "title":
-                title = "\n".join(buffer).strip()
-            buffer = []
-            section = "ingredients"
-        elif stripped.lower().startswith("steps:"):
-            if buffer and section == "ingredients":
-                ingredients = "\n".join(buffer).strip()
-            buffer = []
-            section = "steps"
-        elif stripped:
-            buffer.append(stripped)
+    # Use regex to robustly extract sections
+    title = ""
+    ingredients = ""
+    steps = ""
 
-    if section == "steps":
-        steps = "\n".join(buffer).strip()
+    # Match "Title: ..." on a single line
+    title_match = re.search(r"Title:\s*(.+)", text, re.IGNORECASE)
+    if title_match:
+        title = title_match.group(1).strip()
+
+    # Match everything between "Ingredients:" and "Steps:" or "Directions:"
+    ingredients_match = re.search(
+        r"Ingredients:\s*([\s\S]*?)(?:\n(?:Steps:|Directions:))", text, re.IGNORECASE
+    )
+    if ingredients_match:
+        ingredients = ingredients_match.group(1).strip()
+
+    # Match everything after "Steps:" or "Directions:"
+    steps_match = re.search(r"(?:Steps:|Directions:)\s*([\s\S]*)", text, re.IGNORECASE)
+    if steps_match:
+        steps = steps_match.group(1).strip()
 
     return title, ingredients, steps
 
@@ -361,3 +360,18 @@ def meal_plan_week(request):
         'meal_types': meal_types,
     }
     return render(request, 'recipes/meal_plan_week.html', context)
+
+@login_required
+def ai_surprise_me(request):
+    if request.method == "POST":
+        ai_recipe_raw = ai_generate_surprise_recipe()
+        # Parse the AI response into title, ingredients, steps
+        title, ingredients, steps = parse_generated_recipe(ai_recipe_raw)
+        request.session['ai_recipe_data'] = {
+            'title': title,
+            'ingredients': ingredients,
+            'steps': steps,
+            'is_ai_generated': True
+        }
+        return redirect('recipe_create_from_ai')
+    return redirect('recipe_list')
