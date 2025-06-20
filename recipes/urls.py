@@ -9,7 +9,6 @@ urlpatterns = [
     path('<int:pk>/update/', recipe_update, name='recipe_update'),
     path('<int:pk>/delete/', recipe_delete, name='recipe_delete'),
     path('ai/generate/', ai_generate_recipe, name='ai_generate_recipe'),
-    path('ai-generate/', ai_generate_recipe, name='ai_generate_recipe'),
     path('ai-create/', recipe_create_from_ai, name='recipe_create_from_ai'),
     path('meal-plan/', meal_plan_list, name='meal_plan_list'),
     path('meal-plan/new/', meal_plan_create, name='meal_plan_create'),

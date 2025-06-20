@@ -80,7 +80,7 @@ def recipe_list(request):
             filter=Q(familypreference__preference=3, familypreference__user=request.user),
             distinct=True
         )
-    ).distinct()
+    ).distinct().order_by('-created_at')
 
     # Pagination
     paginator = Paginator(recipes, 12)  # 12 recipes per page
