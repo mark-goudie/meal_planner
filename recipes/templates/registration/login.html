@@ -4,14 +4,14 @@
 
 {% block content %}
 
-<div class="container d-flex justify-content-center align-items-center" style="min-height: 70vh;">
-  <div class="card shadow-sm p-4" style="max-width: 400px; width: 100%;">
+<div class="container d-flex justify-content-center align-items-center min-h-70vh">
+  <div class="card shadow-sm p-4 max-w-400 w-full">
     <div class="text-center mb-4">
-      <h2 class="card-title mb-1" style="color: var(--primary); font-family: 'Inter', sans-serif;">
-        <i class="bi bi-person-circle" style="font-size: 2rem; vertical-align: -4px;"></i>
+      <h2 class="card-title mb-1 text-primary-custom">
+        <i class="bi bi-person-circle text-2rem vertical-align-minus4"></i>
         Login
       </h2>
-      <div class="text-muted" style="font-size: 1rem;">Welcome back! Please sign in to continue.</div>
+      <div class="text-muted text-base">Welcome back! Please sign in to continue.</div>
     </div>
     <form method="post" novalidate>
       {% csrf_token %}
@@ -26,11 +26,11 @@
       <button type="submit" class="btn btn-primary w-100">Login</button>
     </form>
     <div class="mt-3 text-center">
-      <a href="{% url 'password_reset' %}" class="text-decoration-none" style="color: var(--primary); font-size: 0.95rem;">Forgot password?</a>
+      <a href="{% url 'password_reset' %}" class="text-decoration-none text-primary-custom text-95">Forgot password?</a>
     </div>
     <div class="mt-3 text-center">
-      <span class="text-muted" style="font-size: 0.95rem;">Don't have an account?</span>
-      <a href="{% url 'register' %}" class="text-decoration-none" style="color: var(--primary); font-size: 0.95rem;">Sign up</a>
+      <span class="text-muted text-95">Don't have an account?</span>
+      <a href="{% url 'register' %}" class="text-decoration-none text-primary-custom text-95">Sign up</a>
     </div>
   </div>
 </div>

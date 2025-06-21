@@ -5,7 +5,7 @@
     <div class="card shadow-sm mb-4">
       <div class="card-body">
         <div class="d-flex justify-content-between align-items-center mb-4">
-          <h1 class="card-title mb-0" style="color: var(--primary)">
+          <h1 class="card-title mb-0 text-primary-custom">
             🗓️ Meal Plan
           </h1>
           <a href="{% url 'meal_plan_create' %}" class="btn btn-primary"
@@ -16,11 +16,10 @@
         <div class="table-responsive">
           <table
             class="table align-middle table-bordered mb-3"
-            style="background: var(--card-bg)"
           >
             <thead class="table-light">
               <tr>
-                <th style="min-width: 120px">Date</th>
+                <th class="min-w-120">Date</th>
                 <th class="text-center">Breakfast</th>
                 <th class="text-center">Lunch</th>
                 <th class="text-center">Dinner</th>
@@ -37,8 +36,7 @@
                   {% with plan=day.list|get_meal:"breakfast" %} {% if plan %}
                   <a
                     href="{% url 'recipe_detail' plan.recipe.pk %}"
-                    class="text-decoration-none"
-                    style="color: var(--primary)"
+                    class="text-decoration-none text-primary-custom"
                   >
                     {{ plan.recipe.title }}
                   </a>
@@ -52,8 +50,7 @@
                   {% with plan=day.list|get_meal:"lunch" %} {% if plan %}
                   <a
                     href="{% url 'recipe_detail' plan.recipe.pk %}"
-                    class="text-decoration-none"
-                    style="color: var(--primary)"
+                    class="text-decoration-none text-primary-custom"
                   >
                     {{ plan.recipe.title }}
                   </a>
@@ -67,8 +64,7 @@
                   {% with plan=day.list|get_meal:"dinner" %} {% if plan %}
                   <a
                     href="{% url 'recipe_detail' plan.recipe.pk %}"
-                    class="text-decoration-none"
-                    style="color: var(--primary)"
+                    class="text-decoration-none text-primary-custom"
                   >
                     {{ plan.recipe.title }}
                   </a>

@@ -4,7 +4,7 @@
   <div class="col-lg-6">
     <div class="card shadow-sm mb-4">
       <div class="card-body">
-        <h2 class="card-title mb-4" style="color: var(--primary)">
+        <h2 class="card-title mb-4 text-primary-custom">
           <i class="bi bi-card-checklist"></i> Shopping List
         </h2>
         {% if shopping_list %}
@@ -15,7 +15,6 @@
               class="form-check-input me-3 check-off flex-shrink-0"
               type="checkbox"
               id="item{{ forloop.counter }}"
-              style="margin-top: 0"
             />
             <label
               class="form-check-label flex-grow-1 mb-0 w-100"
@@ -65,33 +64,6 @@
   </div>
 </div>
 
-<style>
-  /* Checked-off style */
-  .shopping-item.checked .ingredient-text {
-    text-decoration: line-through;
-    color: var(--text-muted) !important;
-    opacity: 0.6;
-  }
-  #shopping-list .form-check-input {
-    margin-right: 1rem;
-    margin-left: 0;
-    margin-top: 0;
-    vertical-align: middle;
-  }
-  #shopping-list .form-check-label {
-    cursor: pointer;
-    user-select: none;
-    margin-bottom: 0;
-    display: flex;
-    align-items: center;
-  }
-  @media (max-width: 767px) {
-    .d-flex.flex-column.flex-md-row.gap-2.mt-3 > * {
-      min-width: 0;
-      width: 100%;
-    }
-  }
-</style>
 
 <script>
   // Remove shopping list item on click

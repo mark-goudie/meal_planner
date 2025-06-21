@@ -102,16 +102,16 @@
       <!-- Meal Plan Section -->
       <div class="card shadow-sm">
         <div class="card-body">
-          <h6 class="card-title mb-3" style="font-size: 1rem;">
-            <i class="bi bi-calendar-event" style="font-size: 1.1rem; vertical-align: -2px;"></i>
+          <h6 class="card-title mb-3 text-base">
+            <i class="bi bi-calendar-event text-lg-custom"></i>
             Upcoming Meal Plan
           </h6>
-          <div class="list-group" style="max-height: 350px; overflow-y: auto;">
+          <div class="list-group max-h-350 overflow-y-auto">
             {% for plan in meal_plans %}
               <div class="list-group-item">
-                <strong style="font-size: 0.9rem;">{{ plan.date }} – {{ plan.get_meal_type_display }}:</strong>
+                <strong class="text-sm-custom">{{ plan.date }} – {{ plan.get_meal_type_display }}:</strong>
                 <br/>
-                <a href="{% url 'recipe_detail' plan.recipe.pk %}" class="ms-1 text-decoration-none" style="font-size: 0.9rem; color: var(--primary);">
+                <a href="{% url 'recipe_detail' plan.recipe.pk %}" class="ms-1 text-decoration-none text-sm-custom text-primary-custom">
                   {{ plan.recipe.title }}
                 </a>
               </div>
@@ -220,24 +220,6 @@
   </div>
 </div>
 
-<style>
-/* Add subtle hover effect for cards */
-.recipe-card-hover {
-  transition: box-shadow 0.2s, transform 0.2s;
-}
-.recipe-card-hover:hover {
-  box-shadow: 0 0.5rem 1.5rem rgba(0,0,0,0.12);
-  transform: translateY(-4px) scale(1.02);
-}
-.card.recipe-card-hover {
-  min-width: 0;
-  max-width: 100%;
-  width: 100%;
-}
-.card-body, .card-footer {
-  padding: 0.75rem 1rem;
-}
-</style>
 
 {% endblock %}
 

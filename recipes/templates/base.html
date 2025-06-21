@@ -89,19 +89,12 @@
                   <form
                     method="post"
                     action="{% url 'logout' %}"
-                    style="display: inline"
+                    class="d-inline"
                   >
                     {% csrf_token %}
                     <button
                       type="submit"
-                      class="dropdown-item d-flex align-items-center gap-2 text-danger logout-btn"
-                      style="
-                        background: none;
-                        border: none;
-                        padding: 0.5rem 1rem;
-                        width: 100%;
-                        text-align: left;
-                      "
+                      class="btn-logout dropdown-item"
                     >
                       <i class="bi bi-box-arrow-right"></i>
                       Logout
@@ -123,15 +116,13 @@
                 class="form-check form-switch d-flex align-items-center mb-0"
               >
                 <input
-                  class="form-check-input"
+                  class="form-check-input dark-mode-toggle"
                   type="checkbox"
                   id="darkModeToggle"
-                  style="cursor: pointer"
                 />
                 <label
-                  class="form-check-label ms-2"
+                  class="form-check-label dark-mode-toggle-label"
                   for="darkModeToggle"
-                  style="cursor: pointer"
                 >
                   <i class="bi bi-moon-stars"></i>
                 </label>
