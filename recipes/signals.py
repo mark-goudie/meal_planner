@@ -15,6 +15,10 @@ def create_demo_recipes(sender, instance, created, **kwargs):
                 ingredients="2 eggs\nSalt\nPepper\nButter",
                 steps="1. Beat eggs with salt and pepper.\n2. Melt butter in a pan.\n3. Pour eggs and cook until set.",
                 notes="Try adding cheese or herbs for extra flavour.",
+                difficulty="easy",
+                servings=1,
+                prep_time=5,
+                cook_time=5
             )
             Recipe.objects.create(
                 user=instance,
@@ -23,4 +27,8 @@ def create_demo_recipes(sender, instance, created, **kwargs):
                 ingredients="Lettuce\nTomato\nCucumber\nOlive oil\nLemon juice\nSalt\nPepper",
                 steps="1. Chop vegetables.\n2. Toss with olive oil, lemon juice, salt, and pepper.",
                 notes="Add feta cheese or olives for variety.",
+                difficulty="easy",
+                servings=2,
+                prep_time=10,
+                cook_time=0
             )
