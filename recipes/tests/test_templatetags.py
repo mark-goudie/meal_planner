@@ -71,18 +71,19 @@ class RecipeExtrasTemplateTagsTest(TestCase):
         self.assertIsNone(result)
 
     def test_get_meal_filter_returns_first_match(self):
-        """Test get_meal filter returns first matching meal plan"""
-        # Create duplicate breakfast meal plan
-        duplicate_breakfast = MealPlan.objects.create(
+        """Test get_meal filter returns first matching meal plan when filtering a list"""
+        # Create a dinner meal plan (different meal_type, so no conflict)
+        dinner_plan = MealPlan.objects.create(
             user=self.user,
             date=date.today(),
-            meal_type='breakfast',
+            meal_type='dinner',
             recipe=self.recipe2
         )
-        
-        plans = [self.meal_plan1, duplicate_breakfast]
+
+        # Filter should find breakfast from list containing multiple meal types
+        plans = [self.meal_plan1, self.meal_plan2, dinner_plan]
         result = get_meal(plans, 'breakfast')
-        self.assertEqual(result, self.meal_plan1)  # Should return first match
+        self.assertEqual(result, self.meal_plan1)  # Should return the breakfast plan
 
     def test_get_meal_filter_with_objects_without_meal_type(self):
         """Test get_meal filter handles objects without meal_type attribute"""

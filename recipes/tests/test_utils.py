@@ -1,7 +1,7 @@
 from django.test import TestCase
 from django.contrib.auth.models import User
 from recipes.models import Recipe, Tag, MealPlan, FamilyPreference
-from recipes.views import parse_generated_recipe
+from recipes.services import AIService
 from datetime import date, timedelta
 
 
@@ -37,15 +37,20 @@ class TestUtilities:
     
     @staticmethod
     def create_test_meal_plan(user, recipe, meal_type='breakfast', plan_date=None):
-        """Create a test meal plan"""
+        """Create a test meal plan (or get existing one)"""
         if plan_date is None:
             plan_date = date.today()
-        return MealPlan.objects.create(
+        meal_plan, created = MealPlan.objects.get_or_create(
             user=user,
-            recipe=recipe,
+            date=plan_date,
             meal_type=meal_type,
-            date=plan_date
+            defaults={'recipe': recipe}
         )
+        # Update recipe if meal plan already exists
+        if not created and meal_plan.recipe != recipe:
+            meal_plan.recipe = recipe
+            meal_plan.save()
+        return meal_plan
     
     @staticmethod
     def create_test_family_preference(user, recipe, family_member='Test Member', preference=3):
@@ -116,7 +121,7 @@ Steps:
 2. Add sauce
 3. Top with cheese"""
         
-        title, ingredients, steps = parse_generated_recipe(generated_text)
+        title, ingredients, steps = AIService.parse_generated_recipe(generated_text)
         
         self.assertEqual(title, 'Delicious Pasta')
         self.assertIn('2 cups pasta', ingredients)
@@ -138,7 +143,7 @@ Directions:
 - Add ham and cheese
 - Serve immediately"""
         
-        title, ingredients, steps = parse_generated_recipe(generated_text)
+        title, ingredients, steps = AIService.parse_generated_recipe(generated_text)
         
         self.assertEqual(title, 'Quick Sandwich')
         self.assertIn('Bread', ingredients)
@@ -153,7 +158,7 @@ ingredients:
 steps:
 - Some step"""
         
-        title, ingredients, steps = parse_generated_recipe(generated_text)
+        title, ingredients, steps = AIService.parse_generated_recipe(generated_text)
         
         self.assertEqual(title, 'Lowercase Recipe')
         self.assertIn('Some ingredient', ingredients)
@@ -166,7 +171,7 @@ Ingredients:
 - Only ingredients here
 Steps:"""
         
-        title, ingredients, steps = parse_generated_recipe(generated_text)
+        title, ingredients, steps = AIService.parse_generated_recipe(generated_text)
         
         self.assertEqual(title, 'Incomplete Recipe')
         self.assertIn('Only ingredients here', ingredients)
@@ -179,7 +184,7 @@ Steps:"""
 Steps:
 - Some steps"""
         
-        title, ingredients, steps = parse_generated_recipe(generated_text)
+        title, ingredients, steps = AIService.parse_generated_recipe(generated_text)
         
         self.assertEqual(title, '')  # Should be empty string
         self.assertIn('Some ingredients', ingredients)
@@ -189,7 +194,7 @@ Steps:
         """Test parsing completely malformed text"""
         generated_text = "This is just random text without proper structure"
         
-        title, ingredients, steps = parse_generated_recipe(generated_text)
+        title, ingredients, steps = AIService.parse_generated_recipe(generated_text)
         
         self.assertEqual(title, '')
         self.assertEqual(ingredients, '')
@@ -199,7 +204,7 @@ Steps:
         """Test parsing empty text"""
         generated_text = ""
         
-        title, ingredients, steps = parse_generated_recipe(generated_text)
+        title, ingredients, steps = AIService.parse_generated_recipe(generated_text)
         
         self.assertEqual(title, '')
         self.assertEqual(ingredients, '')
@@ -215,7 +220,7 @@ Steps:
    - Step 1
    - Step 2"""
         
-        title, ingredients, steps = parse_generated_recipe(generated_text)
+        title, ingredients, steps = AIService.parse_generated_recipe(generated_text)
         
         self.assertEqual(title, 'Recipe with Spaces')
         # Check that title was stripped of whitespace
@@ -236,7 +241,7 @@ Steps:
    multiple lines for clarity
 3. Final step"""
         
-        title, ingredients, steps = parse_generated_recipe(generated_text)
+        title, ingredients, steps = AIService.parse_generated_recipe(generated_text)
         
         self.assertEqual(title, 'Complex Recipe')
         self.assertIn('First ingredient', ingredients)

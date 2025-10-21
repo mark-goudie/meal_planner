@@ -260,9 +260,9 @@ class AIViewTests(BaseViewTest):
 
     def test_ai_surprise_me(self):
         """Test AI surprise me functionality"""
-        with patch('recipes.views.ai_generate_surprise_recipe') as mock_ai:
+        with patch('recipes.services.AIService.generate_surprise_recipe') as mock_ai:
             mock_ai.return_value = "Title: Surprise Recipe\nIngredients: Surprise ingredients\nSteps: Surprise steps"
-            
+
             self.client.login(username='testuser', password='testpass123')
             response = self.client.post(reverse('ai_surprise_me'))
             self.assertEqual(response.status_code, 302)

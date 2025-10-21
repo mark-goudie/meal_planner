@@ -1,5 +1,11 @@
 from django import forms
-from .models import Recipe, FamilyPreference, MealPlan
+from .models import (
+    Recipe,
+    FamilyPreference,
+    MealPlan,
+    MealPlannerPreferences,
+    DietaryRestriction
+)
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User
 
@@ -98,6 +104,99 @@ class CustomUserCreationForm(UserCreationForm):
     class Meta:
         model = User
         fields = ("username", "email", "password1", "password2")
+
+
+class MealPlannerPreferencesForm(forms.ModelForm):
+    """Form for configuring smart meal planner preferences"""
+
+    class Meta:
+        model = MealPlannerPreferences
+        fields = [
+            'max_weeknight_time',
+            'max_weekend_time',
+            'avoid_repeat_days',
+            'variety_score',
+            'dietary_restrictions',
+            'vegetarian_meals_per_week',
+            'use_leftovers',
+            'batch_cooking_friendly',
+        ]
+        widgets = {
+            'max_weeknight_time': forms.NumberInput(attrs={
+                'class': 'form-control',
+                'min': '15',
+                'max': '120',
+                'step': '5'
+            }),
+            'max_weekend_time': forms.NumberInput(attrs={
+                'class': 'form-control',
+                'min': '30',
+                'max': '240',
+                'step': '15'
+            }),
+            'avoid_repeat_days': forms.NumberInput(attrs={
+                'class': 'form-control',
+                'min': '7',
+                'max': '90',
+                'step': '7'
+            }),
+            'variety_score': forms.NumberInput(attrs={
+                'class': 'form-control',
+                'min': '1',
+                'max': '10',
+                'step': '1'
+            }),
+            'dietary_restrictions': forms.CheckboxSelectMultiple(),
+            'vegetarian_meals_per_week': forms.NumberInput(attrs={
+                'class': 'form-control',
+                'min': '0',
+                'max': '7',
+                'step': '1'
+            }),
+            'use_leftovers': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+            'batch_cooking_friendly': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+        }
+        labels = {
+            'max_weeknight_time': 'Max Weeknight Cooking Time (minutes)',
+            'max_weekend_time': 'Max Weekend Cooking Time (minutes)',
+            'avoid_repeat_days': 'Don\'t Repeat Recipes Within (days)',
+            'variety_score': 'Variety Preference (1=Similar, 10=Very Diverse)',
+            'dietary_restrictions': 'Dietary Restrictions',
+            'vegetarian_meals_per_week': 'Minimum Vegetarian Meals Per Week',
+            'use_leftovers': 'Plan for Using Leftovers',
+            'batch_cooking_friendly': 'Prefer Meal-Prep Friendly Recipes',
+        }
+        help_texts = {
+            'max_weeknight_time': 'Maximum time you want to spend cooking on weeknights',
+            'max_weekend_time': 'Maximum time you want to spend cooking on weekends',
+            'avoid_repeat_days': 'How long before the same recipe can be suggested again',
+            'variety_score': 'Higher scores mean more variety in your meal plan',
+            'vegetarian_meals_per_week': 'Ensure at least this many vegetarian meals each week',
+        }
+
+
+class WeeklyPlanGeneratorForm(forms.Form):
+    """Form for generating a weekly meal plan"""
+
+    week_start = forms.DateField(
+        required=False,
+        widget=forms.DateInput(attrs={
+            'type': 'date',
+            'class': 'form-control'
+        }),
+        help_text='Leave blank to start from next Monday'
+    )
+
+    meals_to_plan = forms.MultipleChoiceField(
+        choices=[
+            ('breakfast', 'Breakfast'),
+            ('lunch', 'Lunch'),
+            ('dinner', 'Dinner'),
+        ],
+        initial=['dinner'],
+        widget=forms.CheckboxSelectMultiple(),
+        help_text='Select which meals you want to plan'
+    )
 
 
 

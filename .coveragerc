@@ -1,0 +1,28 @@
+[run]
+source = recipes
+omit =
+    */migrations/*
+    */tests/*
+    */venv/*
+    */node_modules/*
+    */staticfiles/*
+    */static/react/*
+
+[report]
+precision = 2
+show_missing = True
+skip_covered = False
+exclude_lines =
+    pragma: no cover
+    def __repr__
+    def __str__
+    raise AssertionError
+    raise NotImplementedError
+    if __name__ == .__main__.:
+    if TYPE_CHECKING:
+    @abstractmethod
+    pass
+
+[html]
+directory = htmlcov
+title = Meal Planner Coverage Report

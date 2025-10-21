@@ -22,4 +22,12 @@ urlpatterns = [
     path('disclaimer/', views.disclaimer, name='disclaimer'),
     path('getting-started/', views.getting_started, name='getting_started'),
     path('ai-surprise-me/', views.ai_surprise_me, name='ai_surprise_me'),
+
+    # Smart Meal Planner
+    path('smart-planner/', views.smart_meal_planner, name='smart_meal_planner'),
+    path('smart-planner/preferences/', views.meal_planner_preferences, name='meal_planner_preferences'),
+    path('smart-planner/plan/<int:plan_id>/', views.review_meal_plan, name='review_meal_plan'),
+    path('smart-planner/plan/<int:plan_id>/approve/', views.approve_meal_plan, name='approve_meal_plan'),
+    path('smart-planner/plan/<int:plan_id>/delete/', views.delete_generated_plan, name='delete_generated_plan'),
+    path('smart-planner/entry/<int:entry_id>/regenerate/', views.regenerate_meal, name='regenerate_meal'),
 ]

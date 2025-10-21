@@ -9,10 +9,21 @@ from django.core.paginator import Paginator
 from django.utils.dateparse import parse_date
 from django.utils import timezone
 from datetime import date, timedelta
+from django_ratelimit.decorators import ratelimit
 
-from .models import Recipe, MealPlan, Tag, FamilyPreference
-from .forms import RecipeForm, MealPlanForm, FamilyPreferenceForm, CustomUserCreationForm
-from .templatetags.recipe_extras import ai_generate_surprise_recipe
+from .models import (
+    Recipe, MealPlan, Tag, FamilyPreference,
+    GeneratedMealPlan, GeneratedMealPlanEntry, MealPlannerPreferences,
+    RecipeCookingHistory
+)
+from .forms import (
+    RecipeForm, MealPlanForm, FamilyPreferenceForm, CustomUserCreationForm,
+    MealPlannerPreferencesForm, WeeklyPlanGeneratorForm
+)
+from .services import (
+    AIService, AIConfigurationError, AIValidationError, AIAPIError,
+    MealPlanningAssistantService
+)
 
 import openai
 
@@ -80,7 +91,12 @@ def recipe_list(request):
             filter=Q(familypreference__preference=3, familypreference__user=request.user),
             distinct=True
         )
-    ).distinct().order_by('-created_at')
+    ).distinct().select_related(
+        'user'
+    ).prefetch_related(
+        'tags',
+        'favourited_by'
+    ).order_by('-created_at')
 
     # Pagination
     paginator = Paginator(recipes, 12)  # 12 recipes per page
@@ -92,6 +108,8 @@ def recipe_list(request):
     meal_plans = MealPlan.objects.filter(
         user=request.user,
         date__gte=today
+    ).select_related(
+        'recipe'
     ).order_by('date', 'meal_type')
     tags = Tag.objects.all()
     family_members = FamilyPreference.objects.filter(user=request.user).values_list('family_member', flat=True).distinct()
@@ -138,7 +156,11 @@ def recipe_create_from_ai(request):
 
 @login_required
 def recipe_detail(request, pk):
-    recipe = get_object_or_404(Recipe, pk=pk, user=request.user)
+    recipe = get_object_or_404(
+        Recipe.objects.select_related('user').prefetch_related('tags', 'favourited_by'),
+        pk=pk,
+        user=request.user
+    )
     return render(request, 'recipes/recipe_detail.html', {'recipe': recipe})
 
 @login_required
@@ -159,6 +181,7 @@ def recipe_delete(request, pk):
     return render(request, 'recipes/recipe_confirm_delete.html', {'recipe': recipe})
 
 @login_required
+@ratelimit(key='user', rate='5/h', method='POST', block=True)
 def ai_generate_recipe(request):
     generated_recipe = None
     error = None
@@ -166,33 +189,17 @@ def ai_generate_recipe(request):
     if request.method == 'POST':
         if 'prompt' in request.POST:
             prompt = request.POST.get('prompt')
+
             try:
-                full_prompt = (
-                    f"Create a family-friendly recipe using: {prompt}. "
-                    f"Include a title, ingredients, and clear steps. Format as:\n"
-                    f"Title:\nIngredients:\nSteps:"
-                )
+                # Use AIService for generation
+                generated_recipe = AIService.generate_recipe_from_prompt(prompt)
 
-                client = openai.OpenAI(api_key=settings.OPENAI_API_KEY)
-
-                response = client.chat.completions.create(
-                    model="gpt-4",
-                    messages=[
-                        {"role": "system", "content": "You're a helpful chef assistant."},
-                        {"role": "user", "content": full_prompt},
-                    ],
-                    temperature=0.7
-                )
-
-                content = response.choices[0].message.content
-                generated_recipe = content.strip() if content else None
-
-            except Exception as e:
+            except (AIConfigurationError, AIValidationError, AIAPIError) as e:
                 error = str(e)
 
         elif 'use_recipe' in request.POST:
             raw = request.POST.get('generated_recipe', '')
-            title, ingredients, steps = parse_generated_recipe(raw)
+            title, ingredients, steps = AIService.parse_generated_recipe(raw)
 
             request.session['ai_recipe_data'] = {
                 'title': title,
@@ -207,36 +214,16 @@ def ai_generate_recipe(request):
         'error': error
     })
 
-def parse_generated_recipe(text):
-    import re
-
-    # Use regex to robustly extract sections
-    title = ""
-    ingredients = ""
-    steps = ""
-
-    # Match "Title: ..." on a single line
-    title_match = re.search(r"Title:\s*(.+)", text, re.IGNORECASE)
-    if title_match:
-        title = title_match.group(1).strip()
-
-    # Match everything between "Ingredients:" and "Steps:" or "Directions:"
-    ingredients_match = re.search(
-        r"Ingredients:\s*([\s\S]*?)(?:\n(?:Steps:|Directions:))", text, re.IGNORECASE
-    )
-    if ingredients_match:
-        ingredients = ingredients_match.group(1).strip()
-
-    # Match everything after "Steps:" or "Directions:"
-    steps_match = re.search(r"(?:Steps:|Directions:)\s*([\s\S]*)", text, re.IGNORECASE)
-    if steps_match:
-        steps = steps_match.group(1).strip()
-
-    return title, ingredients, steps
-
 @login_required
 def meal_plan_list(request):
-    plans = MealPlan.objects.filter(user=request.user).order_by('date', 'meal_type')
+    plans = MealPlan.objects.filter(
+        user=request.user
+    ).select_related(
+        'recipe',
+        'recipe__user'
+    ).prefetch_related(
+        'recipe__tags'
+    ).order_by('date', 'meal_type')
     return render(request, 'recipes/meal_plan_list.html', {'plans': plans})
 
 @login_required
@@ -257,9 +244,14 @@ def meal_plan_create(request):
     if request.method == 'POST':
         form = MealPlanForm(request.POST, user=request.user)
         if form.is_valid():
-            meal_plan = form.save(commit=False)
-            meal_plan.user = request.user
-            meal_plan.save()
+            # Use get_or_create to handle duplicate meal plans
+            # (unique constraint on user, date, meal_type)
+            meal_plan, created = MealPlan.objects.update_or_create(
+                user=request.user,
+                date=form.cleaned_data['date'],
+                meal_type=form.cleaned_data['meal_type'],
+                defaults={'recipe': form.cleaned_data['recipe']}
+            )
             # Redirect back to the weekly meal plan with the correct week offset
             return redirect(f"{reverse('meal_plan_week')}?week={week_offset}")
     else:
@@ -333,21 +325,33 @@ def meal_plan_week(request):
     plans = MealPlan.objects.filter(
         user=request.user,
         date__range=[start_of_week, end_of_week]
+    ).select_related(
+        'recipe',
+        'recipe__user'
+    ).prefetch_related(
+        'recipe__tags'
     ).order_by('date', 'meal_type')
 
     # Build a structure: {date: {breakfast: ..., lunch: ..., dinner: ...}}
+    # Convert to dict for efficient lookup
+    plans_by_date = {}
+    for plan in plans:
+        if plan.date not in plans_by_date:
+            plans_by_date[plan.date] = {}
+        plans_by_date[plan.date][plan.meal_type] = plan.recipe
+
     week_days = []
     meal_types = ['breakfast', 'lunch', 'dinner']
     for i in range(7):
         day_date = start_of_week + timedelta(days=i)
-        day_plan = {mt: None for mt in meal_types}
-        for plan in plans.filter(date=day_date):
-            day_plan[plan.meal_type] = plan.recipe
+        day_plan = plans_by_date.get(day_date, {})
         week_days.append({
             'date': day_date,
             'name': day_date.strftime('%A'),
             'is_today': (day_date == today),
-            **day_plan
+            'breakfast': day_plan.get('breakfast'),
+            'lunch': day_plan.get('lunch'),
+            'dinner': day_plan.get('dinner'),
         })
 
     context = {
@@ -362,16 +366,182 @@ def meal_plan_week(request):
     return render(request, 'recipes/meal_plan_week.html', context)
 
 @login_required
+@ratelimit(key='user', rate='3/h', method='POST', block=True)
 def ai_surprise_me(request):
     if request.method == "POST":
-        ai_recipe_raw = ai_generate_surprise_recipe()
-        # Parse the AI response into title, ingredients, steps
-        title, ingredients, steps = parse_generated_recipe(ai_recipe_raw)
-        request.session['ai_recipe_data'] = {
-            'title': title,
-            'ingredients': ingredients,
-            'steps': steps,
-            'is_ai_generated': True
-        }
-        return redirect('recipe_create_from_ai')
+        try:
+            # Use AIService for surprise recipe generation
+            ai_recipe_raw = AIService.generate_surprise_recipe()
+            # Parse the AI response into title, ingredients, steps
+            title, ingredients, steps = AIService.parse_generated_recipe(ai_recipe_raw)
+            request.session['ai_recipe_data'] = {
+                'title': title,
+                'ingredients': ingredients,
+                'steps': steps,
+                'is_ai_generated': True
+            }
+            return redirect('recipe_create_from_ai')
+        except (AIConfigurationError, AIAPIError):
+            # On error, redirect to recipe list
+            return redirect('recipe_list')
     return redirect('recipe_list')
+
+
+# --------------------------
+# Smart Meal Planner Views
+# --------------------------
+
+@login_required
+def meal_planner_preferences(request):
+    """Configure smart meal planner preferences"""
+    preferences = MealPlanningAssistantService.get_or_create_preferences(request.user)
+
+    if request.method == 'POST':
+        form = MealPlannerPreferencesForm(request.POST, instance=preferences)
+        if form.is_valid():
+            form.save()
+            return redirect('smart_meal_planner')
+    else:
+        form = MealPlannerPreferencesForm(instance=preferences)
+
+    return render(request, 'recipes/meal_planner_preferences.html', {
+        'form': form,
+        'preferences': preferences,
+    })
+
+
+@login_required
+def smart_meal_planner(request):
+    """Smart weekly meal plan generator"""
+    preferences = MealPlanningAssistantService.get_or_create_preferences(request.user)
+
+    # Get user's most recent generated plan (if any)
+    latest_plan = GeneratedMealPlan.objects.filter(
+        user=request.user,
+        approved=False
+    ).first()
+
+    if request.method == 'POST':
+        form = WeeklyPlanGeneratorForm(request.POST)
+        if form.is_valid():
+            week_start = form.cleaned_data.get('week_start')
+            meals_to_plan = form.cleaned_data.get('meals_to_plan')
+
+            try:
+                # Generate the plan
+                plan = MealPlanningAssistantService.generate_weekly_plan(
+                    user=request.user,
+                    week_start=week_start,
+                    meals_per_day=meals_to_plan
+                )
+
+                # Redirect to review page
+                return redirect('review_meal_plan', plan_id=plan.id)
+
+            except ValueError as e:
+                form.add_error(None, str(e))
+    else:
+        form = WeeklyPlanGeneratorForm()
+
+    return render(request, 'recipes/smart_meal_planner.html', {
+        'form': form,
+        'preferences': preferences,
+        'latest_plan': latest_plan,
+    })
+
+
+@login_required
+def review_meal_plan(request, plan_id):
+    """Review and adjust a generated meal plan"""
+    plan = get_object_or_404(
+        GeneratedMealPlan.objects.prefetch_related('entries__recipe__tags'),
+        id=plan_id,
+        user=request.user
+    )
+
+    # Organize entries by date
+    entries_by_date = {}
+    for entry in plan.entries.all():
+        if entry.date not in entries_by_date:
+            entries_by_date[entry.date] = {}
+        entries_by_date[entry.date][entry.meal_type] = entry
+
+    # Create week structure
+    week_days = []
+    for day_offset in range(7):
+        current_date = plan.week_start + timedelta(days=day_offset)
+        day_entries = entries_by_date.get(current_date, {})
+        week_days.append({
+            'date': current_date,
+            'name': current_date.strftime('%A'),
+            'is_today': current_date == date.today(),
+            'entries': day_entries,
+        })
+
+    return render(request, 'recipes/review_meal_plan.html', {
+        'plan': plan,
+        'week_days': week_days,
+    })
+
+
+@login_required
+def regenerate_meal(request, entry_id):
+    """Regenerate a single meal in the plan"""
+    entry = get_object_or_404(
+        GeneratedMealPlanEntry,
+        id=entry_id,
+        plan__user=request.user,
+        plan__approved=False
+    )
+
+    try:
+        MealPlanningAssistantService.regenerate_single_meal(entry.plan, entry)
+    except ValueError as e:
+        # Handle case where no alternatives available
+        pass
+
+    return redirect('review_meal_plan', plan_id=entry.plan.id)
+
+
+@login_required
+def approve_meal_plan(request, plan_id):
+    """Approve and activate a generated meal plan"""
+    plan = get_object_or_404(
+        GeneratedMealPlan,
+        id=plan_id,
+        user=request.user,
+        approved=False
+    )
+
+    if request.method == 'POST':
+        # Approve the plan
+        MealPlanningAssistantService.approve_plan(plan)
+
+        # Create cooking history entries for tracking
+        for entry in plan.entries.all():
+            RecipeCookingHistory.objects.get_or_create(
+                user=request.user,
+                recipe=entry.recipe,
+                cooked_date=entry.date,
+                meal_type=entry.meal_type
+            )
+
+        return redirect('meal_plan_week')
+
+    return redirect('review_meal_plan', plan_id=plan_id)
+
+
+@login_required
+def delete_generated_plan(request, plan_id):
+    """Delete a generated plan"""
+    plan = get_object_or_404(
+        GeneratedMealPlan,
+        id=plan_id,
+        user=request.user
+    )
+
+    if request.method == 'POST':
+        plan.delete()
+        return redirect('smart_meal_planner')
+
+    return redirect('review_meal_plan', plan_id=plan_id)
