@@ -72,6 +72,6 @@ class Migration(migrations.Migration):
         ),
         migrations.AddConstraint(
             model_name='familypreference',
-            constraint=models.CheckConstraint(condition=models.Q(('preference__in', [1, 2, 3])), name='preference_valid_value'),
+            constraint=models.CheckConstraint(check=models.Q(('preference__in', [1, 2, 3])), name='preference_valid_value'),
         ),
     ]
