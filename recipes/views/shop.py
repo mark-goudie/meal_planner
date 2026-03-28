@@ -1,0 +1,120 @@
+from collections import defaultdict
+from datetime import date, timedelta
+
+from django.contrib import messages as django_messages
+from django.contrib.auth.decorators import login_required
+from django.http import HttpResponse
+from django.shortcuts import redirect, render
+from django.views.decorators.http import require_POST
+
+from ..models import INGREDIENT_CATEGORY_CHOICES, MealPlan, ShoppingListItem
+from ..services import RecipeService
+
+CATEGORY_EMOJIS = {
+    "produce": "\U0001f96c",
+    "dairy": "\U0001f9c0",
+    "meat": "\U0001f969",
+    "pantry": "\U0001f96b",
+    "spices": "\U0001f9c2",
+    "frozen": "\U0001f9ca",
+    "bakery": "\U0001f35e",
+    "other": "\U0001f4e6",
+}
+
+
+@login_required
+def shop_view(request):
+    """Full shopping list page."""
+    today = date.today()
+    monday = today - timedelta(days=today.weekday())
+    sunday = monday + timedelta(days=6)
+
+    # Get this week's meal plans
+    meals = MealPlan.objects.filter(
+        user=request.user,
+        date__range=[monday, sunday],
+    ).select_related("recipe")
+
+    recipes = [m.recipe for m in meals]
+    meal_count = len(recipes)
+
+    # Generate structured shopping list from recipes
+    generated_items = []
+    if recipes:
+        generated_items = RecipeService.generate_structured_shopping_list(recipes)
+
+    # Group by category
+    categories = defaultdict(list)
+    for item in generated_items:
+        cat = item["category"] or "other"
+        categories[cat].append(item)
+
+    # Build ordered categories list with emojis
+    category_list = []
+    for cat_key, cat_label in INGREDIENT_CATEGORY_CHOICES:
+        if cat_key in categories:
+            category_list.append(
+                {
+                    "key": cat_key,
+                    "label": cat_label,
+                    "emoji": CATEGORY_EMOJIS.get(cat_key, "\U0001f4e6"),
+                    "items": categories[cat_key],
+                }
+            )
+
+    # Manual items
+    manual_items = ShoppingListItem.objects.filter(user=request.user)
+
+    total_generated = len(generated_items)
+    total_manual = manual_items.count()
+    total_items = total_generated + total_manual
+    checked_items = manual_items.filter(checked=True).count()
+
+    return render(
+        request,
+        "shop/shop.html",
+        {
+            "categories": category_list,
+            "manual_items": manual_items,
+            "week_start": monday,
+            "week_end": sunday,
+            "meal_count": meal_count,
+            "total_items": total_items,
+            "checked_items": checked_items,
+        },
+    )
+
+
+@login_required
+@require_POST
+def shop_generate(request):
+    """Regenerate the shopping list."""
+    ShoppingListItem.objects.filter(user=request.user).delete()
+    django_messages.success(request, "Shopping list regenerated!")
+    return redirect("shop")
+
+
+@login_required
+@require_POST
+def shop_toggle(request, pk):
+    """Toggle a ShoppingListItem's checked state."""
+    from django.shortcuts import get_object_or_404
+
+    item = get_object_or_404(ShoppingListItem, pk=pk, user=request.user)
+    item.checked = not item.checked
+    item.save()
+    return render(request, "shop/partials/item.html", {"item": item})
+
+
+@login_required
+@require_POST
+def shop_add(request):
+    """Add a manual shopping list item."""
+    name = request.POST.get("name", "").strip()
+    if name:
+        item = ShoppingListItem.objects.create(
+            user=request.user,
+            name=name,
+        )
+        return render(request, "shop/partials/item.html", {"item": item})
+    return HttpResponse("")
