@@ -11,6 +11,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{% static 'recipes/css/app.css' %}">
+    <link rel="manifest" href="{% static 'recipes/manifest.json' %}">
     {% block extra_css %}{% endblock %}
 </head>
 <body>
@@ -56,6 +57,11 @@
             || document.cookie.match(/csrftoken=([^;]+)/)?.[1] || '';
     });</script>
     <script src="{% static 'recipes/js/app.js' %}"></script>
+    <script>
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register("{% static 'recipes/sw.js' %}");
+    }
+    </script>
     {% block extra_js %}{% endblock %}
 </body>
 </html>
