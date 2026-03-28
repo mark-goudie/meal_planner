@@ -1,10 +1,13 @@
 {% load static %}
+{% load recipe_extras %}
 <a href="{% url 'recipe_detail' pk=recipe.pk %}" class="recipe-card" style="border-left: 3px solid {% if recipe.pk in favourited_ids|default:"" %}var(--accent){% elif recipe.cook_count > 0 %}var(--primary){% else %}var(--text-dim){% endif %};">
   <div class="recipe-card__thumb">
     {% if recipe.image %}
       <img src="{{ recipe.image.url }}" alt="{{ recipe.title }}">
     {% else %}
-      <i class="bi bi-egg-fried"></i>
+      <div class="recipe-placeholder" style="background: {{ recipe.title|recipe_gradient }};">
+        <span class="recipe-placeholder__initials">{{ recipe.title|recipe_initials }}</span>
+      </div>
     {% endif %}
   </div>
   <div class="recipe-card__body">
