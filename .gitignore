@@ -49,3 +49,9 @@ coverage.xml
 
 # Node
 node_modules/
+
+# Worktrees
+.worktrees/
+
+# Superpowers
+.superpowers/
