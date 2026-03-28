@@ -5,7 +5,17 @@
 {% block nav_recipes %}active{% endblock %}
 
 {% block content %}
-<div class="screen">
+<div class="screen" x-data="{
+  activeTag: '{{ selected_tag|default:"" }}',
+  favs: {{ favourites_only|yesno:"true,false" }},
+  sort: '{{ sort|default:"newest" }}',
+  triggerSearch() {
+    this.$nextTick(() => {
+      let input = this.$refs.searchInput;
+      htmx.trigger(input, 'search');
+    });
+  }
+}">
   {% csrf_token %}
 
   <!-- Page Header -->
@@ -23,6 +33,7 @@
     <input type="search"
            class="search-input"
            name="q"
+           x-ref="searchInput"
            placeholder="Search recipes or ingredients..."
            value="{{ query }}"
            hx-get="{% url 'recipe_search' %}"
@@ -34,50 +45,40 @@
   </div>
 
   <!-- Filter Chips -->
-  <div class="filter-row" x-data="{ activeTag: '{{ selected_tag|default:"" }}', favs: {{ favourites_only|yesno:"true,false" }} }">
+  <div class="filter-row">
     <button class="filter-chip"
             :class="{ 'active': !activeTag && !favs }"
-            @click="activeTag = ''; favs = false; $refs.tagInput.value = ''; $refs.favInput.value = ''; htmx.trigger($refs.searchInput, 'search')"
+            @click="activeTag = ''; favs = false; triggerSearch()"
             type="button">All</button>
     <button class="filter-chip"
             :class="{ 'active': favs }"
-            @click="favs = !favs; $refs.favInput.value = favs ? '1' : ''; htmx.trigger($refs.searchInput, 'search')"
+            @click="favs = !favs; triggerSearch()"
             type="button">Favourites</button>
     {% for tag in tags %}
     <button class="filter-chip"
             :class="{ 'active': activeTag == '{{ tag.pk }}' }"
-            @click="activeTag = activeTag == '{{ tag.pk }}' ? '' : '{{ tag.pk }}'; $refs.tagInput.value = activeTag; htmx.trigger($refs.searchInput, 'search')"
+            @click="activeTag = activeTag == '{{ tag.pk }}' ? '' : '{{ tag.pk }}'; triggerSearch()"
             type="button">{{ tag.name }}</button>
     {% endfor %}
   </div>
 
-  <!-- Hidden inputs for HTMX include -->
-  <input type="hidden" name="tag" value="{{ selected_tag|default:"" }}" x-ref="tagInput">
-  <input type="hidden" name="favourites" value="{% if favourites_only %}1{% endif %}" x-ref="favInput">
-  <input type="hidden" name="sort" value="{{ sort }}" x-ref="sortInput">
+  <!-- Hidden inputs for HTMX include (bound to Alpine state) -->
+  <input type="hidden" name="tag" :value="activeTag">
+  <input type="hidden" name="favourites" :value="favs ? '1' : ''">
+  <input type="hidden" name="sort" :value="sort">
 
   <!-- Sort -->
-  <div class="flex justify-between items-center mb-md" x-data>
+  <div class="flex justify-between items-center mb-md">
     <span class="text-sm text-muted">{{ page_obj.paginator.count }} recipe{{ page_obj.paginator.count|pluralize }}</span>
     <select class="form-input btn-sm" style="width: auto; min-height: 36px; padding: 4px 28px 4px 8px;"
-            name="sort"
-            @change="$refs.sortInput.value = $el.value; htmx.trigger(document.querySelector('.search-input'), 'search')">
-      <option value="newest" {% if sort == 'newest' %}selected{% endif %}>Newest</option>
-      <option value="recently_cooked" {% if sort == 'recently_cooked' %}selected{% endif %}>Recently cooked</option>
-      <option value="rating" {% if sort == 'rating' %}selected{% endif %}>Rating</option>
-      <option value="times_cooked" {% if sort == 'times_cooked' %}selected{% endif %}>Times cooked</option>
+            x-model="sort"
+            @change="triggerSearch()">
+      <option value="newest">Newest</option>
+      <option value="recently_cooked">Recently cooked</option>
+      <option value="rating">Rating</option>
+      <option value="times_cooked">Times cooked</option>
     </select>
   </div>
-
-  <!-- Assign x-ref to search input -->
-  {% block extra_js %}
-  <script>
-    document.addEventListener('DOMContentLoaded', function() {
-      var searchInput = document.querySelector('.search-input');
-      if (searchInput) searchInput.setAttribute('x-ref', 'searchInput');
-    });
-  </script>
-  {% endblock %}
 
   <!-- Recipe Cards -->
   <div id="recipe-results">
