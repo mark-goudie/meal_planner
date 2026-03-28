@@ -24,6 +24,7 @@ from .views import (
     shop_add,
     shop_generate,
     shop_toggle,
+    shop_update_qty,
     shop_view,
     toggle_favourite_view,
     week_accept_suggestion,
@@ -54,6 +55,7 @@ urlpatterns = [
     path("shop/", shop_view, name="shop"),
     path("shop/generate/", shop_generate, name="shop_generate"),
     path("shop/toggle/<int:pk>/", shop_toggle, name="shop_toggle"),
+    path("shop/qty/<int:pk>/", shop_update_qty, name="shop_update_qty"),
     path("shop/add/", shop_add, name="shop_add"),
     # --- Redesign: Settings ---
     path("settings/", settings_view, name="settings"),

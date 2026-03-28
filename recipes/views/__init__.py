@@ -28,7 +28,7 @@ from .recipes import (
     toggle_favourite_view,
 )
 from .settings import settings_view
-from .shop import shop_add, shop_generate, shop_toggle, shop_view
+from .shop import shop_add, shop_generate, shop_toggle, shop_update_qty, shop_view
 from .week import (
     day_comment,
     week_accept_suggestion,
@@ -77,6 +77,7 @@ __all__ = [
     "shop_add",
     "shop_generate",
     "shop_toggle",
+    "shop_update_qty",
     "shop_view",
     # Week
     "day_comment",

@@ -1,22 +1,46 @@
 <div id="shop-item-{{ item.pk }}"
      class="shop-item{% if item.checked %} shop-item--checked{% endif %}"
-     hx-post="{% url 'shop_toggle' item.pk %}"
-     hx-target="#shop-item-{{ item.pk }}"
-     hx-swap="outerHTML"
-     role="button"
-     tabindex="0"
-     style="cursor: pointer;">
-  <div class="shop-item__check"></div>
-  <span class="shop-item__label">
-    {{ item.name }}
-    {% if item.recipe_sources %}
-      <span class="text-muted text-sm">&middot; {{ item.recipe_sources }}</span>
-    {% endif %}
-    {% if item.added_by and not item.is_generated %}
-      <span class="text-dim" style="font-size: 9px;">({{ item.added_by.username }})</span>
-    {% endif %}
-  </span>
+     x-data="{ editing: false }">
+  <div class="shop-item__toggle"
+       hx-post="{% url 'shop_toggle' item.pk %}"
+       hx-target="#shop-item-{{ item.pk }}"
+       hx-swap="outerHTML"
+       role="button"
+       tabindex="0"
+       style="cursor: pointer; display: flex; align-items: center; gap: var(--space-sm); flex: 1; min-width: 0;">
+    <div class="shop-item__check"></div>
+    <span class="shop-item__label">
+      {{ item.name }}
+      {% if item.recipe_sources %}
+        <span class="text-muted text-sm">&middot; {{ item.recipe_sources }}</span>
+      {% endif %}
+      {% if item.added_by and not item.is_generated %}
+        <span class="text-dim" style="font-size: 9px;">({{ item.added_by.username }})</span>
+      {% endif %}
+    </span>
+  </div>
   {% if item.quantity %}
-  <span class="shop-item__qty">{{ item.quantity }}</span>
+  <div @click.stop style="flex-shrink: 0;">
+    <span class="shop-item__qty shop-item__qty--editable"
+          x-show="!editing"
+          @click="editing = true"
+          title="Tap to adjust quantity">{{ item.quantity }}</span>
+    <form x-show="editing" x-cloak
+          hx-post="{% url 'shop_update_qty' item.pk %}"
+          hx-target="#shop-item-{{ item.pk }}"
+          hx-swap="outerHTML"
+          @click.stop
+          class="shop-item__qty-form">
+      {% csrf_token %}
+      <input type="text" name="quantity" value="{{ item.quantity }}"
+             class="shop-item__qty-input"
+             x-ref="qtyInput"
+             @keydown.escape="editing = false"
+             x-init="$watch('editing', v => { if (v) $nextTick(() => $refs.qtyInput.select()) })">
+      <button type="submit" class="btn btn-primary btn-sm" style="min-height: 28px; min-width: 28px; padding: 2px 6px;">
+        <i class="bi bi-check-lg"></i>
+      </button>
+    </form>
+  </div>
   {% endif %}
 </div>

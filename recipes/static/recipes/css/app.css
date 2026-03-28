@@ -949,6 +949,40 @@ select.form-input {
   flex-shrink: 0;
 }
 
+.shop-item__qty--editable {
+  color: var(--primary);
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: var(--radius-sm);
+  border: 1px dashed transparent;
+  transition: all var(--transition);
+}
+
+.shop-item__qty--editable:hover,
+.shop-item__qty--editable:active {
+  border-color: var(--primary);
+  background: rgba(124, 185, 168, 0.08);
+}
+
+.shop-item__qty-form {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+}
+
+.shop-item__qty-input {
+  width: 70px;
+  min-height: 28px;
+  padding: 2px 6px;
+  font-size: var(--text-sm);
+  text-align: center;
+  background: var(--bg-card);
+  border: 1.5px solid var(--primary);
+  border-radius: var(--radius-sm);
+  color: var(--text-main);
+  font-family: var(--font);
+}
+
 .shop-item--checked {
   opacity: 0.5;
 }

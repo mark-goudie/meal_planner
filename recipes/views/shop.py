@@ -148,6 +148,18 @@ def shop_toggle(request, pk):
 
 @login_required
 @require_POST
+def shop_update_qty(request, pk):
+    """Update a ShoppingListItem's quantity."""
+    household = get_household(request.user)
+    item = get_object_or_404(ShoppingListItem, pk=pk, household=household)
+    quantity = request.POST.get("quantity", "").strip()
+    item.quantity = quantity
+    item.save()
+    return render(request, "shop/partials/item.html", {"item": item})
+
+
+@login_required
+@require_POST
 def shop_add(request):
     """Add a manual shopping list item."""
     household = get_household(request.user)
