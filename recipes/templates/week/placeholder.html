@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+
+{% block title %}{{ title }} - Meal Planner{% endblock %}
+
+{% block content %}
+<div class="page-container" style="text-align: center; padding-top: var(--space-2xl);">
+  <h1 style="font-size: var(--text-2xl); font-weight: 800; margin-bottom: var(--space-md);">{{ title }}</h1>
+  <p style="color: var(--text-muted);">{{ message }}</p>
+</div>
+{% endblock %}

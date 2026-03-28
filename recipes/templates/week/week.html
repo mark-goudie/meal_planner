@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+
+{% block title %}This Week - Meal Planner{% endblock %}
+
+{% block nav_week %}active{% endblock %}
+
+{% block content %}
+<div class="page-container">
+  {% csrf_token %}
+
+  <!-- Week Header -->
+  <header class="week-header">
+    <a href="?offset={{ offset|add:"-1" }}"
+       class="week-header__nav"
+       aria-label="Previous week"
+       hx-get="?offset={{ offset|add:"-1" }}"
+       hx-target="#main-content"
+       hx-swap="innerHTML"
+       hx-push-url="true">&lsaquo;</a>
+
+    <div class="week-header__center">
+      <div class="week-header__title">
+        {% if offset == 0 %}This Week{% elif offset == 1 %}Next Week{% elif offset == -1 %}Last Week{% else %}Week View{% endif %}
+      </div>
+      <div class="week-header__subtitle">
+        {{ week_start|date:"M d" }} &ndash; {{ week_end|date:"M d, Y" }}
+      </div>
+    </div>
+
+    <a href="?offset={{ offset|add:"1" }}"
+       class="week-header__nav"
+       aria-label="Next week"
+       hx-get="?offset={{ offset|add:"1" }}"
+       hx-target="#main-content"
+       hx-swap="innerHTML"
+       hx-push-url="true">&rsaquo;</a>
+  </header>
+
+  <!-- Day Cards -->
+  <div class="day-list">
+    {% for day in days %}
+      {% include "week/partials/meal_card.html" with day=day %}
+    {% endfor %}
+  </div>
+
+  <!-- Bottom Actions -->
+  <div class="week-bottom-actions">
+    <a href="{% url 'shop' %}" class="btn btn-outline btn-full">
+      Shopping List
+    </a>
+    <button class="btn btn-accent btn-full"
+            hx-get="{% url 'week_suggest' %}"
+            hx-target="#main-content"
+            hx-swap="beforeend">
+      Suggest Meals
+    </button>
+  </div>
+</div>
+{% endblock %}

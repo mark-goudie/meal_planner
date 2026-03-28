@@ -1,0 +1,71 @@
+<div class="picker-overlay"
+     x-data="{ open: true }"
+     x-show="open"
+     @click.self="open = false; $el.remove()"
+     x-transition>
+
+  <div class="picker">
+    <div class="picker__handle"></div>
+
+    <div class="picker__header">
+      <span class="picker__title">Pick a recipe for {{ day_label }}</span>
+      <button class="btn btn-ghost btn-sm"
+              @click="open = false; $el.closest('.picker-overlay').remove()"
+              aria-label="Close">&times;</button>
+    </div>
+
+    <div style="padding: var(--space-md) var(--space-lg) 0;">
+      <input type="search"
+             class="search-input"
+             placeholder="Search recipes..."
+             name="q"
+             hx-get="{% url 'week_assign' date_str meal_type %}"
+             hx-trigger="input changed delay:300ms, search"
+             hx-target="#picker-results-{{ date_str }}"
+             hx-swap="innerHTML"
+             autocomplete="off">
+    </div>
+
+    <div class="picker__body" id="picker-results-{{ date_str }}">
+      {% if recipes %}
+        {% for recipe in recipes %}
+          <div class="recipe-card"
+               hx-post="{% url 'week_assign' date_str meal_type %}"
+               hx-vals='{"recipe_id": "{{ recipe.pk }}"}'
+               hx-target="#day-{{ date_str }}"
+               hx-swap="outerHTML"
+               @click="$el.closest('.picker-overlay').remove()"
+               role="button"
+               tabindex="0">
+            <div class="recipe-card__thumb">
+              {% if recipe.image %}
+                <img src="{{ recipe.image.url }}" alt="">
+              {% else %}
+                &#127858;
+              {% endif %}
+            </div>
+            <div class="recipe-card__body">
+              <div class="recipe-card__title">{{ recipe.title }}</div>
+              <div class="recipe-card__meta">
+                {% if recipe.cook_time %}
+                  <span>&#9201; {{ recipe.cook_time }} min</span>
+                {% endif %}
+                {% if recipe.average_rating %}
+                  <span>&#9733; {{ recipe.average_rating|floatformat:1 }}</span>
+                {% endif %}
+              </div>
+            </div>
+          </div>
+        {% endfor %}
+      {% else %}
+        <div style="text-align: center; padding: var(--space-xl); color: var(--text-dim);">
+          {% if search_query %}
+            No recipes match "{{ search_query }}".
+          {% else %}
+            No recipes yet. Add some recipes first!
+          {% endif %}
+        </div>
+      {% endif %}
+    </div>
+  </div>
+</div>

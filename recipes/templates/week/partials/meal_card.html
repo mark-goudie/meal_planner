@@ -1,0 +1,56 @@
+<div id="day-{{ day.date|date:'Y-m-d' }}"
+     class="day-card{% if day.is_today %} day-card--today{% endif %}{% if not day.meal %} day-card--empty{% endif %}">
+
+  <div class="day-card__header">
+    <span class="day-card__label">{{ day.day_name }} {{ day.day_num }}</span>
+    {% if day.is_today %}
+      <span class="badge badge--today">TODAY</span>
+    {% endif %}
+  </div>
+
+  {% if day.meal %}
+    <a href="{% url 'recipe_detail' day.meal.recipe.pk %}" class="day-card__title" style="display:block; color: inherit;">
+      {{ day.meal.recipe.title }}
+    </a>
+
+    <div class="day-card__meta">
+      {% if day.meal.recipe.cook_time %}
+        <span class="day-card__time">
+          <span class="day-card__time-icon">&#9201;</span>
+          {{ day.meal.recipe.cook_time }} min
+        </span>
+      {% endif %}
+
+      {% if day.meal.recipe.average_rating %}
+        <span class="day-card__time">
+          <span class="day-card__time-icon">&#9733;</span>
+          {{ day.meal.recipe.average_rating|floatformat:1 }}
+        </span>
+      {% endif %}
+    </div>
+
+    {% if day.meal.recipe.tags.all %}
+      <div class="day-card__tags">
+        {% for tag in day.meal.recipe.tags.all %}
+          <span class="chip chip--muted">{{ tag.name }}</span>
+        {% endfor %}
+      </div>
+    {% endif %}
+
+    {% if day.is_today %}
+      <div class="day-card__actions">
+        <a href="#" class="btn btn-accent btn-sm">Start Cooking &rarr;</a>
+      </div>
+    {% endif %}
+
+  {% else %}
+    <div class="day-card__empty"
+         hx-get="{% url 'week_assign' day.date|date:'Y-m-d' 'dinner' %}"
+         hx-target="#day-{{ day.date|date:'Y-m-d' }}"
+         hx-swap="afterend"
+         role="button"
+         tabindex="0">
+      Tap to add a meal...
+    </div>
+  {% endif %}
+</div>
