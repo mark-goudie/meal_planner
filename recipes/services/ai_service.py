@@ -202,6 +202,48 @@ class AIService:
             raise AIAPIError("An unexpected error occurred. Please try again.")
 
     @staticmethod
+    def generate_structured_recipe(prompt):
+        """Generate a recipe with structured ingredients from AI."""
+        AIService.validate_api_key()
+        clean_prompt = AIService.validate_prompt(prompt)
+
+        client = openai.OpenAI(api_key=settings.OPENAI_API_KEY)
+
+        response = client.chat.completions.create(
+            model=AIService.GPT_MODEL,
+            temperature=AIService.TEMPERATURE,
+            messages=[
+                {
+                    "role": "system",
+                    "content": (
+                        "You are a helpful chef. Return recipes as JSON with this exact structure: "
+                        '{"title": "...", "description": "...", "prep_time": 10, "cook_time": 30, '
+                        '"servings": 4, "difficulty": "easy|medium|hard", '
+                        '"ingredients": [{"name": "chicken breast", "quantity": 500, "unit": "g", '
+                        '"category": "meat", "preparation_notes": "diced"}], '
+                        '"steps": ["Step 1 text", "Step 2 text"]}'
+                        " Return ONLY valid JSON, no markdown or extra text."
+                    )
+                },
+                {
+                    "role": "user",
+                    "content": f"Create a family-friendly recipe using: {clean_prompt}"
+                }
+            ]
+        )
+
+        import json
+        content = response.choices[0].message.content.strip()
+        # Strip markdown code fences if present
+        if content.startswith('```'):
+            content = content.split('\n', 1)[1] if '\n' in content else content[3:]
+            if content.endswith('```'):
+                content = content[:-3]
+            content = content.strip()
+
+        return json.loads(content)
+
+    @staticmethod
     def parse_generated_recipe(text: str) -> Tuple[str, str, str]:
         """
         Parse AI-generated recipe text into structured components.
