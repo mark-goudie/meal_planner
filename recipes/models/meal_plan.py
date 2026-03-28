@@ -13,7 +13,17 @@ MEAL_CHOICES = [
 
 
 class MealPlan(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="meal_plans")
+    household = models.ForeignKey(
+        "Household",
+        on_delete=models.CASCADE,
+        related_name="meal_plans",
+    )
+    added_by = models.ForeignKey(
+        User,
+        on_delete=models.SET_NULL,
+        null=True,
+        related_name="+",
+    )
     date = models.DateField(default=date.today)
     meal_type = models.CharField(max_length=10, choices=MEAL_CHOICES)
     recipe = models.ForeignKey("Recipe", on_delete=models.CASCADE)
@@ -24,10 +34,10 @@ class MealPlan(models.Model):
 
     class Meta:
         ordering = ["date", "meal_type"]
-        unique_together = ("user", "date", "meal_type")
+        unique_together = ("household", "date", "meal_type")
         indexes = [
-            models.Index(fields=["user", "date"]),
-            models.Index(fields=["user", "date", "meal_type"]),
+            models.Index(fields=["household", "date"]),
+            models.Index(fields=["household", "date", "meal_type"]),
         ]
 
     def __str__(self):

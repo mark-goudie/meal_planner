@@ -8,7 +8,7 @@ from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.core.files.base import ContentFile
 from django.core.paginator import Paginator
-from django.db.models import Avg, Count, F, Max
+from django.db.models import Avg, Count, F, Max, Q
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 
@@ -19,6 +19,7 @@ from ..models import (
     RecipeIngredient,
     Tag,
 )
+from ..models.household import get_household
 from ..services.ai_service import AIService, AIServiceException
 
 logger = logging.getLogger(__name__)
@@ -43,7 +44,12 @@ def _get_sorted_recipes(queryset, sort, user):
 @login_required
 def recipe_list_view(request):
     """Recipe Collection -- full page view with search, filter, sort."""
-    recipes = Recipe.objects.for_user(request.user).with_related()
+    household = get_household(request.user)
+    recipes = (
+        Recipe.objects.filter(Q(user=request.user) | Q(shared=True, user__household_membership__household=household))
+        .distinct()
+        .with_related()
+    )
 
     query = request.GET.get("q", "").strip()
     tag_id = request.GET.get("tag", "")
@@ -85,7 +91,12 @@ def recipe_list_view(request):
 @login_required
 def recipe_search(request):
     """HTMX partial -- returns filtered recipe cards without page wrapper."""
-    recipes = Recipe.objects.for_user(request.user).with_related()
+    household = get_household(request.user)
+    recipes = (
+        Recipe.objects.filter(Q(user=request.user) | Q(shared=True, user__household_membership__household=household))
+        .distinct()
+        .with_related()
+    )
 
     query = request.GET.get("q", "").strip()
     tag_id = request.GET.get("tag", "")
@@ -206,6 +217,7 @@ def recipe_create_view(request):
             steps=request.POST.get("steps", ""),
             notes=request.POST.get("notes", ""),
             ingredients_text=request.POST.get("ingredients_text", ""),
+            shared=request.POST.get("shared") == "1",
         )
         # Tags
         tag_ids = request.POST.getlist("tags")
@@ -268,6 +280,7 @@ def recipe_update_view(request, pk):
         recipe.steps = request.POST.get("steps", "")
         recipe.notes = request.POST.get("notes", "")
         recipe.ingredients_text = request.POST.get("ingredients_text", "")
+        recipe.shared = request.POST.get("shared") == "1"
         recipe.save()
 
         tag_ids = request.POST.getlist("tags")
@@ -359,10 +372,14 @@ def image_search(request, pk):
     access_key = settings.UNSPLASH_ACCESS_KEY
 
     if not access_key:
-        return render(request, "recipes/partials/image_search.html", {
-            "recipe": recipe,
-            "error": "Unsplash API key not configured.",
-        })
+        return render(
+            request,
+            "recipes/partials/image_search.html",
+            {
+                "recipe": recipe,
+                "error": "Unsplash API key not configured.",
+            },
+        )
 
     try:
         resp = http_requests.get(
@@ -391,11 +408,15 @@ def image_search(request, pk):
     except Exception:
         photos = []
 
-    return render(request, "recipes/partials/image_search.html", {
-        "recipe": recipe,
-        "photos": photos,
-        "query": query,
-    })
+    return render(
+        request,
+        "recipes/partials/image_search.html",
+        {
+            "recipe": recipe,
+            "photos": photos,
+            "query": query,
+        },
+    )
 
 
 @login_required
@@ -410,8 +431,8 @@ def image_select(request, pk):
             resp.raise_for_status()
 
             # Generate filename from recipe title
-            safe_name = re.sub(r'[^\w\s-]', '', recipe.title.lower())
-            safe_name = re.sub(r'[\s-]+', '_', safe_name)[:50]
+            safe_name = re.sub(r"[^\w\s-]", "", recipe.title.lower())
+            safe_name = re.sub(r"[\s-]+", "_", safe_name)[:50]
             filename = f"{safe_name}_{recipe.pk}.jpg"
 
             recipe.image.save(filename, ContentFile(resp.content), save=True)

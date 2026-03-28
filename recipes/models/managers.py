@@ -61,9 +61,9 @@ class MealPlanQuerySet(models.QuerySet):
         """Optimize queries by prefetching related objects."""
         return self.select_related("recipe", "recipe__user").prefetch_related("recipe__tags")
 
-    def for_user(self, user):
-        """Filter meal plans for a specific user."""
-        return self.filter(user=user)
+    def for_household(self, household):
+        """Filter meal plans for a specific household."""
+        return self.filter(household=household)
 
     def upcoming(self):
         """Filter meal plans for today and future dates."""
@@ -84,8 +84,8 @@ class MealPlanManager(models.Manager):
     def with_related(self):
         return self.get_queryset().with_related()
 
-    def for_user(self, user):
-        return self.get_queryset().for_user(user)
+    def for_household(self, household):
+        return self.get_queryset().for_household(household)
 
     def upcoming(self):
         return self.get_queryset().upcoming()

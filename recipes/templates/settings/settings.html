@@ -27,6 +27,50 @@
     </div>
   </div>
 
+  {% if household %}
+  <!-- Household info -->
+  <div style="padding: var(--space-lg); background: var(--bg-card); border-radius: var(--radius-md); margin-bottom: var(--space-xl);">
+    <div class="section-header">
+      <h2 class="section-title" style="margin-bottom: var(--space-md);">Household</h2>
+    </div>
+
+    <form method="post" action="{% url 'settings' %}" style="margin-bottom: var(--space-md);">
+      {% csrf_token %}
+      <input type="hidden" name="action" value="update_household">
+      <div style="margin-bottom: var(--space-sm);">
+        <label style="display: block; font-size: var(--text-sm); font-weight: 700; color: var(--text-muted); margin-bottom: var(--space-xs);">Household Name</label>
+        <div style="display: flex; gap: var(--space-sm);">
+          <input type="text" name="household_name" value="{{ household.name }}"
+                 style="flex: 1; background: var(--bg-surface); border: 1px solid var(--border); border-radius: var(--radius-md); padding: var(--space-sm) var(--space-md); color: var(--text-main); font-size: var(--text-base);">
+          <button type="submit" class="btn btn-primary" style="white-space: nowrap;">Save</button>
+        </div>
+      </div>
+    </form>
+
+    <div style="padding: var(--space-sm) 0; border-bottom: 1px solid var(--border);">
+      <span class="text-muted text-sm" style="display: block; margin-bottom: var(--space-xs);">Invite Code</span>
+      <div style="display: flex; align-items: center; gap: var(--space-sm);">
+        <span style="font-family: monospace; font-size: var(--text-lg); letter-spacing: 0.2em; font-weight: 700; color: var(--text-main);">{{ household.code }}</span>
+        <form method="post" action="{% url 'settings' %}" style="margin: 0;">
+          {% csrf_token %}
+          <input type="hidden" name="action" value="regenerate_code">
+          <button type="submit" class="text-muted text-sm" style="background: none; border: none; cursor: pointer; text-decoration: underline;">Regenerate</button>
+        </form>
+      </div>
+      <p style="font-size: var(--text-xs); color: var(--text-dim); margin-top: var(--space-xs);">Share this code with family members so they can join your household.</p>
+    </div>
+
+    <div style="padding: var(--space-sm) 0;">
+      <span class="text-muted text-sm" style="display: block; margin-bottom: var(--space-xs);">Members</span>
+      {% for member in household_members %}
+      <div style="padding: var(--space-xs) 0;">
+        <span class="text-main">{{ member.username }}{% if member == user %} (you){% endif %}</span>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+
   <!-- Preferences form -->
   <form method="post" action="{% url 'settings' %}">
     {% csrf_token %}

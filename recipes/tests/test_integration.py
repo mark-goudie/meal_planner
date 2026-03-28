@@ -4,6 +4,7 @@ from django.test import Client, TestCase
 from django.urls import reverse
 
 from recipes.models import MealPlan, Recipe
+from recipes.models.household import get_household
 from recipes.tests.test_utils import TestUtilities
 
 
@@ -38,8 +39,9 @@ class RecipeWorkflowIntegrationTest(TestCase):
         response = self.client.post(reverse("meal_plan_create"), meal_plan_data)
         self.assertEqual(response.status_code, 302)
 
+        household = get_household(self.user)
         meal_plan = MealPlan.objects.get(recipe=recipe)
-        self.assertEqual(meal_plan.user, self.user)
+        self.assertEqual(meal_plan.household, household)
         self.assertEqual(meal_plan.meal_type, "breakfast")
 
         # Step 3: Toggle favourite
@@ -84,9 +86,10 @@ class MealPlanningIntegrationTest(TestCase):
                     self.assertEqual(response.status_code, 302)
                     meal_plans_data.append((meal_date, meal_type, recipe))
 
+        household = get_household(self.user)
         # Verify meal plans were created
         for meal_date, meal_type, recipe in meal_plans_data:
-            meal_plan = MealPlan.objects.get(user=self.user, date=meal_date, meal_type=meal_type, recipe=recipe)
+            meal_plan = MealPlan.objects.get(household=household, date=meal_date, meal_type=meal_type)
             self.assertIsNotNone(meal_plan)
 
         # Test weekly view shows all meal plans

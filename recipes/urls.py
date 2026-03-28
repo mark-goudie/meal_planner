@@ -7,6 +7,7 @@ from .views import (
     cook_done,
     cook_step,
     cook_view,
+    day_comment,
     image_search,
     image_select,
     meal_plan_create,
@@ -42,6 +43,7 @@ urlpatterns = [
     path("week/suggest/", week_suggest, name="week_suggest"),
     path("week/accept/<str:date_str>/", week_accept_suggestion, name="week_accept_suggestion"),
     path("week/skip/<str:date_str>/", week_skip_suggestion, name="week_skip_suggestion"),
+    path("week/comment/<str:date_str>/", day_comment, name="day_comment"),
     # --- Redesign: Auth ---
     path("register/", register_view, name="register"),
     # --- Redesign: Cooking mode ---

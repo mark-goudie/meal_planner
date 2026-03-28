@@ -5,6 +5,7 @@ from django.test import Client, TestCase
 from django.urls import reverse
 
 from recipes.models import MealPlan, Recipe
+from recipes.models.household import Household, HouseholdMembership
 
 
 class WeekViewTest(TestCase):
@@ -13,6 +14,8 @@ class WeekViewTest(TestCase):
     def setUp(self):
         self.client = Client()
         self.user = User.objects.create_user(username="testuser", password="testpass123")
+        self.household = Household.objects.create(name="Test")
+        HouseholdMembership.objects.create(user=self.user, household=self.household)
         self.recipe = Recipe.objects.create(
             user=self.user,
             title="Spaghetti Carbonara",
@@ -41,7 +44,8 @@ class WeekViewTest(TestCase):
         """A meal planned for this week should appear in the view."""
         today = date.today()
         MealPlan.objects.create(
-            user=self.user,
+            household=self.household,
+            added_by=self.user,
             date=today,
             meal_type="dinner",
             recipe=self.recipe,
@@ -138,7 +142,7 @@ class WeekViewTest(TestCase):
         # Verify MealPlan was created
         self.assertTrue(
             MealPlan.objects.filter(
-                user=self.user,
+                household=self.household,
                 date=today,
                 meal_type="dinner",
                 recipe=self.recipe,
@@ -157,7 +161,8 @@ class WeekViewTest(TestCase):
 
         # Create initial meal plan
         MealPlan.objects.create(
-            user=self.user,
+            household=self.household,
+            added_by=self.user,
             date=today,
             meal_type="dinner",
             recipe=self.recipe,
@@ -174,7 +179,7 @@ class WeekViewTest(TestCase):
         # Should still be just one plan for this slot
         self.assertEqual(
             MealPlan.objects.filter(
-                user=self.user,
+                household=self.household,
                 date=today,
                 meal_type="dinner",
             ).count(),
@@ -193,7 +198,7 @@ class WeekViewTest(TestCase):
     def test_suggest_with_empty_slots_shows_suggestions(self):
         """Suggest should propose recipes for empty dinner slots."""
         # Current week has meals seeded in setUp — clear them to create empty slots
-        MealPlan.objects.filter(user=self.user).delete()
+        MealPlan.objects.filter(household=self.household).delete()
         response = self.client.get(reverse("week_suggest"))
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "Accept")
@@ -204,13 +209,13 @@ class WeekViewTest(TestCase):
 
         tomorrow = date.today() + timedelta(days=1)
         date_str = tomorrow.strftime("%Y-%m-%d")
-        MealPlan.objects.filter(user=self.user, date=tomorrow).delete()
+        MealPlan.objects.filter(household=self.household, date=tomorrow).delete()
         response = self.client.post(
             reverse("week_accept_suggestion", args=[date_str]),
             {"recipe_id": self.recipe.pk},
         )
         self.assertEqual(response.status_code, 200)
-        self.assertTrue(MealPlan.objects.filter(user=self.user, date=tomorrow, meal_type="dinner").exists())
+        self.assertTrue(MealPlan.objects.filter(household=self.household, date=tomorrow, meal_type="dinner").exists())
 
     # ------------------------------------------------------------------
     # Placeholder views
@@ -259,6 +264,8 @@ class WeekViewTodayHighlightTest(TestCase):
     def setUp(self):
         self.client = Client()
         self.user = User.objects.create_user(username="testuser2", password="testpass123")
+        self.household = Household.objects.create(name="Test")
+        HouseholdMembership.objects.create(user=self.user, household=self.household)
         self.client.login(username="testuser2", password="testpass123")
 
     def test_today_badge_shown(self):

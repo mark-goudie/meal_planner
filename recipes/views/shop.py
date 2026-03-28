@@ -8,6 +8,7 @@ from django.shortcuts import redirect, render
 from django.views.decorators.http import require_POST
 
 from ..models import INGREDIENT_CATEGORY_CHOICES, MealPlan, ShoppingListItem
+from ..models.household import get_household
 from ..services import RecipeService
 
 CATEGORY_ICONS = {
@@ -25,13 +26,17 @@ CATEGORY_ICONS = {
 @login_required
 def shop_view(request):
     """Full shopping list page."""
+    household = get_household(request.user)
+    if not household:
+        return render(request, "shop/shop.html", {"categories": [], "manual_items": []})
+
     today = date.today()
     monday = today - timedelta(days=today.weekday())
     sunday = monday + timedelta(days=6)
 
     # Get this week's meal plans
     meals = MealPlan.objects.filter(
-        user=request.user,
+        household=household,
         date__range=[monday, sunday],
     ).select_related("recipe")
 
@@ -63,7 +68,7 @@ def shop_view(request):
             )
 
     # Manual items
-    manual_items = ShoppingListItem.objects.filter(user=request.user)
+    manual_items = ShoppingListItem.objects.filter(household=household).select_related("added_by")
 
     total_generated = len(generated_items)
     total_manual = manual_items.count()
@@ -89,7 +94,9 @@ def shop_view(request):
 @require_POST
 def shop_generate(request):
     """Regenerate the shopping list."""
-    ShoppingListItem.objects.filter(user=request.user).delete()
+    household = get_household(request.user)
+    if household:
+        ShoppingListItem.objects.filter(household=household).delete()
     django_messages.success(request, "Shopping list regenerated!")
     return redirect("shop")
 
@@ -100,7 +107,8 @@ def shop_toggle(request, pk):
     """Toggle a ShoppingListItem's checked state."""
     from django.shortcuts import get_object_or_404
 
-    item = get_object_or_404(ShoppingListItem, pk=pk, user=request.user)
+    household = get_household(request.user)
+    item = get_object_or_404(ShoppingListItem, pk=pk, household=household)
     item.checked = not item.checked
     item.save()
     return render(request, "shop/partials/item.html", {"item": item})
@@ -110,10 +118,12 @@ def shop_toggle(request, pk):
 @require_POST
 def shop_add(request):
     """Add a manual shopping list item."""
+    household = get_household(request.user)
     name = request.POST.get("name", "").strip()
-    if name:
+    if name and household:
         item = ShoppingListItem.objects.create(
-            user=request.user,
+            household=household,
+            added_by=request.user,
             name=name,
         )
         return render(request, "shop/partials/item.html", {"item": item})

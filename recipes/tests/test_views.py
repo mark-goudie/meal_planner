@@ -6,15 +6,20 @@ from django.test import Client, TestCase
 from django.urls import reverse
 
 from recipes.models import MealPlan, Recipe, Tag
+from recipes.models.household import Household, HouseholdMembership
 
 
 class BaseViewTest(TestCase):
     def setUp(self):
         self.client = Client()
         self.user = User.objects.create_user(username="testuser", email="test@example.com", password="testpass123")
+        self.household = Household.objects.create(name="Test")
+        HouseholdMembership.objects.create(user=self.user, household=self.household)
         self.other_user = User.objects.create_user(
             username="otheruser", email="other@example.com", password="otherpass123"
         )
+        self.other_household = Household.objects.create(name="Other")
+        HouseholdMembership.objects.create(user=self.other_user, household=self.other_household)
         self.tag = Tag.objects.create(name="Test Tag")
         self.recipe = Recipe.objects.create(
             user=self.user, title="Test Recipe", ingredients_text="Test ingredients", steps="Test steps"
@@ -279,7 +284,11 @@ class MealPlanViewTests(BaseViewTest):
     def test_meal_plan_list_view(self):
         """Test meal plan list view"""
         MealPlan.objects.create(
-            user=self.user, date=date.today(), meal_type="breakfast", recipe=self.recipe
+            household=self.household,
+            added_by=self.user,
+            date=date.today(),
+            meal_type="breakfast",
+            recipe=self.recipe,
         )
         self.client.login(username="testuser", password="testpass123")
         response = self.client.get(reverse("meal_plan_list"))
@@ -303,7 +312,13 @@ class MealPlanViewTests(BaseViewTest):
 
     def test_meal_plan_week_view(self):
         """Test weekly meal plan view"""
-        MealPlan.objects.create(user=self.user, date=date.today(), meal_type="breakfast", recipe=self.recipe)
+        MealPlan.objects.create(
+            household=self.household,
+            added_by=self.user,
+            date=date.today(),
+            meal_type="breakfast",
+            recipe=self.recipe,
+        )
         self.client.login(username="testuser", password="testpass123")
         response = self.client.get(reverse("meal_plan_week"))
         self.assertEqual(response.status_code, 200)

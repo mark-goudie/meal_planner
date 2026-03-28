@@ -1897,3 +1897,29 @@ body.light-mode .cook-step-number {
   min-height: 120px;
   font-size: 36px;
 }
+
+/* ============================================================
+   14. DAY COMMENTS
+   ============================================================ */
+.day-comment {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  padding: 2px 0;
+}
+
+.day-card__comments {
+  margin-bottom: var(--space-sm);
+  padding-bottom: var(--space-sm);
+  border-bottom: 1px solid var(--border);
+}
+
+.day-card__add-comment {
+  margin-top: var(--space-sm);
+  padding-top: var(--space-sm);
+  border-top: 1px solid var(--border);
+}
+
+[x-cloak] {
+  display: none !important;
+}

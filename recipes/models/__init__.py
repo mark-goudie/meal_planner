@@ -1,4 +1,11 @@
 from .cooking import CookingNote
+from .household import (
+    DayComment,
+    Household,
+    HouseholdMembership,
+    generate_household_code,
+    get_household,
+)
 from .managers import (
     MealPlanManager,
     MealPlanQuerySet,
@@ -23,6 +30,12 @@ from .recipe import (
 from .shopping import ShoppingListItem
 
 __all__ = [
+    # Household models
+    "Household",
+    "HouseholdMembership",
+    "DayComment",
+    "generate_household_code",
+    "get_household",
     # Recipe models
     "Tag",
     "TAG_TYPE_CHOICES",

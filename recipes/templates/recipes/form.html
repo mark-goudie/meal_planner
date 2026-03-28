@@ -133,6 +133,17 @@
     </div>
     {% endif %}
 
+    <!-- Share with household -->
+    <div class="form-group">
+      <label class="form-label flex items-center gap-sm" style="cursor: pointer;">
+        <input type="checkbox" name="shared" value="1"
+               {% if recipe.shared %}checked{% endif %}
+               style="width: 20px; height: 20px; accent-color: var(--primary);">
+        Share with household
+      </label>
+      <span class="form-help">When enabled, household members can see this recipe and add it to the meal plan.</span>
+    </div>
+
     <!-- Structured Ingredients (Alpine.js) -->
     <div class="form-group" x-data="ingredientManager()">
       <label class="form-label">Ingredients</label>

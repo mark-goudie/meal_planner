@@ -4,6 +4,7 @@ from django.contrib.auth.models import User
 from django.test import TestCase
 
 from recipes.models import MealPlan, Recipe, Tag
+from recipes.models.household import Household, HouseholdMembership, get_household
 from recipes.services import AIService
 
 
@@ -13,7 +14,11 @@ class TestUtilities:
     @staticmethod
     def create_test_user(username="testuser", email="test@example.com", password="testpass123"):
         """Create a test user with default or custom credentials"""
-        return User.objects.create_user(username=username, email=email, password=password)
+        user = User.objects.create_user(username=username, email=email, password=password)
+        # Auto-create household and membership for test users
+        household = Household.objects.create(name=f"{username}'s household")
+        HouseholdMembership.objects.create(user=user, household=household)
+        return user
 
     @staticmethod
     def create_test_recipe(
@@ -35,8 +40,12 @@ class TestUtilities:
         """Create a test meal plan (or get existing one)"""
         if plan_date is None:
             plan_date = date.today()
+        household = get_household(user)
         meal_plan, created = MealPlan.objects.get_or_create(
-            user=user, date=plan_date, meal_type=meal_type, defaults={"recipe": recipe}
+            household=household,
+            date=plan_date,
+            meal_type=meal_type,
+            defaults={"recipe": recipe, "added_by": user},
         )
         # Update recipe if meal plan already exists
         if not created and meal_plan.recipe != recipe:
@@ -273,7 +282,8 @@ class TestUtilitiesTest(TestCase):
 
         # Check relationships
         self.assertEqual(data["recipes"][0].user, data["user"])
-        self.assertEqual(data["meal_plans"][0].user, data["user"])
+        household = get_household(data["user"])
+        self.assertEqual(data["meal_plans"][0].household, household)
 
     def test_create_test_meal_plan_default_date(self):
         """Test creating meal plan with default date"""
@@ -322,7 +332,8 @@ class DatabaseTestCase(TestCase):
 
     def assertMealPlanExists(self, user, date, meal_type):
         """Assert that a meal plan exists for the given user, date, and meal type"""
+        household = get_household(user)
         self.assertTrue(
-            MealPlan.objects.filter(user=user, date=date, meal_type=meal_type).exists(),
+            MealPlan.objects.filter(household=household, date=date, meal_type=meal_type).exists(),
             f"Meal plan for {meal_type} on {date} does not exist for user {user.username}",
         )

@@ -1,0 +1,7 @@
+{% for comment in comments %}
+<div class="day-comment">
+  <i class="bi bi-chat-dots" style="color: var(--accent); font-size: var(--text-xs);"></i>
+  <span class="text-sm text-muted">{{ comment.user.username }}:</span>
+  <span class="text-sm">{{ comment.text }}</span>
+</div>
+{% endfor %}
