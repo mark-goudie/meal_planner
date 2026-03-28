@@ -68,7 +68,7 @@ def shop_view(request):
             )
 
     # Manual items
-    manual_items = ShoppingListItem.objects.filter(household=household)
+    manual_items = ShoppingListItem.objects.filter(household=household).select_related("added_by")
 
     total_generated = len(generated_items)
     total_manual = manual_items.count()

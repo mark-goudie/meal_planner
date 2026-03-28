@@ -45,9 +45,11 @@ def _get_sorted_recipes(queryset, sort, user):
 def recipe_list_view(request):
     """Recipe Collection -- full page view with search, filter, sort."""
     household = get_household(request.user)
-    recipes = Recipe.objects.filter(
-        Q(user=request.user) | Q(shared=True, user__household_membership__household=household)
-    ).distinct().with_related()
+    recipes = (
+        Recipe.objects.filter(Q(user=request.user) | Q(shared=True, user__household_membership__household=household))
+        .distinct()
+        .with_related()
+    )
 
     query = request.GET.get("q", "").strip()
     tag_id = request.GET.get("tag", "")
@@ -90,9 +92,11 @@ def recipe_list_view(request):
 def recipe_search(request):
     """HTMX partial -- returns filtered recipe cards without page wrapper."""
     household = get_household(request.user)
-    recipes = Recipe.objects.filter(
-        Q(user=request.user) | Q(shared=True, user__household_membership__household=household)
-    ).distinct().with_related()
+    recipes = (
+        Recipe.objects.filter(Q(user=request.user) | Q(shared=True, user__household_membership__household=household))
+        .distinct()
+        .with_related()
+    )
 
     query = request.GET.get("q", "").strip()
     tag_id = request.GET.get("tag", "")
@@ -368,10 +372,14 @@ def image_search(request, pk):
     access_key = settings.UNSPLASH_ACCESS_KEY
 
     if not access_key:
-        return render(request, "recipes/partials/image_search.html", {
-            "recipe": recipe,
-            "error": "Unsplash API key not configured.",
-        })
+        return render(
+            request,
+            "recipes/partials/image_search.html",
+            {
+                "recipe": recipe,
+                "error": "Unsplash API key not configured.",
+            },
+        )
 
     try:
         resp = http_requests.get(
@@ -400,11 +408,15 @@ def image_search(request, pk):
     except Exception:
         photos = []
 
-    return render(request, "recipes/partials/image_search.html", {
-        "recipe": recipe,
-        "photos": photos,
-        "query": query,
-    })
+    return render(
+        request,
+        "recipes/partials/image_search.html",
+        {
+            "recipe": recipe,
+            "photos": photos,
+            "query": query,
+        },
+    )
 
 
 @login_required
@@ -419,8 +431,8 @@ def image_select(request, pk):
             resp.raise_for_status()
 
             # Generate filename from recipe title
-            safe_name = re.sub(r'[^\w\s-]', '', recipe.title.lower())
-            safe_name = re.sub(r'[\s-]+', '_', safe_name)[:50]
+            safe_name = re.sub(r"[^\w\s-]", "", recipe.title.lower())
+            safe_name = re.sub(r"[\s-]+", "_", safe_name)[:50]
             filename = f"{safe_name}_{recipe.pk}.jpg"
 
             recipe.image.save(filename, ContentFile(resp.content), save=True)

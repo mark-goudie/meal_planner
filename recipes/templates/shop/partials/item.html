@@ -4,5 +4,9 @@
      hx-target="#shop-item-{{ item.pk }}"
      hx-swap="outerHTML">
   <div class="shop-item__check"></div>
-  <span class="shop-item__label">{{ item.name }}</span>
+  <span class="shop-item__label">{{ item.name }}
+    {% if item.added_by %}
+    <span class="text-dim" style="font-size: 9px;">({{ item.added_by.username }})</span>
+    {% endif %}
+  </span>
 </div>

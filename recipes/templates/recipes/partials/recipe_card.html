@@ -41,5 +41,10 @@
     {% if recipe.cook_count > 0 %}
       <span class="recipe-card__stat">{{ recipe.cook_count }}x cooked</span>
     {% endif %}
+    {% if recipe.shared and recipe.user != request.user %}
+    <div class="text-dim" style="font-size: var(--text-xs); margin-top: var(--space-xs);">
+      <i class="bi bi-people"></i> Shared by {{ recipe.user.username }}
+    </div>
+    {% endif %}
   </div>
 </a>
