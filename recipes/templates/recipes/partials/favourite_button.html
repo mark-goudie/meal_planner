@@ -4,8 +4,8 @@
         hx-swap="outerHTML"
         aria-label="{% if is_favourited %}Remove from favourites{% else %}Add to favourites{% endif %}">
   {% if is_favourited %}
-    <span style="color: var(--accent); font-size: 24px;">&#9829;</span>
+    <i class="bi bi-heart-fill" style="color: var(--accent); font-size: 24px;"></i>
   {% else %}
-    <span style="color: var(--text-dim); font-size: 24px;">&#9825;</span>
+    <i class="bi bi-heart" style="color: var(--text-dim); font-size: 24px;"></i>
   {% endif %}
 </button>

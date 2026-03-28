@@ -11,7 +11,7 @@
       <span class="picker__title">Pick a recipe for {{ day_label }}</span>
       <button class="btn btn-ghost btn-sm"
               @click="open = false; $el.closest('.picker-overlay').remove()"
-              aria-label="Close">&times;</button>
+              aria-label="Close"><i class="bi bi-x-lg"></i></button>
     </div>
 
     <div style="padding: var(--space-md) var(--space-lg) 0;">
@@ -41,17 +41,17 @@
               {% if recipe.image %}
                 <img src="{{ recipe.image.url }}" alt="">
               {% else %}
-                &#127858;
+                <i class="bi bi-egg-fried"></i>
               {% endif %}
             </div>
             <div class="recipe-card__body">
               <div class="recipe-card__title">{{ recipe.title }}</div>
               <div class="recipe-card__meta">
                 {% if recipe.cook_time %}
-                  <span>&#9201; {{ recipe.cook_time }} min</span>
+                  <span><i class="bi bi-clock"></i> {{ recipe.cook_time }} min</span>
                 {% endif %}
                 {% if recipe.average_rating %}
-                  <span>&#9733; {{ recipe.average_rating|floatformat:1 }}</span>
+                  <span><i class="bi bi-star-fill"></i> {{ recipe.average_rating|floatformat:1 }}</span>
                 {% endif %}
               </div>
             </div>

@@ -33,7 +33,7 @@
   {% for cat in categories %}
   <div class="shop-category">
     <div class="shop-category__header">
-      <span class="shop-category__emoji">{{ cat.emoji }}</span>
+      <span class="shop-category__emoji"><i class="bi bi-{{ cat.icon }}"></i></span>
       {{ cat.label }}
     </div>
     {% for item in cat.items %}
@@ -55,7 +55,7 @@
   {% empty %}
     {% if not manual_items %}
     <div style="text-align: center; padding: var(--space-2xl) 0;">
-      <div style="font-size: 48px; margin-bottom: var(--space-md);">🛒</div>
+      <div style="font-size: 48px; margin-bottom: var(--space-md);"><i class="bi bi-cart3"></i></div>
       <p class="text-muted">No meals planned this week.</p>
       <a href="{% url 'week' %}" class="btn btn-primary mt-lg">Plan your week</a>
     </div>
@@ -65,7 +65,7 @@
   <!-- Manual items -->
   <div class="shop-category">
     <div class="shop-category__header">
-      <span class="shop-category__emoji">&#10002;</span>
+      <span class="shop-category__emoji"><i class="bi bi-pencil-square"></i></span>
       Other Items
     </div>
     <div id="manual-items-list">

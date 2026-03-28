@@ -1849,3 +1849,27 @@ body.light-mode .cook-step-number {
     scroll-behavior: auto;
   }
 }
+
+/* ============================================================
+   BOOTSTRAP ICON OVERRIDES
+   ============================================================ */
+
+/* Icon sizing in bottom nav */
+.nav-icon i {
+  font-size: 22px;
+  line-height: 1;
+}
+
+/* Auth logo icon */
+.auth-logo i {
+  font-size: inherit;
+}
+
+/* Stars in ratings */
+.bi-star-fill { color: var(--accent); }
+.bi-star { color: var(--text-dim); }
+
+/* Search icon positioning */
+.search-icon i {
+  font-size: 16px;
+}

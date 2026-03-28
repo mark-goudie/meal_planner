@@ -46,13 +46,13 @@
   <!-- Bottom Actions -->
   <div class="week-bottom-actions">
     <a href="{% url 'shop' %}" class="btn btn-outline btn-full">
-      Shopping List
+      <i class="bi bi-cart3"></i> Shopping List
     </a>
     <button class="btn btn-accent btn-full"
             hx-get="{% url 'week_suggest' %}"
             hx-target="#main-content"
             hx-swap="beforeend">
-      Suggest Meals
+      <i class="bi bi-stars"></i> Suggest Meals
     </button>
   </div>
 </div>

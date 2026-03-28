@@ -4,17 +4,17 @@
     {% if recipe.image %}
       <img src="{{ recipe.image.url }}" alt="{{ recipe.title }}">
     {% else %}
-      🍽
+      <i class="bi bi-egg-fried"></i>
     {% endif %}
   </div>
   <div class="recipe-card__body">
     <div class="recipe-card__title">{{ recipe.title }}</div>
     <div class="recipe-card__meta">
       {% if recipe.cook_time %}
-        <span class="recipe-card__stat">⏱ {{ recipe.cook_time }}m</span>
+        <span class="recipe-card__stat"><i class="bi bi-clock"></i> {{ recipe.cook_time }}m</span>
       {% endif %}
       {% if recipe.servings %}
-        <span class="recipe-card__stat">👤 {{ recipe.servings }}</span>
+        <span class="recipe-card__stat"><i class="bi bi-people"></i> {{ recipe.servings }}</span>
       {% endif %}
       {% if recipe.difficulty %}
         <span class="recipe-card__stat">{{ recipe.get_difficulty_display }}</span>
@@ -33,7 +33,7 @@
   </div>
   <div class="recipe-card__actions">
     {% if recipe.average_rating %}
-      <span class="recipe-card__stat" style="color: var(--accent);">★ {{ recipe.average_rating|floatformat:1 }}</span>
+      <span class="recipe-card__stat" style="color: var(--accent);"><i class="bi bi-star-fill"></i> {{ recipe.average_rating|floatformat:1 }}</span>
     {% endif %}
     {% if recipe.cook_count > 0 %}
       <span class="recipe-card__stat">{{ recipe.cook_count }}x cooked</span>

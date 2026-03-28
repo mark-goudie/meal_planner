@@ -10,15 +10,15 @@ from django.views.decorators.http import require_POST
 from ..models import INGREDIENT_CATEGORY_CHOICES, MealPlan, ShoppingListItem
 from ..services import RecipeService
 
-CATEGORY_EMOJIS = {
-    "produce": "\U0001f96c",
-    "dairy": "\U0001f9c0",
-    "meat": "\U0001f969",
-    "pantry": "\U0001f96b",
-    "spices": "\U0001f9c2",
-    "frozen": "\U0001f9ca",
-    "bakery": "\U0001f35e",
-    "other": "\U0001f4e6",
+CATEGORY_ICONS = {
+    "meat": "basket2-fill",
+    "dairy": "cup-straw",
+    "produce": "flower2",
+    "pantry": "archive",
+    "spices": "fire",
+    "frozen": "snow2",
+    "bakery": "bag",
+    "other": "box",
 }
 
 
@@ -57,7 +57,7 @@ def shop_view(request):
                 {
                     "key": cat_key,
                     "label": cat_label,
-                    "emoji": CATEGORY_EMOJIS.get(cat_key, "\U0001f4e6"),
+                    "icon": CATEGORY_ICONS.get(cat_key, "box"),
                     "items": categories[cat_key],
                 }
             )

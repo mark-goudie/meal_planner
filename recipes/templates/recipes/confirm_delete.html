@@ -10,7 +10,7 @@
   <a href="{% url 'recipe_detail' pk=recipe.pk %}" class="text-sm text-muted mb-lg block">&lsaquo; Back to recipe</a>
 
   <div class="empty-state" style="min-height: auto; padding-top: var(--space-2xl);">
-    <div class="empty-state__icon">🗑️</div>
+    <div class="empty-state__icon"><i class="bi bi-trash"></i></div>
     <h2 class="empty-state__title">Delete Recipe?</h2>
     <p class="empty-state__text" style="max-width: 320px;">
       Are you sure you want to delete <strong>{{ recipe.title }}</strong>?

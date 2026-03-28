@@ -16,14 +16,14 @@
     <div class="day-card__meta">
       {% if day.meal.recipe.cook_time %}
         <span class="day-card__time">
-          <span class="day-card__time-icon">&#9201;</span>
+          <span class="day-card__time-icon"><i class="bi bi-clock"></i></span>
           {{ day.meal.recipe.cook_time }} min
         </span>
       {% endif %}
 
       {% if day.meal.recipe.average_rating %}
         <span class="day-card__time">
-          <span class="day-card__time-icon">&#9733;</span>
+          <span class="day-card__time-icon"><i class="bi bi-star-fill"></i></span>
           {{ day.meal.recipe.average_rating|floatformat:1 }}
         </span>
       {% endif %}

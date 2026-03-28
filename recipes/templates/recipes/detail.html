@@ -27,16 +27,16 @@
     <!-- Metadata chips -->
     <div class="flex gap-sm mt-md" style="flex-wrap: wrap;">
       {% if recipe.cook_time %}
-        <span class="chip chip--primary">⏱ {{ recipe.cook_time }}m</span>
+        <span class="chip chip--primary"><i class="bi bi-clock"></i> {{ recipe.cook_time }}m</span>
       {% endif %}
       {% if recipe.prep_time %}
-        <span class="chip chip--primary">🔪 {{ recipe.prep_time }}m prep</span>
+        <span class="chip chip--primary"><i class="bi bi-scissors"></i> {{ recipe.prep_time }}m prep</span>
       {% endif %}
       {% if recipe.total_time %}
         <span class="chip chip--muted">{{ recipe.total_time }}m total</span>
       {% endif %}
       {% if recipe.servings %}
-        <span class="chip chip--primary">👤 {{ recipe.servings }} servings</span>
+        <span class="chip chip--primary"><i class="bi bi-people"></i> {{ recipe.servings }} servings</span>
       {% endif %}
       {% if recipe.difficulty %}
         <span class="chip chip--muted">{{ recipe.get_difficulty_display }}</span>
@@ -61,7 +61,7 @@
   <div class="flex gap-lg items-center mb-xl" style="padding: var(--space-md); background: var(--bg-card); border-radius: var(--radius-md);">
     {% if recipe.average_rating %}
       <div class="flex items-center gap-xs">
-        <span style="color: var(--accent); font-size: var(--text-xl);">★</span>
+        <span style="color: var(--accent); font-size: var(--text-xl);"><i class="bi bi-star-fill"></i></span>
         <span class="font-bold text-lg">{{ recipe.average_rating|floatformat:1 }}</span>
       </div>
     {% endif %}
@@ -151,7 +151,7 @@
         <span class="text-sm text-muted">{{ note.cooked_date|date:"M d, Y" }}</span>
         {% if note.rating %}
           <span style="color: var(--accent);">
-            {% for i in "12345" %}{% if forloop.counter <= note.rating %}★{% else %}☆{% endif %}{% endfor %}
+            {% for i in "12345" %}{% if forloop.counter <= note.rating %}<i class="bi bi-star-fill"></i>{% else %}<i class="bi bi-star"></i>{% endif %}{% endfor %}
           </span>
         {% endif %}
       </div>
