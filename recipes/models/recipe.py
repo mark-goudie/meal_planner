@@ -94,6 +94,9 @@ class Recipe(models.Model):
     )
     image = models.ImageField(upload_to="recipes/", null=True, blank=True)
 
+    # Sharing
+    shared = models.BooleanField(default=False)
+
     # Relationships
     tags = models.ManyToManyField("Tag", blank=True)
     favourited_by = models.ManyToManyField(User, related_name="favourites", blank=True)

@@ -46,6 +46,14 @@
         </div>
         {% endfor %}
 
+        <div class="form-group">
+          <label class="form-label" for="household_code">Household Code (optional)</label>
+          <input type="text" id="household_code" name="household_code" class="form-input"
+                 value="{{ household_code }}" placeholder="e.g. A7K3NP" maxlength="6"
+                 style="text-transform: uppercase; letter-spacing: 0.2em; text-align: center;">
+          <span class="form-help">Have a code from a family member? Enter it to join their household.</span>
+        </div>
+
         <button type="submit" class="btn btn-primary btn-full mt-md">
             Sign Up
         </button>

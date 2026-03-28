@@ -2,6 +2,9 @@ from django.contrib import admin
 
 from .models import (
     CookingNote,
+    DayComment,
+    Household,
+    HouseholdMembership,
     Ingredient,
     MealPlan,
     MealPlannerPreferences,
@@ -47,9 +50,9 @@ class RecipeAdmin(admin.ModelAdmin):
 
 @admin.register(MealPlan)
 class MealPlanAdmin(admin.ModelAdmin):
-    list_display = ("user", "date", "meal_type", "recipe")
+    list_display = ("household", "added_by", "date", "meal_type", "recipe")
     list_filter = ("meal_type", "date")
-    search_fields = ("user__username", "recipe__title")
+    search_fields = ("household__name", "recipe__title")
 
 
 @admin.register(MealPlannerPreferences)
@@ -64,8 +67,26 @@ class CookingNoteAdmin(admin.ModelAdmin):
     search_fields = ("recipe__title", "user__username", "note")
 
 
+@admin.register(Household)
+class HouseholdAdmin(admin.ModelAdmin):
+    list_display = ("name", "code", "created_by", "created_at")
+    search_fields = ("name", "code")
+
+
+@admin.register(HouseholdMembership)
+class HouseholdMembershipAdmin(admin.ModelAdmin):
+    list_display = ("user", "household", "joined_at")
+    search_fields = ("user__username", "household__name")
+
+
+@admin.register(DayComment)
+class DayCommentAdmin(admin.ModelAdmin):
+    list_display = ("household", "user", "date", "text")
+    list_filter = ("date",)
+
+
 @admin.register(ShoppingListItem)
 class ShoppingListItemAdmin(admin.ModelAdmin):
-    list_display = ("name", "user", "checked", "created_at")
+    list_display = ("name", "household", "added_by", "checked", "created_at")
     list_filter = ("checked",)
-    search_fields = ("name", "user__username")
+    search_fields = ("name", "household__name")

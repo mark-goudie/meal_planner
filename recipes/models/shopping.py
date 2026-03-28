@@ -3,7 +3,12 @@ from django.db import models
 
 
 class ShoppingListItem(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="shopping_items")
+    household = models.ForeignKey(
+        "Household", on_delete=models.CASCADE, related_name="shopping_items",
+    )
+    added_by = models.ForeignKey(
+        User, on_delete=models.SET_NULL, null=True, related_name="+",
+    )
     name = models.CharField(max_length=200)
     checked = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
