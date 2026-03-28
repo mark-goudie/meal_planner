@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+
+{% block title %}Delete {{ recipe.title }} - Meal Planner{% endblock %}
+
+{% block nav_recipes %}active{% endblock %}
+
+{% block content %}
+<div class="screen">
+
+  <a href="{% url 'recipe_detail' pk=recipe.pk %}" class="text-sm text-muted mb-lg block">&lsaquo; Back to recipe</a>
+
+  <div class="empty-state" style="min-height: auto; padding-top: var(--space-2xl);">
+    <div class="empty-state__icon">🗑️</div>
+    <h2 class="empty-state__title">Delete Recipe?</h2>
+    <p class="empty-state__text" style="max-width: 320px;">
+      Are you sure you want to delete <strong>{{ recipe.title }}</strong>?
+      This action cannot be undone. All cooking notes for this recipe will also be deleted.
+    </p>
+  </div>
+
+  <form method="post" action="{% url 'recipe_delete' pk=recipe.pk %}" class="mt-xl">
+    {% csrf_token %}
+    <div class="flex gap-sm">
+      <a href="{% url 'recipe_detail' pk=recipe.pk %}" class="btn btn-ghost flex-1">Cancel</a>
+      <button type="submit" class="btn btn-danger flex-1">Delete Recipe</button>
+    </div>
+  </form>
+</div>
+{% endblock %}

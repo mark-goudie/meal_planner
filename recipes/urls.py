@@ -7,6 +7,10 @@ from .views import (
     # Redesign views
     week_view, week_slot, week_assign, week_suggest,
     register_view, shop_placeholder, settings_placeholder,
+    # Redesign recipe views
+    recipe_list_view, recipe_search, recipe_detail_view,
+    recipe_create_view, recipe_update_view, recipe_delete_view,
+    toggle_favourite_view,
 )
 from . import views
 
@@ -25,15 +29,18 @@ urlpatterns = [
     path('shop/', shop_placeholder, name='shop'),
     path('settings/', settings_placeholder, name='settings'),
 
-    # --- Legacy recipe views (still in use) ---
-    path('recipes/', recipe_list, name='recipe_list'),
-    path('recipes/new/', recipe_create, name='recipe_create'),
-    path('recipes/<int:pk>/', recipe_detail, name='recipe_detail'),
-    path('recipes/<int:pk>/update/', recipe_update, name='recipe_update'),
-    path('recipes/<int:pk>/delete/', recipe_delete, name='recipe_delete'),
+    # --- Redesign: Recipe views ---
+    path('recipes/', recipe_list_view, name='recipe_list'),
+    path('recipes/search/', recipe_search, name='recipe_search'),
+    path('recipes/new/', recipe_create_view, name='recipe_create'),
+    path('recipes/<int:pk>/', recipe_detail_view, name='recipe_detail'),
+    path('recipes/<int:pk>/edit/', recipe_update_view, name='recipe_update'),
+    path('recipes/<int:pk>/delete/', recipe_delete_view, name='recipe_delete'),
+    path('recipes/<int:pk>/favourite/', toggle_favourite_view, name='toggle_favourite'),
+
+    # --- Legacy recipe views (AI-related, still in use) ---
     path('recipes/ai/generate/', ai_generate_recipe, name='ai_generate_recipe'),
     path('recipes/ai-create/', recipe_create_from_ai, name='recipe_create_from_ai'),
-    path('recipes/<int:recipe_id>/favourite/', toggle_favourite, name='toggle_favourite'),
 
     # --- Legacy meal plan views ---
     path('meal-plan/', meal_plan_list, name='meal_plan_list'),
