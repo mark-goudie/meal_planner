@@ -6,11 +6,17 @@ from .views import (
     generate_shopping_list,
     # Redesign views
     week_view, week_slot, week_assign, week_suggest,
-    register_view, shop_placeholder, settings_placeholder,
+    register_view,
     # Redesign recipe views
     recipe_list_view, recipe_search, recipe_detail_view,
     recipe_create_view, recipe_update_view, recipe_delete_view,
     toggle_favourite_view,
+    # Cooking mode
+    cook_view, cook_step, cook_done,
+    # Shopping list
+    shop_view, shop_generate, shop_toggle, shop_add,
+    # Settings
+    settings_view,
 )
 from . import views
 
@@ -25,9 +31,19 @@ urlpatterns = [
     # --- Redesign: Auth ---
     path('register/', register_view, name='register'),
 
-    # --- Redesign: Placeholder pages ---
-    path('shop/', shop_placeholder, name='shop'),
-    path('settings/', settings_placeholder, name='settings'),
+    # --- Redesign: Cooking mode ---
+    path('cook/<int:pk>/', cook_view, name='cook'),
+    path('cook/<int:pk>/step/<int:step>/', cook_step, name='cook_step'),
+    path('cook/<int:pk>/done/', cook_done, name='cook_done'),
+
+    # --- Redesign: Shopping list ---
+    path('shop/', shop_view, name='shop'),
+    path('shop/generate/', shop_generate, name='shop_generate'),
+    path('shop/toggle/<int:pk>/', shop_toggle, name='shop_toggle'),
+    path('shop/add/', shop_add, name='shop_add'),
+
+    # --- Redesign: Settings ---
+    path('settings/', settings_view, name='settings'),
 
     # --- Redesign: Recipe views ---
     path('recipes/', recipe_list_view, name='recipe_list'),

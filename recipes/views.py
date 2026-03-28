@@ -15,9 +15,12 @@ from django.views.decorators.http import require_POST
 from datetime import date, timedelta
 from django_ratelimit.decorators import ratelimit
 
+from django.contrib import messages as django_messages
+
 from .models import (
     Recipe, MealPlan, Tag, MealPlannerPreferences,
-    Ingredient, RecipeIngredient, CookingNote, UNIT_CHOICES,
+    Ingredient, RecipeIngredient, CookingNote, ShoppingListItem,
+    UNIT_CHOICES, INGREDIENT_CATEGORY_CHOICES,
 )
 from .forms import (
     RecipeForm, MealPlanForm, CustomUserCreationForm,
@@ -25,7 +28,8 @@ from .forms import (
 )
 from .services import (
     AIService, AIConfigurationError, AIValidationError, AIAPIError,
-    MealPlanningAssistantService
+    MealPlanningAssistantService,
+    RecipeService,
 )
 
 import openai
@@ -839,4 +843,261 @@ def toggle_favourite_view(request, pk):
     return render(request, 'recipes/partials/favourite_button.html', {
         'recipe': recipe,
         'is_favourited': is_favourited,
+    })
+
+
+# --------------------------
+# Cooking Mode Views
+# --------------------------
+
+def _parse_cooking_steps(recipe):
+    """Parse recipe into cooking mode steps.
+
+    Returns a list of dicts: [{'text': str, 'ingredients': queryset_or_list}, ...]
+    """
+    if recipe.cooking_mode_steps:
+        # Structured JSON steps
+        steps = []
+        all_ingredients = {
+            ri.pk: ri
+            for ri in recipe.recipe_ingredients.select_related('ingredient').all()
+        }
+        for step_data in recipe.cooking_mode_steps:
+            ingredient_ids = step_data.get('ingredient_ids', [])
+            step_ingredients = [
+                all_ingredients[pk] for pk in ingredient_ids if pk in all_ingredients
+            ]
+            steps.append({
+                'text': step_data.get('text', ''),
+                'ingredients': step_ingredients,
+            })
+        return steps
+
+    # Fallback: split steps text by newlines
+    lines = [line.strip() for line in recipe.steps.splitlines() if line.strip()]
+    all_ingredients = list(recipe.recipe_ingredients.select_related('ingredient').all())
+    steps = []
+    for i, line in enumerate(lines):
+        steps.append({
+            'text': line,
+            'ingredients': all_ingredients if i == 0 else [],
+        })
+    return steps
+
+
+@login_required
+def cook_view(request, pk):
+    """Full-page cooking mode for a recipe."""
+    recipe = get_object_or_404(
+        Recipe.objects.select_related('user').prefetch_related(
+            'recipe_ingredients__ingredient', 'cooking_notes',
+        ),
+        pk=pk,
+        user=request.user,
+    )
+    steps = _parse_cooking_steps(recipe)
+    if not steps:
+        return redirect('recipe_detail', pk=recipe.pk)
+
+    total_steps = len(steps)
+    first_step = steps[0]
+    cooking_notes = list(recipe.cooking_notes.exclude(note='')[:3])
+
+    return render(request, 'cook/cook.html', {
+        'recipe': recipe,
+        'step_num': 1,
+        'step_text': first_step['text'],
+        'step_ingredients': first_step['ingredients'],
+        'total_steps': total_steps,
+        'cooking_notes': cooking_notes,
+    })
+
+
+@login_required
+def cook_step(request, pk, step):
+    """HTMX partial for a single cooking step."""
+    recipe = get_object_or_404(
+        Recipe.objects.select_related('user').prefetch_related(
+            'recipe_ingredients__ingredient', 'cooking_notes',
+        ),
+        pk=pk,
+        user=request.user,
+    )
+    steps = _parse_cooking_steps(recipe)
+    total_steps = len(steps)
+
+    if step < 1 or step > total_steps:
+        from django.http import Http404
+        raise Http404("Step not found")
+
+    current = steps[step - 1]
+    cooking_notes = list(recipe.cooking_notes.exclude(note='')[:3])
+
+    return render(request, 'cook/partials/step.html', {
+        'recipe': recipe,
+        'step_num': step,
+        'step_text': current['text'],
+        'step_ingredients': current['ingredients'],
+        'total_steps': total_steps,
+        'cooking_notes': cooking_notes,
+    })
+
+
+@login_required
+def cook_done(request, pk):
+    """Completion screen with rating form (GET) or save note (POST)."""
+    recipe = get_object_or_404(Recipe, pk=pk, user=request.user)
+    steps = _parse_cooking_steps(recipe)
+    total_steps = len(steps) if steps else 1
+
+    if request.method == 'POST':
+        rating = request.POST.get('rating')
+        note_text = request.POST.get('note', '').strip()
+        would_make_again = 'would_make_again' in request.POST
+
+        CookingNote.objects.create(
+            recipe=recipe,
+            user=request.user,
+            cooked_date=date.today(),
+            rating=int(rating) if rating else None,
+            note=note_text,
+            would_make_again=would_make_again,
+        )
+        django_messages.success(request, f'Cooking note saved for {recipe.title}!')
+        return redirect('recipe_detail', pk=recipe.pk)
+
+    return render(request, 'cook/partials/done.html', {
+        'recipe': recipe,
+        'total_steps': total_steps,
+    })
+
+
+# --------------------------
+# Shopping List Views
+# --------------------------
+
+CATEGORY_EMOJIS = {
+    'produce': '🥬',
+    'dairy': '🧀',
+    'meat': '🥩',
+    'pantry': '🥫',
+    'spices': '🧂',
+    'frozen': '🧊',
+    'bakery': '🍞',
+    'other': '📦',
+}
+
+
+@login_required
+def shop_view(request):
+    """Full shopping list page."""
+    today = date.today()
+    monday = today - timedelta(days=today.weekday())
+    sunday = monday + timedelta(days=6)
+
+    # Get this week's meal plans
+    meals = MealPlan.objects.filter(
+        user=request.user,
+        date__range=[monday, sunday],
+    ).select_related('recipe')
+
+    recipes = [m.recipe for m in meals]
+    meal_count = len(recipes)
+
+    # Generate structured shopping list from recipes
+    generated_items = []
+    if recipes:
+        generated_items = RecipeService.generate_structured_shopping_list(recipes)
+
+    # Group by category
+    from collections import defaultdict
+    categories = defaultdict(list)
+    for item in generated_items:
+        cat = item['category'] or 'other'
+        categories[cat].append(item)
+
+    # Build ordered categories list with emojis
+    category_list = []
+    for cat_key, cat_label in INGREDIENT_CATEGORY_CHOICES:
+        if cat_key in categories:
+            category_list.append({
+                'key': cat_key,
+                'label': cat_label,
+                'emoji': CATEGORY_EMOJIS.get(cat_key, '📦'),
+                'items': categories[cat_key],
+            })
+
+    # Manual items
+    manual_items = ShoppingListItem.objects.filter(user=request.user)
+
+    total_generated = len(generated_items)
+    total_manual = manual_items.count()
+    total_items = total_generated + total_manual
+    checked_items = manual_items.filter(checked=True).count()
+
+    return render(request, 'shop/shop.html', {
+        'categories': category_list,
+        'manual_items': manual_items,
+        'week_start': monday,
+        'week_end': sunday,
+        'meal_count': meal_count,
+        'total_items': total_items,
+        'checked_items': checked_items,
+    })
+
+
+@login_required
+@require_POST
+def shop_generate(request):
+    """Regenerate the shopping list."""
+    ShoppingListItem.objects.filter(user=request.user).delete()
+    django_messages.success(request, 'Shopping list regenerated!')
+    return redirect('shop')
+
+
+@login_required
+@require_POST
+def shop_toggle(request, pk):
+    """Toggle a ShoppingListItem's checked state."""
+    item = get_object_or_404(ShoppingListItem, pk=pk, user=request.user)
+    item.checked = not item.checked
+    item.save()
+    return render(request, 'shop/partials/item.html', {'item': item})
+
+
+@login_required
+@require_POST
+def shop_add(request):
+    """Add a manual shopping list item."""
+    name = request.POST.get('name', '').strip()
+    if name:
+        item = ShoppingListItem.objects.create(
+            user=request.user,
+            name=name,
+        )
+        return render(request, 'shop/partials/item.html', {'item': item})
+    return HttpResponse('')
+
+
+# --------------------------
+# Settings View
+# --------------------------
+
+@login_required
+def settings_view(request):
+    """User settings and preferences."""
+    prefs, _ = MealPlannerPreferences.objects.get_or_create(user=request.user)
+
+    if request.method == 'POST':
+        form = MealPlannerPreferencesForm(request.POST, instance=prefs)
+        if form.is_valid():
+            form.save()
+            django_messages.success(request, 'Settings saved!')
+            return redirect('settings')
+    else:
+        form = MealPlannerPreferencesForm(instance=prefs)
+
+    return render(request, 'settings/settings.html', {
+        'form': form,
+        'preferences': prefs,
     })

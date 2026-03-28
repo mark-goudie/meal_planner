@@ -39,7 +39,7 @@
 
     {% if day.is_today %}
       <div class="day-card__actions">
-        <a href="#" class="btn btn-accent btn-sm">Start Cooking &rarr;</a>
+        <a href="{% url 'cook' day.meal.recipe.pk %}" class="btn btn-accent btn-sm">Start Cooking &rarr;</a>
       </div>
     {% endif %}
 

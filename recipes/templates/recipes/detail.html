@@ -169,7 +169,7 @@
 
   <!-- Actions -->
   <div class="flex flex-col gap-sm mt-xl mb-lg">
-    <a href="#" class="btn btn-primary btn-full btn-lg">Start Cooking &rarr;</a>
+    <a href="{% url 'cook' recipe.pk %}" class="btn btn-primary btn-full btn-lg">Start Cooking &rarr;</a>
     <div class="flex gap-sm">
       <a href="{% url 'recipe_update' pk=recipe.pk %}" class="btn btn-outline flex-1">Edit</a>
       <a href="{% url 'recipe_delete' pk=recipe.pk %}" class="btn btn-danger flex-1">Delete</a>

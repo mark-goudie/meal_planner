@@ -1,0 +1,47 @@
+<div class="cook-content" data-step-num="{{ total_steps }}">
+  <div style="text-align: center; margin-bottom: var(--space-xl);">
+    <div style="font-size: 48px; margin-bottom: var(--space-md);">&#127860;</div>
+    <h2 style="font-size: var(--text-xl); font-weight: 800; color: var(--text-main); margin-bottom: var(--space-sm);">All done!</h2>
+    <p style="color: var(--text-muted);">How did {{ recipe.title }} turn out?</p>
+  </div>
+
+  <form method="post" action="{% url 'cook_done' recipe.pk %}">
+    {% csrf_token %}
+
+    <!-- Star rating -->
+    <div style="margin-bottom: var(--space-lg);">
+      <label style="display: block; font-size: var(--text-sm); font-weight: 700; color: var(--text-muted); margin-bottom: var(--space-sm);">Rating</label>
+      <div style="display: flex; gap: var(--space-sm); justify-content: center; font-size: 32px;"
+           x-data="{ rating: 0 }">
+        {% for i in "12345" %}
+        <label style="cursor: pointer;">
+          <input type="radio" name="rating" value="{{ forloop.counter }}" style="display: none;"
+                 x-on:click="rating = {{ forloop.counter }}">
+          <span :style="rating >= {{ forloop.counter }} ? 'color: var(--accent)' : 'color: var(--text-dim)'"
+                style="transition: color 0.2s;">&#9733;</span>
+        </label>
+        {% endfor %}
+      </div>
+    </div>
+
+    <!-- Note -->
+    <div style="margin-bottom: var(--space-lg);">
+      <label for="note" style="display: block; font-size: var(--text-sm); font-weight: 700; color: var(--text-muted); margin-bottom: var(--space-sm);">Notes</label>
+      <textarea id="note" name="note" rows="3" class="form-input"
+                placeholder="Any thoughts on this cook?"
+                style="width: 100%; background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-md); padding: var(--space-md); color: var(--text-main); font-size: var(--text-base); font-family: var(--font); resize: vertical;"></textarea>
+    </div>
+
+    <!-- Would make again -->
+    <div style="margin-bottom: var(--space-xl);">
+      <label style="display: flex; align-items: center; gap: var(--space-sm); cursor: pointer;">
+        <input type="checkbox" name="would_make_again" value="1" checked
+               style="width: 20px; height: 20px; accent-color: var(--primary);">
+        <span style="color: var(--text-main); font-size: var(--text-base);">Would make again</span>
+      </label>
+    </div>
+
+    <!-- Submit -->
+    <button type="submit" class="btn btn-primary btn-full btn-lg">Save &amp; Finish</button>
+  </form>
+</div>
