@@ -257,7 +257,6 @@ small {
   background: var(--bg-card);
   border-radius: var(--radius-lg);
   border-left: 3px solid var(--primary);
-  padding: var(--space-md) var(--space-lg);
   margin-bottom: var(--space-md);
   transition: background var(--transition), transform var(--transition);
   cursor: pointer;
@@ -265,8 +264,39 @@ small {
   overflow: hidden;
 }
 
+/* Background image layer for meals with photos */
+.day-card--has-meal::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: var(--card-bg-image, none);
+  background-size: cover;
+  background-position: center;
+  filter: brightness(0.3) saturate(0.5);
+  opacity: 0.6;
+  transition: opacity var(--transition);
+  z-index: 0;
+}
+
+/* Gradient tint for meals without photos */
+.day-card--has-meal:not([style*="card-bg-image"])::before {
+  background-image: none;
+  background: var(--card-bg-gradient, none);
+  filter: none;
+  opacity: 0.12;
+}
+
+.day-card:hover::before {
+  opacity: 0.75;
+}
+
+.day-card__content {
+  position: relative;
+  z-index: 1;
+  padding: var(--space-md) var(--space-lg);
+}
+
 .day-card:hover {
-  background: var(--bg-card-hover);
   transform: translateX(2px);
 }
 
@@ -276,17 +306,22 @@ small {
   opacity: 0.75;
 }
 
+.day-card--empty .day-card__content {
+  padding: var(--space-md) var(--space-lg);
+}
+
 .day-card--today {
   border-left-color: var(--accent);
   box-shadow: -4px 0 16px rgba(255, 213, 154, 0.15), 0 0 0 1px rgba(255, 213, 154, 0.08);
 }
 
-.day-card--today::before {
+.day-card--today.day-card--has-meal::after {
   content: '';
   position: absolute;
   inset: 0;
-  background: linear-gradient(90deg, rgba(255,213,154,0.04) 0%, transparent 60%);
+  background: linear-gradient(90deg, rgba(255,213,154,0.06) 0%, transparent 60%);
   pointer-events: none;
+  z-index: 0;
 }
 
 .day-card__header {

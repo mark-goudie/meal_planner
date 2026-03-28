@@ -1,92 +1,100 @@
+{% load recipe_extras %}
 <div id="day-{{ day.date|date:'Y-m-d' }}"
-     class="day-card{% if day.is_today %} day-card--today{% endif %}{% if not day.meal %} day-card--empty{% endif %}">
+     class="day-card{% if day.is_today %} day-card--today{% endif %}{% if not day.meal %} day-card--empty{% endif %}{% if day.meal %} day-card--has-meal{% endif %}"
+     {% if day.meal and day.meal.recipe.image %}
+     style="--card-bg-image: url('{{ day.meal.recipe.image.url }}');"
+     {% elif day.meal %}
+     style="--card-bg-gradient: {{ day.meal.recipe.title|recipe_gradient }};"
+     {% endif %}>
 
-  <div class="day-card__header">
-    <span class="day-card__label">{{ day.day_name }} {{ day.day_num }}</span>
-    {% if day.is_today %}
-      <span class="badge badge--today">TODAY</span>
-    {% endif %}
-  </div>
-
-  <div id="day-{{ day.date|date:'Y-m-d' }}-comments">
-    {% if day.comments %}
-    <div class="day-card__comments">
-      {% for comment in day.comments %}
-      <div class="day-comment">
-        <i class="bi bi-chat-dots" style="color: var(--accent); font-size: var(--text-xs);"></i>
-        <span class="text-sm text-muted">{{ comment.user.username }}:</span>
-        <span class="text-sm">{{ comment.text }}</span>
-      </div>
-      {% endfor %}
-    </div>
-    {% endif %}
-  </div>
-
-  {% if day.meal %}
-    <a href="{% url 'recipe_detail' day.meal.recipe.pk %}" class="day-card__title" style="display:block; color: inherit;">
-      {{ day.meal.recipe.title }}
-    </a>
-
-    <div class="day-card__meta">
-      {% if day.meal.recipe.cook_time %}
-        <span class="day-card__time">
-          <span class="day-card__time-icon"><i class="bi bi-clock"></i></span>
-          {{ day.meal.recipe.cook_time }} min
-        </span>
-      {% endif %}
-
-      {% if day.meal.recipe.average_rating %}
-        <span class="day-card__time">
-          <span class="day-card__time-icon"><i class="bi bi-star-fill"></i></span>
-          {{ day.meal.recipe.average_rating|floatformat:1 }}
-        </span>
+  <div class="day-card__content">
+    <div class="day-card__header">
+      <span class="day-card__label">{{ day.day_name }} {{ day.day_num }}</span>
+      {% if day.is_today %}
+        <span class="badge badge--today">TODAY</span>
       {% endif %}
     </div>
 
-    {% if day.meal.recipe.tags.all %}
-      <div class="day-card__tags">
-        {% for tag in day.meal.recipe.tags.all %}
-          <span class="chip chip--muted">{{ tag.name }}</span>
+    <div id="day-{{ day.date|date:'Y-m-d' }}-comments">
+      {% if day.comments %}
+      <div class="day-card__comments">
+        {% for comment in day.comments %}
+        <div class="day-comment">
+          <i class="bi bi-chat-dots" style="color: var(--accent); font-size: var(--text-xs);"></i>
+          <span class="text-sm text-muted">{{ comment.user.username }}:</span>
+          <span class="text-sm">{{ comment.text }}</span>
+        </div>
         {% endfor %}
       </div>
-    {% endif %}
+      {% endif %}
+    </div>
 
-    {% if day.is_today %}
-      <div class="day-card__actions">
-        <a href="{% url 'cook' day.meal.recipe.pk %}" class="btn btn-accent btn-sm">Start Cooking &rarr;</a>
+    {% if day.meal %}
+      <a href="{% url 'recipe_detail' day.meal.recipe.pk %}" class="day-card__title" style="display:block; color: inherit;">
+        {{ day.meal.recipe.title }}
+      </a>
+
+      <div class="day-card__meta">
+        {% if day.meal.recipe.cook_time %}
+          <span class="day-card__time">
+            <span class="day-card__time-icon"><i class="bi bi-clock"></i></span>
+            {{ day.meal.recipe.cook_time }} min
+          </span>
+        {% endif %}
+
+        {% if day.meal.recipe.average_rating %}
+          <span class="day-card__time">
+            <span class="day-card__time-icon"><i class="bi bi-star-fill"></i></span>
+            {{ day.meal.recipe.average_rating|floatformat:1 }}
+          </span>
+        {% endif %}
+      </div>
+
+      {% if day.meal.recipe.tags.all %}
+        <div class="day-card__tags">
+          {% for tag in day.meal.recipe.tags.all %}
+            <span class="chip chip--muted">{{ tag.name }}</span>
+          {% endfor %}
+        </div>
+      {% endif %}
+
+      {% if day.is_today %}
+        <div class="day-card__actions">
+          <a href="{% url 'cook' day.meal.recipe.pk %}" class="btn btn-accent btn-sm">Start Cooking &rarr;</a>
+        </div>
+      {% endif %}
+
+    {% else %}
+      <div class="day-card__empty"
+           hx-get="{% url 'week_assign' day.date|date:'Y-m-d' 'dinner' %}"
+           hx-target="#day-{{ day.date|date:'Y-m-d' }}"
+           hx-swap="afterend"
+           role="button"
+           tabindex="0">
+        Tap to add a meal...
       </div>
     {% endif %}
 
-  {% else %}
-    <div class="day-card__empty"
-         hx-get="{% url 'week_assign' day.date|date:'Y-m-d' 'dinner' %}"
-         hx-target="#day-{{ day.date|date:'Y-m-d' }}"
-         hx-swap="afterend"
-         role="button"
-         tabindex="0">
-      Tap to add a meal...
-    </div>
-  {% endif %}
-
-  <div class="day-card__add-comment" x-data="{ open: false }">
-    <button class="btn btn-ghost btn-sm" @click="open = !open"
-            style="font-size: var(--text-xs); color: var(--text-dim); padding: 4px 8px;">
-      <i class="bi bi-chat-dots"></i> {% if day.comments %}{{ day.comments|length }}{% else %}Note{% endif %}
-    </button>
-    <div x-show="open" x-cloak style="margin-top: var(--space-xs);">
-      <form hx-post="{% url 'day_comment' day.date|date:'Y-m-d' %}"
-            hx-target="#day-{{ day.date|date:'Y-m-d' }}-comments"
-            hx-swap="innerHTML"
-            class="flex gap-xs">
-        {% csrf_token %}
-        <input type="text" name="text" class="form-input"
-               style="flex: 1; min-height: 32px; padding: 4px 8px; font-size: var(--text-sm);"
-               placeholder="e.g. Work dinner tonight" maxlength="200"
-               value="{{ day.my_comment }}">
-        <button type="submit" class="btn btn-primary btn-sm" style="min-height: 32px; padding: 4px 8px;">
-          <i class="bi bi-check-lg"></i>
-        </button>
-      </form>
+    <div class="day-card__add-comment" x-data="{ open: false }">
+      <button class="btn btn-ghost btn-sm" @click="open = !open"
+              style="font-size: var(--text-xs); color: var(--text-dim); padding: 4px 8px;">
+        <i class="bi bi-chat-dots"></i> {% if day.comments %}{{ day.comments|length }}{% else %}Note{% endif %}
+      </button>
+      <div x-show="open" x-cloak style="margin-top: var(--space-xs);">
+        <form hx-post="{% url 'day_comment' day.date|date:'Y-m-d' %}"
+              hx-target="#day-{{ day.date|date:'Y-m-d' }}-comments"
+              hx-swap="innerHTML"
+              class="flex gap-xs">
+          {% csrf_token %}
+          <input type="text" name="text" class="form-input"
+                 style="flex: 1; min-height: 32px; padding: 4px 8px; font-size: var(--text-sm);"
+                 placeholder="e.g. Work dinner tonight" maxlength="200"
+                 value="{{ day.my_comment }}">
+          <button type="submit" class="btn btn-primary btn-sm" style="min-height: 32px; padding: 4px 8px;">
+            <i class="bi bi-check-lg"></i>
+          </button>
+        </form>
+      </div>
     </div>
   </div>
 </div>
