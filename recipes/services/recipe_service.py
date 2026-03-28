@@ -4,7 +4,6 @@ Recipe Service - Business logic for recipe management.
 This service encapsulates all recipe-related operations including:
 - Recipe creation, updating, deletion
 - Recipe filtering and search
-- Family preferences
 - Favourites management
 - Shopping list generation
 """
@@ -13,7 +12,7 @@ from typing import List, Optional, Set
 from django.db.models import Q, Count, QuerySet
 from django.contrib.auth.models import User
 
-from ..models import Recipe, FamilyPreference, Tag
+from ..models import Recipe, Tag
 
 
 class RecipeService:
@@ -24,8 +23,8 @@ class RecipeService:
         user: User,
         query: Optional[str] = None,
         tag_id: Optional[int] = None,
-        selected_members: Optional[List[str]] = None,
-        favourites_only: bool = False
+        favourites_only: bool = False,
+        **kwargs,
     ) -> QuerySet:
         """
         Get recipes for a user with optional filters.
@@ -34,7 +33,6 @@ class RecipeService:
             user: The user whose recipes to retrieve
             query: Search query for title/ingredients
             tag_id: Filter by tag ID
-            selected_members: Filter by family members who like the recipe
             favourites_only: Show only favourited recipes
 
         Returns:
@@ -46,39 +44,19 @@ class RecipeService:
         if query:
             recipes = recipes.filter(
                 Q(title__icontains=query) |
-                Q(ingredients__icontains=query)
+                Q(ingredients_text__icontains=query)
             )
 
         # Apply tag filter
         if tag_id:
             recipes = recipes.filter(tags__id=tag_id)
 
-        # Apply family member preference filter
-        if selected_members:
-            recipes = recipes.annotate(
-                matching_likes=Count(
-                    'familypreference',
-                    filter=Q(
-                        familypreference__preference=3,
-                        familypreference__family_member__in=selected_members,
-                        familypreference__user=user
-                    ),
-                    distinct=True
-                )
-            ).filter(matching_likes=len(selected_members))
-
         # Apply favourites filter
         if favourites_only:
             recipes = recipes.filter(favourited_by=user)
 
-        # Optimize queries and add annotations
-        recipes = recipes.annotate(
-            total_likes=Count(
-                'familypreference',
-                filter=Q(familypreference__preference=3, familypreference__user=user),
-                distinct=True
-            )
-        ).distinct().select_related(
+        # Optimize queries
+        recipes = recipes.distinct().select_related(
             'user'
         ).prefetch_related(
             'tags',
@@ -150,48 +128,6 @@ class RecipeService:
             return True
 
     @staticmethod
-    def add_or_update_preference(
-        user: User,
-        recipe: Recipe,
-        family_member: str,
-        preference: int
-    ) -> FamilyPreference:
-        """
-        Add or update a family member's preference for a recipe.
-
-        Args:
-            user: The user adding the preference
-            recipe: The recipe
-            family_member: Name of the family member
-            preference: Preference value (1=dislike, 2=neutral, 3=like)
-
-        Returns:
-            The FamilyPreference instance
-        """
-        pref, created = FamilyPreference.objects.update_or_create(
-            recipe=recipe,
-            family_member=family_member,
-            user=user,
-            defaults={'preference': preference}
-        )
-        return pref
-
-    @staticmethod
-    def get_family_members(user: User) -> QuerySet:
-        """
-        Get all family members for a user.
-
-        Args:
-            user: The user
-
-        Returns:
-            QuerySet of family member names
-        """
-        return FamilyPreference.objects.filter(
-            user=user
-        ).values_list('family_member', flat=True).distinct()
-
-    @staticmethod
     def generate_shopping_list(user: User, recipe_ids: List[int]) -> List[str]:
         """
         Generate a deduplicated shopping list from multiple recipes.
@@ -207,8 +143,8 @@ class RecipeService:
         ingredient_set: Set[str] = set()
 
         for recipe in recipes:
-            if recipe.ingredients:
-                for line in recipe.ingredients.splitlines():
+            if recipe.ingredients_text:
+                for line in recipe.ingredients_text.splitlines():
                     line = line.strip()
                     if line:
                         ingredient_set.add(line)

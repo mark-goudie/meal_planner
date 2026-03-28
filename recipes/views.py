@@ -12,12 +12,10 @@ from datetime import date, timedelta
 from django_ratelimit.decorators import ratelimit
 
 from .models import (
-    Recipe, MealPlan, Tag, FamilyPreference,
-    GeneratedMealPlan, GeneratedMealPlanEntry, MealPlannerPreferences,
-    RecipeCookingHistory
+    Recipe, MealPlan, Tag, MealPlannerPreferences,
 )
 from .forms import (
-    RecipeForm, MealPlanForm, FamilyPreferenceForm, CustomUserCreationForm,
+    RecipeForm, MealPlanForm, CustomUserCreationForm,
     MealPlannerPreferencesForm, WeeklyPlanGeneratorForm
 )
 from .services import (
@@ -67,31 +65,16 @@ def recipe_list(request):
     if query:
         recipes = recipes.filter(
             Q(title__icontains=query) |
-            Q(ingredients__icontains=query)
+            Q(ingredients_text__icontains=query)
         )
 
     if tag_id:
         recipes = recipes.filter(tags__id=tag_id)
 
-    if selected_members:
-        recipes = recipes.annotate(
-            matching_likes=Count(
-                'familypreference',
-                filter=Q(familypreference__preference=3, familypreference__family_member__in=selected_members, familypreference__user=request.user),
-                distinct=True
-            )
-        ).filter(matching_likes=len(selected_members))
-
     if favourites_only:
         recipes = recipes.filter(favourited_by=request.user)
 
-    recipes = recipes.annotate(
-        total_likes=Count(
-            'familypreference',
-            filter=Q(familypreference__preference=3, familypreference__user=request.user),
-            distinct=True
-        )
-    ).distinct().select_related(
+    recipes = recipes.distinct().select_related(
         'user'
     ).prefetch_related(
         'tags',
@@ -112,7 +95,6 @@ def recipe_list(request):
         'recipe'
     ).order_by('date', 'meal_type')
     tags = Tag.objects.all()
-    family_members = FamilyPreference.objects.filter(user=request.user).values_list('family_member', flat=True).distinct()
 
     return render(request, 'recipes/recipe_list.html', {
         'page_obj': page_obj,
@@ -121,8 +103,6 @@ def recipe_list(request):
         'tags': tags,
         'query': query,
         'selected_tag': int(tag_id) if tag_id else None,
-        'family_members': family_members,
-        'selected_members': selected_members,
         'favourites_only': favourites_only,
     })
 
@@ -259,28 +239,6 @@ def meal_plan_create(request):
     return render(request, 'recipes/meal_plan_form.html', {'form': form})
 
 @login_required
-def add_preference(request, recipe_id):
-    recipe = get_object_or_404(Recipe, pk=recipe_id, user=request.user)
-    form = FamilyPreferenceForm(request.POST or None)
-
-    if form.is_valid():
-        pref = form.save(commit=False)
-        pref.recipe = recipe
-        pref.user = request.user
-        try:
-            existing = FamilyPreference.objects.get(recipe=recipe, family_member=pref.family_member, user=request.user)
-            existing.preference = pref.preference
-            existing.save()
-        except FamilyPreference.DoesNotExist:
-            pref.save()
-        return redirect('recipe_detail', pk=recipe_id)
-
-    return render(request, 'recipes/add_preference.html', {
-        'form': form,
-        'recipe': recipe,
-    })
-
-@login_required
 def toggle_favourite(request, recipe_id):
     recipe = get_object_or_404(Recipe, id=recipe_id, user=request.user)
     if request.user in recipe.favourited_by.all():
@@ -297,8 +255,8 @@ def generate_shopping_list(request):
         # Combine ingredients (assuming ingredients are stored as text, one per line)
         ingredient_set = set()
         for recipe in recipes:
-            if recipe.ingredients:
-                for line in recipe.ingredients.splitlines():
+            if recipe.ingredients_text:
+                for line in recipe.ingredients_text.splitlines():
                     line = line.strip()
                     if line:
                         ingredient_set.add(line)
@@ -415,12 +373,6 @@ def smart_meal_planner(request):
     """Smart weekly meal plan generator"""
     preferences = MealPlanningAssistantService.get_or_create_preferences(request.user)
 
-    # Get user's most recent generated plan (if any)
-    latest_plan = GeneratedMealPlan.objects.filter(
-        user=request.user,
-        approved=False
-    ).first()
-
     if request.method == 'POST':
         form = WeeklyPlanGeneratorForm(request.POST)
         if form.is_valid():
@@ -435,8 +387,7 @@ def smart_meal_planner(request):
                     meals_per_day=meals_to_plan
                 )
 
-                # Redirect to review page
-                return redirect('review_meal_plan', plan_id=plan.id)
+                return redirect('meal_plan_week')
 
             except ValueError as e:
                 form.add_error(None, str(e))
@@ -446,102 +397,4 @@ def smart_meal_planner(request):
     return render(request, 'recipes/smart_meal_planner.html', {
         'form': form,
         'preferences': preferences,
-        'latest_plan': latest_plan,
     })
-
-
-@login_required
-def review_meal_plan(request, plan_id):
-    """Review and adjust a generated meal plan"""
-    plan = get_object_or_404(
-        GeneratedMealPlan.objects.prefetch_related('entries__recipe__tags'),
-        id=plan_id,
-        user=request.user
-    )
-
-    # Organize entries by date
-    entries_by_date = {}
-    for entry in plan.entries.all():
-        if entry.date not in entries_by_date:
-            entries_by_date[entry.date] = {}
-        entries_by_date[entry.date][entry.meal_type] = entry
-
-    # Create week structure
-    week_days = []
-    for day_offset in range(7):
-        current_date = plan.week_start + timedelta(days=day_offset)
-        day_entries = entries_by_date.get(current_date, {})
-        week_days.append({
-            'date': current_date,
-            'name': current_date.strftime('%A'),
-            'is_today': current_date == date.today(),
-            'entries': day_entries,
-        })
-
-    return render(request, 'recipes/review_meal_plan.html', {
-        'plan': plan,
-        'week_days': week_days,
-    })
-
-
-@login_required
-def regenerate_meal(request, entry_id):
-    """Regenerate a single meal in the plan"""
-    entry = get_object_or_404(
-        GeneratedMealPlanEntry,
-        id=entry_id,
-        plan__user=request.user,
-        plan__approved=False
-    )
-
-    try:
-        MealPlanningAssistantService.regenerate_single_meal(entry.plan, entry)
-    except ValueError as e:
-        # Handle case where no alternatives available
-        pass
-
-    return redirect('review_meal_plan', plan_id=entry.plan.id)
-
-
-@login_required
-def approve_meal_plan(request, plan_id):
-    """Approve and activate a generated meal plan"""
-    plan = get_object_or_404(
-        GeneratedMealPlan,
-        id=plan_id,
-        user=request.user,
-        approved=False
-    )
-
-    if request.method == 'POST':
-        # Approve the plan
-        MealPlanningAssistantService.approve_plan(plan)
-
-        # Create cooking history entries for tracking
-        for entry in plan.entries.all():
-            RecipeCookingHistory.objects.get_or_create(
-                user=request.user,
-                recipe=entry.recipe,
-                cooked_date=entry.date,
-                meal_type=entry.meal_type
-            )
-
-        return redirect('meal_plan_week')
-
-    return redirect('review_meal_plan', plan_id=plan_id)
-
-
-@login_required
-def delete_generated_plan(request, plan_id):
-    """Delete a generated plan"""
-    plan = get_object_or_404(
-        GeneratedMealPlan,
-        id=plan_id,
-        user=request.user
-    )
-
-    if request.method == 'POST':
-        plan.delete()
-        return redirect('smart_meal_planner')
-
-    return redirect('review_meal_plan', plan_id=plan_id)

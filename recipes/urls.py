@@ -1,5 +1,10 @@
 from django.urls import path
-from .views import recipe_list, recipe_create, recipe_detail, recipe_update, recipe_delete, ai_generate_recipe, recipe_create_from_ai, meal_plan_list, meal_plan_create, add_preference, register, toggle_favourite, generate_shopping_list
+from .views import (
+    recipe_list, recipe_create, recipe_detail, recipe_update,
+    recipe_delete, ai_generate_recipe, recipe_create_from_ai,
+    meal_plan_list, meal_plan_create, register, toggle_favourite,
+    generate_shopping_list,
+)
 from . import views
 
 urlpatterns = [
@@ -13,7 +18,6 @@ urlpatterns = [
     path('meal-plan/', meal_plan_list, name='meal_plan_list'),
     path('meal-plan/new/', meal_plan_create, name='meal_plan_create'),
     path('meal-plan/week/', views.meal_plan_week, name='meal_plan_week'),
-    path('<int:recipe_id>/rate/', add_preference, name='add_preference'),
     path('register/', views.register, name='register'),
     path('<int:recipe_id>/favourite/', toggle_favourite, name='toggle_favourite'),
     path('shopping-list/', views.generate_shopping_list, name='generate_shopping_list'),
@@ -26,8 +30,4 @@ urlpatterns = [
     # Smart Meal Planner
     path('smart-planner/', views.smart_meal_planner, name='smart_meal_planner'),
     path('smart-planner/preferences/', views.meal_planner_preferences, name='meal_planner_preferences'),
-    path('smart-planner/plan/<int:plan_id>/', views.review_meal_plan, name='review_meal_plan'),
-    path('smart-planner/plan/<int:plan_id>/approve/', views.approve_meal_plan, name='approve_meal_plan'),
-    path('smart-planner/plan/<int:plan_id>/delete/', views.delete_generated_plan, name='delete_generated_plan'),
-    path('smart-planner/entry/<int:entry_id>/regenerate/', views.regenerate_meal, name='regenerate_meal'),
 ]
