@@ -37,19 +37,7 @@
       {{ cat.label }}
     </div>
     {% for item in cat.items %}
-    <div class="shop-item">
-      <div class="shop-item__check"></div>
-      <span class="shop-item__label">
-        {{ item.ingredient.name }}
-        {% if item.recipes %}
-          <span class="text-muted text-sm">&middot; {% for r in item.recipes %}{{ r }}{% if not forloop.last %}, {% endif %}{% endfor %}</span>
-        {% endif %}
-      </span>
-      <span class="shop-item__qty">
-        {% if item.total_quantity %}{{ item.total_quantity|floatformat:"-2" }}{% endif %}
-        {{ item.unit }}
-      </span>
-    </div>
+      {% include "shop/partials/item.html" with item=item %}
     {% endfor %}
   </div>
   {% empty %}
@@ -82,7 +70,7 @@
       {% csrf_token %}
       <input type="text" name="name" placeholder="Add item..."
              class="form-input"
-             style="flex: 1; background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-md); padding: var(--space-sm) var(--space-md); color: var(--text-main); font-size: var(--text-base);"
+             style="flex: 1;"
              required>
       <button type="submit" class="btn btn-primary btn-sm">Add</button>
     </form>
@@ -92,7 +80,9 @@
   <div class="mt-xl mb-lg">
     <form method="post" action="{% url 'shop_generate' %}">
       {% csrf_token %}
-      <button type="submit" class="btn btn-outline btn-full">Regenerate List</button>
+      <button type="submit" class="btn btn-outline btn-full">
+        <i class="bi bi-arrow-repeat"></i> Regenerate List
+      </button>
     </form>
   </div>
 </div>

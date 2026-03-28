@@ -2,11 +2,21 @@
      class="shop-item{% if item.checked %} shop-item--checked{% endif %}"
      hx-post="{% url 'shop_toggle' item.pk %}"
      hx-target="#shop-item-{{ item.pk }}"
-     hx-swap="outerHTML">
+     hx-swap="outerHTML"
+     role="button"
+     tabindex="0"
+     style="cursor: pointer;">
   <div class="shop-item__check"></div>
-  <span class="shop-item__label">{{ item.name }}
-    {% if item.added_by %}
-    <span class="text-dim" style="font-size: 9px;">({{ item.added_by.username }})</span>
+  <span class="shop-item__label">
+    {{ item.name }}
+    {% if item.recipe_sources %}
+      <span class="text-muted text-sm">&middot; {{ item.recipe_sources }}</span>
+    {% endif %}
+    {% if item.added_by and not item.is_generated %}
+      <span class="text-dim" style="font-size: 9px;">({{ item.added_by.username }})</span>
     {% endif %}
   </span>
+  {% if item.quantity %}
+  <span class="shop-item__qty">{{ item.quantity }}</span>
+  {% endif %}
 </div>
