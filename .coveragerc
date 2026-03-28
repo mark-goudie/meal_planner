@@ -6,7 +6,7 @@ omit =
     */venv/*
     */node_modules/*
     */staticfiles/*
-    */static/react/*
+
 
 [report]
 precision = 2

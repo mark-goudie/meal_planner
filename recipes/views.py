@@ -6,8 +6,8 @@ from django.contrib import messages as django_messages
 from django.contrib.auth import login
 from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
-from django.db.models import Avg, Count, Max, Q
-from django.http import HttpResponse, HttpResponseRedirect
+from django.db.models import Avg, Count, Max
+from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.utils.dateparse import parse_date
@@ -41,18 +41,6 @@ from .services import (
 # --------------------------
 
 
-def register(request):
-    if request.method == "POST":
-        form = CustomUserCreationForm(request.POST)
-        if form.is_valid():
-            user = form.save()
-            login(request, user)
-            return redirect("recipe_list")
-    else:
-        form = CustomUserCreationForm()
-    return render(request, "registration/register.html", {"form": form})
-
-
 def privacy(request):
     return render(request, "legal/privacy.html")
 
@@ -71,68 +59,6 @@ def disclaimer(request):
 
 
 @login_required
-def recipe_list(request):
-    query = request.GET.get("q")
-    tag_id = request.GET.get("tag")
-    favourites_only = request.GET.get("favourites") == "1"
-
-    recipes = Recipe.objects.filter(user=request.user)
-
-    if query:
-        recipes = recipes.filter(Q(title__icontains=query) | Q(ingredients_text__icontains=query))
-
-    if tag_id:
-        recipes = recipes.filter(tags__id=tag_id)
-
-    if favourites_only:
-        recipes = recipes.filter(favourited_by=request.user)
-
-    recipes = (
-        recipes.distinct().select_related("user").prefetch_related("tags", "favourited_by").order_by("-created_at")
-    )
-
-    # Pagination
-    paginator = Paginator(recipes, 12)  # 12 recipes per page
-    page_number = request.GET.get("page")
-    page_obj = paginator.get_page(page_number)
-
-    # Only show upcoming meal plans (today and future)
-    today = date.today()
-    meal_plans = (
-        MealPlan.objects.filter(user=request.user, date__gte=today)
-        .select_related("recipe")
-        .order_by("date", "meal_type")
-    )
-    tags = Tag.objects.all()
-
-    return render(
-        request,
-        "recipes/recipe_list.html",
-        {
-            "page_obj": page_obj,
-            "recipes": page_obj.object_list,
-            "meal_plans": meal_plans,
-            "tags": tags,
-            "query": query,
-            "selected_tag": int(tag_id) if tag_id else None,
-            "favourites_only": favourites_only,
-        },
-    )
-
-
-@login_required
-def recipe_create(request):
-    form = RecipeForm(request.POST or None)
-    if form.is_valid():
-        recipe = form.save(commit=False)
-        recipe.user = request.user
-        recipe.save()
-        form.save_m2m()
-        return redirect("recipe_list")
-    return render(request, "recipes/recipe_form.html", {"form": form})
-
-
-@login_required
 def recipe_create_from_ai(request):
     data = request.session.get("ai_recipe_data", {})
     form = RecipeForm(initial=data)
@@ -148,33 +74,6 @@ def recipe_create_from_ai(request):
             return redirect("recipe_list")
 
     return render(request, "recipes/recipe_form.html", {"form": form, "update": False})
-
-
-@login_required
-def recipe_detail(request, pk):
-    recipe = get_object_or_404(
-        Recipe.objects.select_related("user").prefetch_related("tags", "favourited_by"), pk=pk, user=request.user
-    )
-    return render(request, "recipes/recipe_detail.html", {"recipe": recipe})
-
-
-@login_required
-def recipe_update(request, pk):
-    recipe = get_object_or_404(Recipe, pk=pk, user=request.user)
-    form = RecipeForm(request.POST or None, instance=recipe)
-    if form.is_valid():
-        form.save()
-        return redirect("recipe_detail", pk=recipe.pk)
-    return render(request, "recipes/recipe_form.html", {"form": form, "update": True})
-
-
-@login_required
-def recipe_delete(request, pk):
-    recipe = get_object_or_404(Recipe, pk=pk, user=request.user)
-    if request.method == "POST":
-        recipe.delete()
-        return redirect("recipe_list")
-    return render(request, "recipes/recipe_confirm_delete.html", {"recipe": recipe})
 
 
 @login_required
@@ -251,16 +150,6 @@ def meal_plan_create(request):
     else:
         form = MealPlanForm(initial=initial, user=request.user)
     return render(request, "recipes/meal_plan_form.html", {"form": form})
-
-
-@login_required
-def toggle_favourite(request, recipe_id):
-    recipe = get_object_or_404(Recipe, id=recipe_id, user=request.user)
-    if request.user in recipe.favourited_by.all():
-        recipe.favourited_by.remove(request.user)
-    else:
-        recipe.favourited_by.add(request.user)
-    return HttpResponseRedirect(reverse("recipe_detail", args=[recipe.pk]))
 
 
 @login_required
