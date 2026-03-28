@@ -42,9 +42,7 @@ def settings_view(request):
     # Build household context
     household_members = []
     if household:
-        household_members = [
-            m.user for m in household.members.select_related("user").all()
-        ]
+        household_members = [m.user for m in household.members.select_related("user").all()]
 
     return render(
         request,

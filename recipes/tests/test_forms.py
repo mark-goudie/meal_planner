@@ -3,6 +3,7 @@ from django.test import TestCase
 
 from recipes.forms import CustomUserCreationForm, MealPlanForm, RecipeForm
 from recipes.models import Recipe, Tag
+from recipes.models.household import Household, HouseholdMembership
 
 
 class RecipeFormTest(TestCase):
@@ -98,6 +99,8 @@ class MealPlanFormTest(TestCase):
         self.other_user = User.objects.create_user(
             username="otheruser", email="other@example.com", password="otherpass123"
         )
+        self.household = Household.objects.create(name="Test")
+        HouseholdMembership.objects.create(user=self.user, household=self.household)
         self.recipe = Recipe.objects.create(
             user=self.user, title="Test Recipe", ingredients_text="Test ingredients", steps="Test steps"
         )
@@ -140,7 +143,8 @@ class MealPlanFormTest(TestCase):
         self.assertTrue(form.is_valid())
 
         meal_plan = form.save(commit=False)
-        meal_plan.user = self.user
+        meal_plan.household = self.household
+        meal_plan.added_by = self.user
         meal_plan.save()
 
         self.assertEqual(meal_plan.recipe, self.recipe)
@@ -239,6 +243,8 @@ class FormIntegrationTest(TestCase):
 
     def setUp(self):
         self.user = User.objects.create_user(username="testuser", email="test@example.com", password="testpass123")
+        self.household = Household.objects.create(name="Test")
+        HouseholdMembership.objects.create(user=self.user, household=self.household)
         self.tag = Tag.objects.create(name="Test Tag")
 
     def test_recipe_to_meal_plan_workflow(self):
@@ -264,7 +270,8 @@ class FormIntegrationTest(TestCase):
         self.assertTrue(meal_plan_form.is_valid())
 
         meal_plan = meal_plan_form.save(commit=False)
-        meal_plan.user = self.user
+        meal_plan.household = self.household
+        meal_plan.added_by = self.user
         meal_plan.save()
 
         self.assertEqual(meal_plan.recipe, recipe)

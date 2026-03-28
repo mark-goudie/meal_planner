@@ -28,6 +28,7 @@ from recipes.models import (
     ShoppingListItem,
     Tag,
 )
+from recipes.models.household import Household, HouseholdMembership
 
 
 class IngredientModelTests(TestCase):
@@ -218,14 +219,16 @@ class ShoppingListItemModelTests(TestCase):
 
     def setUp(self):
         self.user = User.objects.create_user("shopper", password="pass1234")
+        self.household = Household.objects.create(name="Test")
+        HouseholdMembership.objects.create(user=self.user, household=self.household)
 
     def test_create_item(self):
-        item = ShoppingListItem.objects.create(user=self.user, name="Milk")
+        item = ShoppingListItem.objects.create(household=self.household, added_by=self.user, name="Milk")
         self.assertEqual(item.name, "Milk")
         self.assertFalse(item.checked)
 
     def test_toggle_checked(self):
-        item = ShoppingListItem.objects.create(user=self.user, name="Eggs")
+        item = ShoppingListItem.objects.create(household=self.household, added_by=self.user, name="Eggs")
         self.assertFalse(item.checked)
 
         item.checked = True
@@ -234,17 +237,17 @@ class ShoppingListItemModelTests(TestCase):
         self.assertTrue(item.checked)
 
     def test_ordering_checked_last(self):
-        ShoppingListItem.objects.create(user=self.user, name="Bread")
-        ShoppingListItem.objects.create(user=self.user, name="Butter", checked=True)
-        ShoppingListItem.objects.create(user=self.user, name="Cheese")
+        ShoppingListItem.objects.create(household=self.household, added_by=self.user, name="Bread")
+        ShoppingListItem.objects.create(household=self.household, added_by=self.user, name="Butter", checked=True)
+        ShoppingListItem.objects.create(household=self.household, added_by=self.user, name="Cheese")
 
-        items = list(ShoppingListItem.objects.filter(user=self.user))
+        items = list(ShoppingListItem.objects.filter(household=self.household))
         # Checked items should come last (ordering by checked, created_at)
         self.assertEqual(items[-1].name, "Butter")
         self.assertTrue(items[-1].checked)
 
     def test_str(self):
-        item = ShoppingListItem.objects.create(user=self.user, name="Apple")
+        item = ShoppingListItem.objects.create(household=self.household, added_by=self.user, name="Apple")
         self.assertIn("Apple", str(item))
 
         item.checked = True
@@ -380,6 +383,8 @@ class MealPlanNotesFieldTests(TestCase):
 
     def setUp(self):
         self.user = User.objects.create_user("planner", password="pass1234")
+        self.household = Household.objects.create(name="Test")
+        HouseholdMembership.objects.create(user=self.user, household=self.household)
         self.recipe = Recipe.objects.create(
             user=self.user,
             title="Dinner",
@@ -388,7 +393,8 @@ class MealPlanNotesFieldTests(TestCase):
 
     def test_meal_plan_with_notes(self):
         plan = MealPlan.objects.create(
-            user=self.user,
+            household=self.household,
+            added_by=self.user,
             date=date(2026, 3, 28),
             meal_type="dinner",
             recipe=self.recipe,
@@ -398,7 +404,8 @@ class MealPlanNotesFieldTests(TestCase):
 
     def test_meal_plan_notes_default_blank(self):
         plan = MealPlan.objects.create(
-            user=self.user,
+            household=self.household,
+            added_by=self.user,
             date=date(2026, 3, 28),
             meal_type="dinner",
             recipe=self.recipe,

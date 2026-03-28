@@ -6,6 +6,7 @@ from django.db import IntegrityError
 from django.test import TestCase
 
 from recipes.models import MEAL_CHOICES, MealPlan, Recipe, Tag
+from recipes.models.household import Household, HouseholdMembership
 
 
 class RecipeModelTest(TestCase):
@@ -107,6 +108,8 @@ class TagModelTest(TestCase):
 class MealPlanModelTest(TestCase):
     def setUp(self):
         self.user = User.objects.create_user(username="testuser", email="test@example.com", password="testpass123")
+        self.household = Household.objects.create(name="Test")
+        HouseholdMembership.objects.create(user=self.user, household=self.household)
         self.recipe = Recipe.objects.create(
             user=self.user, title="Test Recipe", ingredients_text="ingredients", steps="steps"
         )
@@ -114,22 +117,29 @@ class MealPlanModelTest(TestCase):
     def test_create_meal_plan(self):
         """Test creating a meal plan"""
         meal_plan = MealPlan.objects.create(
-            user=self.user, date=date.today(), meal_type="breakfast", recipe=self.recipe
+            household=self.household, added_by=self.user, date=date.today(), meal_type="breakfast", recipe=self.recipe
         )
-        self.assertEqual(meal_plan.user, self.user)
+        self.assertEqual(meal_plan.household, self.household)
+        self.assertEqual(meal_plan.added_by, self.user)
         self.assertEqual(meal_plan.date, date.today())
         self.assertEqual(meal_plan.meal_type, "breakfast")
         self.assertEqual(meal_plan.recipe, self.recipe)
 
     def test_meal_plan_default_date(self):
         """Test that meal plan defaults to today's date"""
-        meal_plan = MealPlan.objects.create(user=self.user, meal_type="lunch", recipe=self.recipe)
+        meal_plan = MealPlan.objects.create(
+            household=self.household, added_by=self.user, meal_type="lunch", recipe=self.recipe
+        )
         self.assertEqual(meal_plan.date, date.today())
 
     def test_meal_plan_str_method(self):
         """Test the string representation of MealPlan"""
         meal_plan = MealPlan.objects.create(
-            user=self.user, date=date(2023, 12, 25), meal_type="dinner", recipe=self.recipe
+            household=self.household,
+            added_by=self.user,
+            date=date(2023, 12, 25),
+            meal_type="dinner",
+            recipe=self.recipe,
         )
         expected_str = f"Dinner on 2023-12-25: {self.recipe.title}"
         self.assertEqual(str(meal_plan), expected_str)
@@ -141,12 +151,16 @@ class MealPlanModelTest(TestCase):
         self.assertIn("lunch", valid_choices)
         self.assertIn("dinner", valid_choices)
 
-    def test_meal_plan_user_relationship(self):
-        """Test the foreign key relationship with User"""
-        meal_plan = MealPlan.objects.create(user=self.user, meal_type="breakfast", recipe=self.recipe)
-        self.assertIn(meal_plan, self.user.meal_plans.all())
+    def test_meal_plan_household_relationship(self):
+        """Test the foreign key relationship with Household"""
+        meal_plan = MealPlan.objects.create(
+            household=self.household, added_by=self.user, meal_type="breakfast", recipe=self.recipe
+        )
+        self.assertIn(meal_plan, self.household.meal_plans.all())
 
     def test_meal_plan_recipe_relationship(self):
         """Test the foreign key relationship with Recipe"""
-        meal_plan = MealPlan.objects.create(user=self.user, meal_type="breakfast", recipe=self.recipe)
+        meal_plan = MealPlan.objects.create(
+            household=self.household, added_by=self.user, meal_type="breakfast", recipe=self.recipe
+        )
         self.assertEqual(meal_plan.recipe, self.recipe)

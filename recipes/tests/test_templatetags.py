@@ -5,12 +5,15 @@ from django.contrib.auth.models import User
 from django.test import TestCase
 
 from recipes.models import MealPlan, Recipe
+from recipes.models.household import Household, HouseholdMembership
 from recipes.templatetags.recipe_extras import ai_generate_surprise_recipe, get, get_meal
 
 
 class RecipeExtrasTemplateTagsTest(TestCase):
     def setUp(self):
         self.user = User.objects.create_user(username="testuser", email="test@example.com", password="testpass123")
+        self.household = Household.objects.create(name="Test")
+        HouseholdMembership.objects.create(user=self.user, household=self.household)
         self.recipe1 = Recipe.objects.create(
             user=self.user, title="Breakfast Recipe", ingredients_text="Breakfast ingredients", steps="Breakfast steps"
         )
@@ -18,10 +21,18 @@ class RecipeExtrasTemplateTagsTest(TestCase):
             user=self.user, title="Lunch Recipe", ingredients_text="Lunch ingredients", steps="Lunch steps"
         )
         self.meal_plan1 = MealPlan.objects.create(
-            user=self.user, date=date.today(), meal_type="breakfast", recipe=self.recipe1
+            household=self.household,
+            added_by=self.user,
+            date=date.today(),
+            meal_type="breakfast",
+            recipe=self.recipe1,
         )
         self.meal_plan2 = MealPlan.objects.create(
-            user=self.user, date=date.today(), meal_type="lunch", recipe=self.recipe2
+            household=self.household,
+            added_by=self.user,
+            date=date.today(),
+            meal_type="lunch",
+            recipe=self.recipe2,
         )
 
     def test_get_meal_filter_finds_breakfast(self):
@@ -60,7 +71,11 @@ class RecipeExtrasTemplateTagsTest(TestCase):
         """Test get_meal filter returns first matching meal plan when filtering a list"""
         # Create a dinner meal plan (different meal_type, so no conflict)
         dinner_plan = MealPlan.objects.create(
-            user=self.user, date=date.today(), meal_type="dinner", recipe=self.recipe2
+            household=self.household,
+            added_by=self.user,
+            date=date.today(),
+            meal_type="dinner",
+            recipe=self.recipe2,
         )
 
         # Filter should find breakfast from list containing multiple meal types
@@ -221,7 +236,9 @@ class TemplateTagIntegrationTest(TestCase):
     """Test template tags working together in realistic scenarios"""
 
     def setUp(self):
-        self.user = User.objects.create_user(username="testuser", email="test@example.com", password="testpass123")
+        self.user = User.objects.create_user(username="testuser2", email="test2@example.com", password="testpass123")
+        self.household = Household.objects.create(name="Test2")
+        HouseholdMembership.objects.create(user=self.user, household=self.household)
 
     def test_get_meal_with_real_meal_plan_data(self):
         """Test get_meal filter with realistic meal plan data structure"""
@@ -234,8 +251,20 @@ class TemplateTagIntegrationTest(TestCase):
         )
 
         meal_plans = [
-            MealPlan.objects.create(user=self.user, date=date.today(), meal_type="breakfast", recipe=breakfast_recipe),
-            MealPlan.objects.create(user=self.user, date=date.today(), meal_type="lunch", recipe=lunch_recipe),
+            MealPlan.objects.create(
+                household=self.household,
+                added_by=self.user,
+                date=date.today(),
+                meal_type="breakfast",
+                recipe=breakfast_recipe,
+            ),
+            MealPlan.objects.create(
+                household=self.household,
+                added_by=self.user,
+                date=date.today(),
+                meal_type="lunch",
+                recipe=lunch_recipe,
+            ),
         ]
 
         # Test getting each meal type

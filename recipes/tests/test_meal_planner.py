@@ -15,6 +15,7 @@ from recipes.models import (
     MealPlannerPreferences,
     Recipe,
 )
+from recipes.models.household import Household, HouseholdMembership
 from recipes.services import MealPlanningAssistantService
 
 
@@ -43,6 +44,8 @@ class MealPlanningAssistantServiceTest(TestCase):
 
     def setUp(self):
         self.user = User.objects.create_user(username="testuser", password="testpass")
+        self.household = Household.objects.create(name="Test")
+        HouseholdMembership.objects.create(user=self.user, household=self.household)
 
         # Create some test recipes
         self.recipe1 = Recipe.objects.create(
@@ -147,7 +150,7 @@ class MealPlanningAssistantServiceTest(TestCase):
         MealPlanningAssistantService.generate_weekly_plan(user=self.user, meals_per_day=["dinner"])
 
         # Should have created 7 dinner entries
-        meal_plans = MealPlan.objects.filter(user=self.user, meal_type="dinner")
+        meal_plans = MealPlan.objects.filter(household=self.household, meal_type="dinner")
         self.assertEqual(meal_plans.count(), 7)
 
         # Each entry should have a recipe
@@ -159,7 +162,7 @@ class MealPlanningAssistantServiceTest(TestCase):
         MealPlanningAssistantService.generate_weekly_plan(user=self.user, meals_per_day=["breakfast", "dinner"])
 
         # Should have 14 entries (7 days * 2 meals)
-        meal_plans = MealPlan.objects.filter(user=self.user)
+        meal_plans = MealPlan.objects.filter(household=self.household)
         self.assertEqual(meal_plans.count(), 14)
 
 
@@ -169,6 +172,8 @@ class MealPlannerViewsTest(TestCase):
     def setUp(self):
         self.client = Client()
         self.user = User.objects.create_user(username="testuser", password="testpass")
+        self.household = Household.objects.create(name="Test")
+        HouseholdMembership.objects.create(user=self.user, household=self.household)
         self.client.login(username="testuser", password="testpass")
 
         # Create a test recipe
@@ -210,7 +215,7 @@ class MealPlannerViewsTest(TestCase):
         self.assertEqual(response.status_code, 302)
 
         # Should have created meal plans
-        plans = MealPlan.objects.filter(user=self.user)
+        plans = MealPlan.objects.filter(household=self.household)
         self.assertGreater(plans.count(), 0)
 
     def test_unauthenticated_access(self):

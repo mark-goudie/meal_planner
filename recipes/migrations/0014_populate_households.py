@@ -25,10 +25,12 @@ def populate_households(apps, schema_editor):
             household=household,
         )
         MealPlan.objects.filter(user=user).update(
-            household=household, added_by=user,
+            household=household,
+            added_by=user,
         )
         ShoppingListItem.objects.filter(user=user).update(
-            household=household, added_by=user,
+            household=household,
+            added_by=user,
         )
 
 
@@ -41,7 +43,7 @@ def reverse_populate(apps, schema_editor):
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('recipes', '0013_add_household_fields'),
+        ("recipes", "0013_add_household_fields"),
     ]
 
     operations = [

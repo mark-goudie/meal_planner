@@ -17,7 +17,6 @@ from ..services import (
     MealPlanningAssistantService,
 )
 
-
 # --------------------------
 # Public Views
 # --------------------------

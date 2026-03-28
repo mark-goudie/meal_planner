@@ -4,10 +4,15 @@ from django.db import models
 
 class ShoppingListItem(models.Model):
     household = models.ForeignKey(
-        "Household", on_delete=models.CASCADE, related_name="shopping_items",
+        "Household",
+        on_delete=models.CASCADE,
+        related_name="shopping_items",
     )
     added_by = models.ForeignKey(
-        User, on_delete=models.SET_NULL, null=True, related_name="+",
+        User,
+        on_delete=models.SET_NULL,
+        null=True,
+        related_name="+",
     )
     name = models.CharField(max_length=200)
     checked = models.BooleanField(default=False)

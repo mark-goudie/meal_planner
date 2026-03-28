@@ -10,6 +10,7 @@ from django.contrib.auth.models import User
 from django.test import TestCase
 
 from recipes.models import MealPlan, Recipe, Tag
+from recipes.models.household import Household, HouseholdMembership
 from recipes.services import (
     AIAPIError,
     AIConfigurationError,
@@ -112,6 +113,8 @@ class MealPlanServiceTest(TestCase):
 
     def setUp(self):
         self.user = User.objects.create_user(username="testuser", password="testpass")
+        self.household = Household.objects.create(name="Test")
+        HouseholdMembership.objects.create(user=self.user, household=self.household)
         self.recipe = Recipe.objects.create(
             user=self.user, title="Test Recipe", ingredients_text="ingredients", steps="steps"
         )
@@ -119,7 +122,9 @@ class MealPlanServiceTest(TestCase):
 
     def test_get_meal_plans_for_user(self):
         """Test getting meal plans for a user"""
-        MealPlan.objects.create(user=self.user, recipe=self.recipe, date=self.today, meal_type="breakfast")
+        MealPlan.objects.create(
+            household=self.household, added_by=self.user, recipe=self.recipe, date=self.today, meal_type="breakfast"
+        )
         plans = MealPlanService.get_meal_plans_for_user(self.user)
         self.assertEqual(plans.count(), 1)
 
@@ -127,11 +132,19 @@ class MealPlanServiceTest(TestCase):
         """Test filtering for upcoming meal plans"""
         # Create past meal plan
         MealPlan.objects.create(
-            user=self.user, recipe=self.recipe, date=self.today - timedelta(days=5), meal_type="breakfast"
+            household=self.household,
+            added_by=self.user,
+            recipe=self.recipe,
+            date=self.today - timedelta(days=5),
+            meal_type="breakfast",
         )
         # Create future meal plan
         MealPlan.objects.create(
-            user=self.user, recipe=self.recipe, date=self.today + timedelta(days=2), meal_type="lunch"
+            household=self.household,
+            added_by=self.user,
+            recipe=self.recipe,
+            date=self.today + timedelta(days=2),
+            meal_type="lunch",
         )
 
         plans = MealPlanService.get_meal_plans_for_user(self.user, upcoming_only=True)
@@ -149,7 +162,13 @@ class MealPlanServiceTest(TestCase):
     def test_create_or_update_meal_plan_update(self):
         """Test updating an existing meal plan"""
         # Create initial meal plan
-        MealPlan.objects.create(user=self.user, recipe=self.recipe, date=self.today, meal_type="breakfast")
+        MealPlan.objects.create(
+            household=self.household,
+            added_by=self.user,
+            recipe=self.recipe,
+            date=self.today,
+            meal_type="breakfast",
+        )
 
         # Create new recipe for update
         new_recipe = Recipe.objects.create(
@@ -169,7 +188,13 @@ class MealPlanServiceTest(TestCase):
         # Create meal plans for this week
         start_of_week = self.today - timedelta(days=self.today.weekday())
 
-        MealPlan.objects.create(user=self.user, recipe=self.recipe, date=start_of_week, meal_type="breakfast")
+        MealPlan.objects.create(
+            household=self.household,
+            added_by=self.user,
+            recipe=self.recipe,
+            date=start_of_week,
+            meal_type="breakfast",
+        )
 
         result = MealPlanService.get_weekly_meal_plan(self.user, week_offset=0)
 

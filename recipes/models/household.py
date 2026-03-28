@@ -17,9 +17,7 @@ def generate_household_code():
 class Household(models.Model):
     name = models.CharField(max_length=100)
     code = models.CharField(max_length=8, unique=True)
-    created_by = models.ForeignKey(
-        User, on_delete=models.SET_NULL, null=True, related_name="created_households"
-    )
+    created_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name="created_households")
     created_at = models.DateTimeField(auto_now_add=True)
 
     def save(self, *args, **kwargs):
@@ -32,12 +30,8 @@ class Household(models.Model):
 
 
 class HouseholdMembership(models.Model):
-    user = models.OneToOneField(
-        User, on_delete=models.CASCADE, related_name="household_membership"
-    )
-    household = models.ForeignKey(
-        Household, on_delete=models.CASCADE, related_name="members"
-    )
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="household_membership")
+    household = models.ForeignKey(Household, on_delete=models.CASCADE, related_name="members")
     joined_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
@@ -45,9 +39,7 @@ class HouseholdMembership(models.Model):
 
 
 class DayComment(models.Model):
-    household = models.ForeignKey(
-        Household, on_delete=models.CASCADE, related_name="day_comments"
-    )
+    household = models.ForeignKey(Household, on_delete=models.CASCADE, related_name="day_comments")
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     date = models.DateField()
     text = models.CharField(max_length=200)

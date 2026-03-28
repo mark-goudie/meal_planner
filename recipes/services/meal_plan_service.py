@@ -14,6 +14,7 @@ from django.contrib.auth.models import User
 from django.db.models import QuerySet
 
 from ..models import MealPlan, Recipe
+from ..models.household import get_household
 
 
 class MealPlanService:
@@ -26,7 +27,7 @@ class MealPlanService:
         user: User, start_date: Optional[date] = None, end_date: Optional[date] = None, upcoming_only: bool = False
     ) -> QuerySet:
         """
-        Get meal plans for a user with optional date filtering.
+        Get meal plans for a user's household with optional date filtering.
 
         Args:
             user: The user whose meal plans to retrieve
@@ -37,7 +38,8 @@ class MealPlanService:
         Returns:
             QuerySet of MealPlan objects with optimized queries
         """
-        plans = MealPlan.objects.filter(user=user)
+        household = get_household(user)
+        plans = MealPlan.objects.filter(household=household)
 
         if upcoming_only:
             today = date.today()
@@ -74,8 +76,12 @@ class MealPlanService:
         Returns:
             Tuple of (MealPlan instance, created boolean)
         """
+        household = get_household(user)
         meal_plan, created = MealPlan.objects.update_or_create(
-            user=user, date=plan_date, meal_type=meal_type, defaults={"recipe": recipe}
+            household=household,
+            date=plan_date,
+            meal_type=meal_type,
+            defaults={"recipe": recipe, "added_by": user},
         )
         return meal_plan, created
 

@@ -14,10 +14,15 @@ MEAL_CHOICES = [
 
 class MealPlan(models.Model):
     household = models.ForeignKey(
-        "Household", on_delete=models.CASCADE, related_name="meal_plans",
+        "Household",
+        on_delete=models.CASCADE,
+        related_name="meal_plans",
     )
     added_by = models.ForeignKey(
-        User, on_delete=models.SET_NULL, null=True, related_name="+",
+        User,
+        on_delete=models.SET_NULL,
+        null=True,
+        related_name="+",
     )
     date = models.DateField(default=date.today)
     meal_type = models.CharField(max_length=10, choices=MEAL_CHOICES)
