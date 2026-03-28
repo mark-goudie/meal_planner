@@ -1,0 +1,71 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <meta name="theme-color" content="#0d0d1a">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>Cooking: {{ recipe.title }}</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'recipes/css/app.css' %}">
+</head>
+<body>
+    <div class="cook-screen"
+         x-data="cookingMode()"
+         x-init="init()"
+         @beforeunload.window="destroy()">
+
+      {% csrf_token %}
+
+      <!-- Top bar -->
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-lg);">
+        <a href="{% url 'recipe_detail' recipe.pk %}" class="btn btn-outline btn-sm">&lsaquo; Exit</a>
+        <div style="text-align: center; flex: 1;">
+          <div style="font-weight: 700; font-size: var(--text-base); color: var(--text-main);">{{ recipe.title }}</div>
+        </div>
+        <div style="font-size: var(--text-sm); color: var(--text-muted); font-weight: 700; min-width: 70px; text-align: right;">
+          Step <span id="current-step-num">1</span>/{{ total_steps }}
+        </div>
+      </div>
+
+      <!-- Progress bar -->
+      <div class="cook-progress">
+        <div class="cook-progress__fill" id="cook-progress-fill" style="width: {% widthratio 1 total_steps 100 %}%;"></div>
+      </div>
+
+      <!-- Step content area (swapped by HTMX) -->
+      <div id="cook-step-content">
+        {% include "cook/partials/step.html" %}
+      </div>
+
+    </div>
+
+    <script src="https://unpkg.com/htmx.org@2.0.4"></script>
+    <script src="https://unpkg.com/alpinejs@3.14.8/dist/cdn.min.js" defer></script>
+    <script>document.body.addEventListener('htmx:configRequest', (e) => {
+        e.detail.headers['X-CSRFToken'] = document.querySelector('[name=csrfmiddlewaretoken]')?.value
+            || document.cookie.match(/csrftoken=([^;]+)/)?.[1] || '';
+    });</script>
+    <script src="{% static 'recipes/js/app.js' %}"></script>
+    <script>
+    document.body.addEventListener('htmx:afterSwap', (e) => {
+        // Update step counter and progress bar after HTMX swap
+        const stepEl = document.getElementById('cook-step-content');
+        if (stepEl) {
+            const num = stepEl.querySelector('[data-step-num]');
+            if (num) {
+                const stepNum = num.getAttribute('data-step-num');
+                const totalSteps = {{ total_steps }};
+                const counterEl = document.getElementById('current-step-num');
+                if (counterEl) counterEl.textContent = stepNum;
+                const fill = document.getElementById('cook-progress-fill');
+                if (fill) fill.style.width = (stepNum / totalSteps * 100) + '%';
+            }
+        }
+    });
+    </script>
+</body>
+</html>

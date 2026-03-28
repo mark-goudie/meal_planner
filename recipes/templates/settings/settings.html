@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+
+{% block title %}Settings - Meal Planner{% endblock %}
+
+{% block nav_more %}active{% endblock %}
+
+{% block content %}
+<div class="screen">
+  {% csrf_token %}
+
+  <header class="mb-xl">
+    <h1 style="font-size: var(--text-xl); font-weight: 800;">Settings</h1>
+  </header>
+
+  <!-- Account info -->
+  <div style="padding: var(--space-lg); background: var(--bg-card); border-radius: var(--radius-md); margin-bottom: var(--space-xl);">
+    <div class="section-header">
+      <h2 class="section-title" style="margin-bottom: var(--space-sm);">Account</h2>
+    </div>
+    <div class="flex justify-between items-center" style="padding: var(--space-sm) 0; border-bottom: 1px solid var(--border);">
+      <span class="text-muted text-sm">Username</span>
+      <span class="text-main">{{ user.username }}</span>
+    </div>
+    <div class="flex justify-between items-center" style="padding: var(--space-sm) 0;">
+      <span class="text-muted text-sm">Email</span>
+      <span class="text-main">{{ user.email|default:"Not set" }}</span>
+    </div>
+  </div>
+
+  <!-- Preferences form -->
+  <form method="post" action="{% url 'settings' %}">
+    {% csrf_token %}
+
+    <div style="padding: var(--space-lg); background: var(--bg-card); border-radius: var(--radius-md); margin-bottom: var(--space-xl);">
+      <div class="section-header">
+        <h2 class="section-title" style="margin-bottom: var(--space-md);">Meal Planner Preferences</h2>
+      </div>
+
+      {% for field in form %}
+      <div style="margin-bottom: var(--space-lg);">
+        <label for="{{ field.id_for_label }}"
+               style="display: block; font-size: var(--text-sm); font-weight: 700; color: var(--text-muted); margin-bottom: var(--space-xs);">
+          {{ field.label }}
+        </label>
+        <input type="number"
+               id="{{ field.id_for_label }}"
+               name="{{ field.html_name }}"
+               value="{{ field.value }}"
+               min="{{ field.field.widget.attrs.min }}"
+               max="{{ field.field.widget.attrs.max }}"
+               step="{{ field.field.widget.attrs.step }}"
+               style="width: 100%; background: var(--bg-surface); border: 1px solid var(--border); border-radius: var(--radius-md); padding: var(--space-sm) var(--space-md); color: var(--text-main); font-size: var(--text-base);">
+        {% if field.help_text %}
+        <p style="font-size: var(--text-xs); color: var(--text-dim); margin-top: var(--space-xs);">{{ field.help_text }}</p>
+        {% endif %}
+        {% if field.errors %}
+        <p style="font-size: var(--text-xs); color: var(--danger); margin-top: var(--space-xs);">{{ field.errors.0 }}</p>
+        {% endif %}
+      </div>
+      {% endfor %}
+    </div>
+
+    <button type="submit" class="btn btn-primary btn-full btn-lg">Save Settings</button>
+  </form>
+
+  <!-- Logout -->
+  <div class="mt-xl mb-lg" style="text-align: center;">
+    <a href="{% url 'logout' %}" class="text-muted text-sm">Log out</a>
+  </div>
+</div>
+{% endblock %}

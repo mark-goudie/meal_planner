@@ -1,0 +1,193 @@
+{% extends "base.html" %}
+
+{% block title %}{% if update %}Edit{% else %}New{% endif %} Recipe - Meal Planner{% endblock %}
+
+{% block nav_recipes %}active{% endblock %}
+
+{% block content %}
+<div class="screen">
+
+  <!-- Back link -->
+  {% if update and recipe %}
+    <a href="{% url 'recipe_detail' pk=recipe.pk %}" class="text-sm text-muted mb-lg block">&lsaquo; Back to recipe</a>
+  {% else %}
+    <a href="{% url 'recipe_list' %}" class="text-sm text-muted mb-lg block">&lsaquo; Back to recipes</a>
+  {% endif %}
+
+  <header class="page-header">
+    <div class="page-header__text">
+      <h1 class="page-header__title">{% if update %}Edit Recipe{% else %}New Recipe{% endif %}</h1>
+    </div>
+  </header>
+
+  {% if error %}
+  <div class="form-error-list">
+    <li>{{ error }}</li>
+  </div>
+  {% endif %}
+
+  <form method="post" action="{% if update %}{% url 'recipe_update' pk=recipe.pk %}{% else %}{% url 'recipe_create' %}{% endif %}">
+    {% csrf_token %}
+
+    <!-- Title -->
+    <div class="form-group">
+      <label class="form-label" for="title">Recipe Title *</label>
+      <input type="text" id="title" name="title" class="form-input"
+             value="{% if recipe %}{{ recipe.title }}{% endif %}"
+             placeholder="e.g. Spaghetti Carbonara" required>
+    </div>
+
+    <!-- Description -->
+    <div class="form-group">
+      <label class="form-label" for="description">Description</label>
+      <textarea id="description" name="description" class="form-input" rows="3"
+                placeholder="Brief description of the dish">{% if recipe %}{{ recipe.description }}{% endif %}</textarea>
+    </div>
+
+    <!-- Time & Servings Row -->
+    <div class="flex gap-md mb-lg">
+      <div class="flex-1">
+        <label class="form-label" for="prep_time">Prep (min)</label>
+        <input type="number" id="prep_time" name="prep_time" class="form-input"
+               value="{% if recipe.prep_time %}{{ recipe.prep_time }}{% endif %}"
+               min="0" placeholder="15">
+      </div>
+      <div class="flex-1">
+        <label class="form-label" for="cook_time">Cook (min)</label>
+        <input type="number" id="cook_time" name="cook_time" class="form-input"
+               value="{% if recipe.cook_time %}{{ recipe.cook_time }}{% endif %}"
+               min="0" placeholder="30">
+      </div>
+      <div class="flex-1">
+        <label class="form-label" for="servings">Servings</label>
+        <input type="number" id="servings" name="servings" class="form-input"
+               value="{% if recipe %}{{ recipe.servings }}{% else %}4{% endif %}"
+               min="1" placeholder="4">
+      </div>
+    </div>
+
+    <!-- Difficulty & Source -->
+    <div class="flex gap-md mb-lg">
+      <div class="flex-1">
+        <label class="form-label" for="difficulty">Difficulty</label>
+        <select id="difficulty" name="difficulty" class="form-input">
+          <option value="easy" {% if recipe.difficulty == 'easy' %}selected{% endif %}>Easy</option>
+          <option value="medium" {% if recipe.difficulty == 'medium' or not recipe %}selected{% endif %}>Medium</option>
+          <option value="hard" {% if recipe.difficulty == 'hard' %}selected{% endif %}>Hard</option>
+        </select>
+      </div>
+      <div class="flex-1">
+        <label class="form-label" for="source">Source</label>
+        <select id="source" name="source" class="form-input">
+          <option value="manual" {% if recipe.source == 'manual' or not recipe %}selected{% endif %}>Manual</option>
+          <option value="ai" {% if recipe.source == 'ai' %}selected{% endif %}>AI Generated</option>
+          <option value="url" {% if recipe.source == 'url' %}selected{% endif %}>Imported</option>
+          <option value="family" {% if recipe.source == 'family' %}selected{% endif %}>Family Recipe</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Tags -->
+    {% if tags %}
+    <div class="form-group">
+      <label class="form-label">Tags</label>
+      <div class="flex gap-xs" style="flex-wrap: wrap;">
+        {% for tag in tags %}
+          <label class="filter-chip" style="cursor: pointer;">
+            <input type="checkbox" name="tags" value="{{ tag.pk }}" style="display: none;"
+                   {% if recipe and tag in recipe.tags.all %}checked{% endif %}
+                   onchange="this.parentElement.classList.toggle('active', this.checked)">
+            {{ tag.name }}
+          </label>
+        {% endfor %}
+      </div>
+    </div>
+    {% endif %}
+
+    <!-- Structured Ingredients (Alpine.js) -->
+    <div class="form-group" x-data="ingredientManager()">
+      <label class="form-label">Ingredients</label>
+
+      <template x-for="(ing, index) in ingredients" :key="index">
+        <div class="flex gap-xs mb-sm items-center" style="flex-wrap: wrap;">
+          <input type="text" :name="'ing_name_' + index" x-model="ing.name"
+                 class="form-input" style="flex: 2; min-width: 120px; min-height: 40px; padding: 6px 10px;"
+                 placeholder="Ingredient name">
+          <input type="number" :name="'ing_qty_' + index" x-model="ing.quantity"
+                 class="form-input" style="flex: 0.7; min-width: 60px; min-height: 40px; padding: 6px 10px;"
+                 placeholder="Qty" step="0.01" min="0">
+          <select :name="'ing_unit_' + index" x-model="ing.unit"
+                  class="form-input" style="flex: 0.8; min-width: 70px; min-height: 40px; padding: 6px 24px 6px 10px;">
+            {% for value, label in unit_choices %}
+              <option value="{{ value }}">{{ label }}</option>
+            {% endfor %}
+          </select>
+          <input type="text" :name="'ing_notes_' + index" x-model="ing.notes"
+                 class="form-input" style="flex: 1.5; min-width: 80px; min-height: 40px; padding: 6px 10px;"
+                 placeholder="e.g. diced">
+          <button type="button" @click="ingredients.splice(index, 1)" class="btn btn-ghost btn-sm"
+                  style="min-height: 40px; min-width: 40px; padding: 0; flex-shrink: 0;"
+                  aria-label="Remove ingredient">&#10005;</button>
+        </div>
+      </template>
+
+      <button type="button"
+              @click="ingredients.push({ name: '', quantity: '', unit: '', notes: '' })"
+              class="btn btn-outline btn-sm mt-sm">+ Add Ingredient</button>
+
+      <input type="hidden" name="ingredient_count" :value="ingredients.length">
+    </div>
+
+    <!-- Ingredients Text Fallback -->
+    <div class="form-group">
+      <label class="form-label" for="ingredients_text">Ingredients (text fallback)</label>
+      <textarea id="ingredients_text" name="ingredients_text" class="form-input" rows="4"
+                placeholder="One ingredient per line (optional fallback)">{% if recipe %}{{ recipe.ingredients_text }}{% endif %}</textarea>
+      <span class="form-help">Use the structured fields above if possible. This is a fallback for quick entry.</span>
+    </div>
+
+    <!-- Steps -->
+    <div class="form-group">
+      <label class="form-label" for="steps">Steps</label>
+      <textarea id="steps" name="steps" class="form-input" rows="6"
+                placeholder="One step per line">{% if recipe %}{{ recipe.steps }}{% endif %}</textarea>
+    </div>
+
+    <!-- Notes -->
+    <div class="form-group">
+      <label class="form-label" for="notes">Notes</label>
+      <textarea id="notes" name="notes" class="form-input" rows="3"
+                placeholder="Tips, variations, or reminders">{% if recipe %}{{ recipe.notes }}{% endif %}</textarea>
+    </div>
+
+    <!-- Submit -->
+    <div class="flex gap-sm mt-xl">
+      <button type="submit" class="btn btn-primary btn-full btn-lg">
+        {% if update %}Save Changes{% else %}Create Recipe{% endif %}
+      </button>
+    </div>
+  </form>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function ingredientManager() {
+  var existing = {{ existing_ingredients|safe|default:"[]" }};
+  var ingredients = [];
+  if (existing.length > 0) {
+    for (var i = 0; i < existing.length; i++) {
+      ingredients.push({
+        name: existing[i].name || '',
+        quantity: existing[i].quantity || '',
+        unit: existing[i].unit || '',
+        notes: existing[i].notes || ''
+      });
+    }
+  } else {
+    ingredients.push({ name: '', quantity: '', unit: '', notes: '' });
+  }
+  return { ingredients: ingredients };
+}
+</script>
+{% endblock %}

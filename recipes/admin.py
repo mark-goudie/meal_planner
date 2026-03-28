@@ -1,31 +1,64 @@
 from django.contrib import admin
 from .models import (
-    Recipe, Tag, MealPlan, FamilyPreference,
-    DietaryRestriction, MealPlannerPreferences,
-    RecipeCookingHistory, GeneratedMealPlan, GeneratedMealPlanEntry
+    Recipe, Tag, Ingredient, RecipeIngredient,
+    MealPlan, MealPlannerPreferences,
+    CookingNote, ShoppingListItem,
 )
 
-# Basic registrations
-admin.site.register(Recipe)
-admin.site.register(Tag)
-admin.site.register(MealPlan)
-admin.site.register(FamilyPreference)
-admin.site.register(DietaryRestriction)
-admin.site.register(MealPlannerPreferences)
-admin.site.register(RecipeCookingHistory)
+
+# Inlines
+
+class RecipeIngredientInline(admin.TabularInline):
+    model = RecipeIngredient
+    extra = 1
+    autocomplete_fields = ['ingredient']
 
 
-# Custom admin for Generated Meal Plans
-class GeneratedMealPlanEntryInline(admin.TabularInline):
-    model = GeneratedMealPlanEntry
-    extra = 0
-    readonly_fields = ('recipe', 'date', 'meal_type', 'happiness_score')
+# Model admin classes
+
+@admin.register(Tag)
+class TagAdmin(admin.ModelAdmin):
+    list_display = ('name', 'tag_type')
+    list_filter = ('tag_type',)
+    search_fields = ('name',)
 
 
-@admin.register(GeneratedMealPlan)
-class GeneratedMealPlanAdmin(admin.ModelAdmin):
-    list_display = ('id', 'user', 'week_start', 'week_end', 'approved', 'overall_happiness_score', 'variety_score')
-    list_filter = ('approved', 'generated_at')
-    search_fields = ('user__username',)
-    readonly_fields = ('generated_at', 'approved_at')
-    inlines = [GeneratedMealPlanEntryInline]
+@admin.register(Ingredient)
+class IngredientAdmin(admin.ModelAdmin):
+    list_display = ('name', 'category')
+    list_filter = ('category',)
+    search_fields = ('name',)
+
+
+@admin.register(Recipe)
+class RecipeAdmin(admin.ModelAdmin):
+    list_display = ('title', 'user', 'source', 'difficulty', 'created_at')
+    list_filter = ('source', 'difficulty', 'is_ai_generated')
+    search_fields = ('title', 'description')
+    inlines = [RecipeIngredientInline]
+
+
+@admin.register(MealPlan)
+class MealPlanAdmin(admin.ModelAdmin):
+    list_display = ('user', 'date', 'meal_type', 'recipe')
+    list_filter = ('meal_type', 'date')
+    search_fields = ('user__username', 'recipe__title')
+
+
+@admin.register(MealPlannerPreferences)
+class MealPlannerPreferencesAdmin(admin.ModelAdmin):
+    list_display = ('user', 'max_weeknight_time', 'max_weekend_time', 'avoid_repeat_days')
+
+
+@admin.register(CookingNote)
+class CookingNoteAdmin(admin.ModelAdmin):
+    list_display = ('recipe', 'user', 'cooked_date', 'rating', 'would_make_again')
+    list_filter = ('rating', 'would_make_again', 'cooked_date')
+    search_fields = ('recipe__title', 'user__username', 'note')
+
+
+@admin.register(ShoppingListItem)
+class ShoppingListItemAdmin(admin.ModelAdmin):
+    list_display = ('name', 'user', 'checked', 'created_at')
+    list_filter = ('checked',)
+    search_fields = ('name', 'user__username')

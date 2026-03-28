@@ -3,7 +3,7 @@ from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
 from django.db import IntegrityError
 from datetime import date, timedelta
-from recipes.models import Recipe, Tag, MealPlan, FamilyPreference, MEAL_CHOICES, PREFERENCE_CHOICES
+from recipes.models import Recipe, Tag, MealPlan, MEAL_CHOICES
 
 
 class RecipeModelTest(TestCase):
@@ -21,7 +21,7 @@ class RecipeModelTest(TestCase):
         recipe = Recipe.objects.create(
             user=self.user,
             title='Test Recipe',
-            ingredients='Test ingredients',
+            ingredients_text='Test ingredients',
             steps='Test steps'
         )
         self.assertEqual(recipe.title, 'Test Recipe')
@@ -36,14 +36,14 @@ class RecipeModelTest(TestCase):
             title='Full Test Recipe',
             author='Test Author',
             description='Test description',
-            ingredients='Test ingredients\nMore ingredients',
+            ingredients_text='Test ingredients\nMore ingredients',
             steps='Step 1\nStep 2',
             notes='Test notes',
             is_ai_generated=True
         )
         recipe.tags.add(self.tag1, self.tag2)
         recipe.favourited_by.add(self.user)
-        
+
         self.assertEqual(recipe.title, 'Full Test Recipe')
         self.assertEqual(recipe.author, 'Test Author')
         self.assertTrue(recipe.is_ai_generated)
@@ -55,7 +55,7 @@ class RecipeModelTest(TestCase):
         recipe = Recipe.objects.create(
             user=self.user,
             title='String Test Recipe',
-            ingredients='ingredients',
+            ingredients_text='ingredients',
             steps='steps'
         )
         self.assertEqual(str(recipe), 'String Test Recipe')
@@ -65,7 +65,7 @@ class RecipeModelTest(TestCase):
         recipe = Recipe.objects.create(
             user=self.user,
             title='Relationship Test',
-            ingredients='ingredients',
+            ingredients_text='ingredients',
             steps='steps'
         )
         self.assertEqual(recipe.user, self.user)
@@ -76,7 +76,7 @@ class RecipeModelTest(TestCase):
         recipe = Recipe.objects.create(
             user=self.user,
             title='Tag Test Recipe',
-            ingredients='ingredients',
+            ingredients_text='ingredients',
             steps='steps'
         )
         recipe.tags.add(self.tag1)
@@ -88,7 +88,7 @@ class RecipeModelTest(TestCase):
         recipe = Recipe.objects.create(
             user=self.user,
             title='Favourite Test',
-            ingredients='ingredients',
+            ingredients_text='ingredients',
             steps='steps'
         )
         recipe.favourited_by.add(self.user)
@@ -131,7 +131,7 @@ class MealPlanModelTest(TestCase):
         self.recipe = Recipe.objects.create(
             user=self.user,
             title='Test Recipe',
-            ingredients='ingredients',
+            ingredients_text='ingredients',
             steps='steps'
         )
 
@@ -192,102 +192,3 @@ class MealPlanModelTest(TestCase):
             recipe=self.recipe
         )
         self.assertEqual(meal_plan.recipe, self.recipe)
-
-
-class FamilyPreferenceModelTest(TestCase):
-    def setUp(self):
-        self.user = User.objects.create_user(
-            username='testuser',
-            email='test@example.com',
-            password='testpass123'
-        )
-        self.recipe = Recipe.objects.create(
-            user=self.user,
-            title='Test Recipe',
-            ingredients='ingredients',
-            steps='steps'
-        )
-
-    def test_create_family_preference(self):
-        """Test creating a family preference"""
-        preference = FamilyPreference.objects.create(
-            user=self.user,
-            family_member='Alice',
-            recipe=self.recipe,
-            preference=3  # Like
-        )
-        self.assertEqual(preference.user, self.user)
-        self.assertEqual(preference.family_member, 'Alice')
-        self.assertEqual(preference.recipe, self.recipe)
-        self.assertEqual(preference.preference, 3)
-
-    def test_family_preference_str_method(self):
-        """Test the string representation of FamilyPreference"""
-        preference = FamilyPreference.objects.create(
-            user=self.user,
-            family_member='Bob',
-            recipe=self.recipe,
-            preference=1  # Dislike
-        )
-        expected_str = f"Bob - {self.recipe.title}: Dislike"
-        self.assertEqual(str(preference), expected_str)
-
-    def test_preference_choices_validation(self):
-        """Test that preference is restricted to valid choices"""
-        valid_choices = [choice[0] for choice in PREFERENCE_CHOICES]
-        self.assertIn(1, valid_choices)  # Dislike
-        self.assertIn(2, valid_choices)  # Neutral
-        self.assertIn(3, valid_choices)  # Like
-
-    def test_unique_together_constraint(self):
-        """Test that family_member and recipe combination must be unique"""
-        FamilyPreference.objects.create(
-            user=self.user,
-            family_member='Charlie',
-            recipe=self.recipe,
-            preference=2
-        )
-        with self.assertRaises(IntegrityError):
-            FamilyPreference.objects.create(
-                user=self.user,
-                family_member='Charlie',
-                recipe=self.recipe,
-                preference=3
-            )
-
-    def test_family_preference_user_relationship(self):
-        """Test the foreign key relationship with User"""
-        preference = FamilyPreference.objects.create(
-            user=self.user,
-            family_member='Diana',
-            recipe=self.recipe,
-            preference=3
-        )
-        self.assertIn(preference, self.user.family_preferences.all())
-
-    def test_family_preference_recipe_relationship(self):
-        """Test the foreign key relationship with Recipe"""
-        preference = FamilyPreference.objects.create(
-            user=self.user,
-            family_member='Eve',
-            recipe=self.recipe,
-            preference=2
-        )
-        self.assertEqual(preference.recipe, self.recipe)
-
-    def test_multiple_family_members_same_recipe(self):
-        """Test that multiple family members can have preferences for the same recipe"""
-        FamilyPreference.objects.create(
-            user=self.user,
-            family_member='Frank',
-            recipe=self.recipe,
-            preference=3
-        )
-        FamilyPreference.objects.create(
-            user=self.user,
-            family_member='Grace',
-            recipe=self.recipe,
-            preference=1
-        )
-        preferences = FamilyPreference.objects.filter(recipe=self.recipe)
-        self.assertEqual(preferences.count(), 2)

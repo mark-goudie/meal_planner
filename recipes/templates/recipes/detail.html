@@ -1,0 +1,179 @@
+{% extends "base.html" %}
+
+{% block title %}{{ recipe.title }} - Meal Planner{% endblock %}
+
+{% block nav_recipes %}active{% endblock %}
+
+{% block content %}
+<div class="screen">
+  {% csrf_token %}
+
+  <!-- Back link -->
+  <a href="{% url 'recipe_list' %}" class="text-sm text-muted mb-lg block">&lsaquo; Back to recipes</a>
+
+  <!-- Recipe Header -->
+  <header class="mb-xl">
+    <div class="flex justify-between items-start gap-md">
+      <h1 style="flex: 1;">{{ recipe.title }}</h1>
+      <div id="fav-btn">
+        {% include "recipes/partials/favourite_button.html" with recipe=recipe is_favourited=is_favourited %}
+      </div>
+    </div>
+
+    {% if recipe.description %}
+      <p class="mt-sm">{{ recipe.description }}</p>
+    {% endif %}
+
+    <!-- Metadata chips -->
+    <div class="flex gap-sm mt-md" style="flex-wrap: wrap;">
+      {% if recipe.cook_time %}
+        <span class="chip chip--primary">⏱ {{ recipe.cook_time }}m</span>
+      {% endif %}
+      {% if recipe.prep_time %}
+        <span class="chip chip--primary">🔪 {{ recipe.prep_time }}m prep</span>
+      {% endif %}
+      {% if recipe.total_time %}
+        <span class="chip chip--muted">{{ recipe.total_time }}m total</span>
+      {% endif %}
+      {% if recipe.servings %}
+        <span class="chip chip--primary">👤 {{ recipe.servings }} servings</span>
+      {% endif %}
+      {% if recipe.difficulty %}
+        <span class="chip chip--muted">{{ recipe.get_difficulty_display }}</span>
+      {% endif %}
+      {% if recipe.source == 'ai' %}
+        <span class="chip chip--accent">AI Generated</span>
+      {% endif %}
+    </div>
+
+    <!-- Tags -->
+    {% if recipe.tags.all %}
+    <div class="flex gap-xs mt-sm" style="flex-wrap: wrap;">
+      {% for tag in recipe.tags.all %}
+        <span class="chip chip--muted">{{ tag.name }}</span>
+      {% endfor %}
+    </div>
+    {% endif %}
+  </header>
+
+  <!-- Rating Summary -->
+  {% if recipe.average_rating or recipe.cook_count > 0 %}
+  <div class="flex gap-lg items-center mb-xl" style="padding: var(--space-md); background: var(--bg-card); border-radius: var(--radius-md);">
+    {% if recipe.average_rating %}
+      <div class="flex items-center gap-xs">
+        <span style="color: var(--accent); font-size: var(--text-xl);">★</span>
+        <span class="font-bold text-lg">{{ recipe.average_rating|floatformat:1 }}</span>
+      </div>
+    {% endif %}
+    {% if recipe.cook_count > 0 %}
+      <div>
+        <span class="text-muted text-sm">Cooked {{ recipe.cook_count }} time{{ recipe.cook_count|pluralize }}</span>
+      </div>
+    {% endif %}
+    {% if recipe.latest_note %}
+      <div>
+        <span class="text-muted text-sm">Last: {{ recipe.latest_note.cooked_date|date:"M d, Y" }}</span>
+      </div>
+    {% endif %}
+  </div>
+  {% endif %}
+
+  <!-- Ingredients -->
+  <div class="section-header">
+    <h2 class="section-title">Ingredients</h2>
+  </div>
+
+  {% if structured_ingredients %}
+    <ul class="mb-xl">
+      {% for ri in structured_ingredients %}
+      <li class="flex justify-between items-center" style="padding: var(--space-sm) 0; border-bottom: 1px solid var(--border);">
+        <span class="text-main">
+          {{ ri.ingredient.name }}
+          {% if ri.preparation_notes %}
+            <span class="text-muted text-sm">({{ ri.preparation_notes }})</span>
+          {% endif %}
+        </span>
+        <span class="text-muted text-sm" style="white-space: nowrap; margin-left: var(--space-md);">
+          {% if ri.quantity %}{{ ri.quantity|floatformat:"-2" }}{% endif %}
+          {% if ri.unit %}{{ ri.get_unit_display }}{% endif %}
+        </span>
+      </li>
+      {% endfor %}
+    </ul>
+  {% elif recipe.ingredients_text %}
+    <div class="mb-xl" style="padding: var(--space-md); background: var(--bg-card); border-radius: var(--radius-md);">
+      <pre style="white-space: pre-wrap; font-family: var(--font); color: var(--text-main); font-size: var(--text-base); line-height: 1.8; margin: 0;">{{ recipe.ingredients_text }}</pre>
+    </div>
+  {% else %}
+    <p class="text-muted mb-xl">No ingredients listed.</p>
+  {% endif %}
+
+  <!-- Steps -->
+  <div class="section-header">
+    <h2 class="section-title">Steps</h2>
+  </div>
+
+  {% if recipe.steps %}
+  <ol class="mb-xl" style="counter-reset: step;">
+    {% for step in recipe.steps.splitlines %}
+      {% if step.strip %}
+      <li style="counter-increment: step; display: flex; gap: var(--space-md); padding: var(--space-md) 0; border-bottom: 1px solid var(--border);">
+        <span style="color: var(--primary); font-weight: 800; font-size: var(--text-lg); min-width: 24px;" class="flex-shrink-0">{{ forloop.counter }}.</span>
+        <span class="text-main">{{ step }}</span>
+      </li>
+      {% endif %}
+    {% endfor %}
+  </ol>
+  {% else %}
+    <p class="text-muted mb-xl">No steps listed.</p>
+  {% endif %}
+
+  <!-- Notes -->
+  {% if recipe.notes %}
+  <div class="section-header">
+    <h2 class="section-title">Notes</h2>
+  </div>
+  <div class="mb-xl" style="padding: var(--space-md); background: var(--bg-card); border-radius: var(--radius-md);">
+    <p>{{ recipe.notes }}</p>
+  </div>
+  {% endif %}
+
+  <!-- Cooking Notes -->
+  <div class="section-header">
+    <h2 class="section-title">Cooking Notes</h2>
+    <span class="text-muted text-sm">{{ cooking_notes|length }} note{{ cooking_notes|length|pluralize }}</span>
+  </div>
+
+  {% if cooking_notes %}
+    {% for note in cooking_notes %}
+    <div style="padding: var(--space-md); background: var(--bg-card); border-radius: var(--radius-md); margin-bottom: var(--space-md);">
+      <div class="flex justify-between items-center mb-xs">
+        <span class="text-sm text-muted">{{ note.cooked_date|date:"M d, Y" }}</span>
+        {% if note.rating %}
+          <span style="color: var(--accent);">
+            {% for i in "12345" %}{% if forloop.counter <= note.rating %}★{% else %}☆{% endif %}{% endfor %}
+          </span>
+        {% endif %}
+      </div>
+      {% if note.note %}
+        <p class="text-main text-sm">{{ note.note }}</p>
+      {% endif %}
+      {% if not note.would_make_again %}
+        <span class="chip chip--danger mt-xs">Would not make again</span>
+      {% endif %}
+    </div>
+    {% endfor %}
+  {% else %}
+    <p class="text-muted mb-lg">No cooking notes yet. Cook this recipe and share your experience!</p>
+  {% endif %}
+
+  <!-- Actions -->
+  <div class="flex flex-col gap-sm mt-xl mb-lg">
+    <a href="{% url 'cook' recipe.pk %}" class="btn btn-primary btn-full btn-lg">Start Cooking &rarr;</a>
+    <div class="flex gap-sm">
+      <a href="{% url 'recipe_update' pk=recipe.pk %}" class="btn btn-outline flex-1">Edit</a>
+      <a href="{% url 'recipe_delete' pk=recipe.pk %}" class="btn btn-danger flex-1">Delete</a>
+    </div>
+  </div>
+</div>
+{% endblock %}

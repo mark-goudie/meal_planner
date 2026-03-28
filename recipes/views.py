@@ -1,28 +1,35 @@
+import json
+from decimal import Decimal, InvalidOperation
+
 from django.shortcuts import render, get_object_or_404, redirect
-from django.db.models import Q, Count
+from django.db.models import Q, Count, Avg, Max
 from django.conf import settings
 from django.contrib.auth import login
 from django.contrib.auth.decorators import login_required
-from django.http import HttpResponseRedirect
+from django.http import HttpResponseRedirect, HttpResponse, HttpResponseForbidden
 from django.urls import reverse
 from django.core.paginator import Paginator
 from django.utils.dateparse import parse_date
 from django.utils import timezone
+from django.views.decorators.http import require_POST
 from datetime import date, timedelta
 from django_ratelimit.decorators import ratelimit
 
+from django.contrib import messages as django_messages
+
 from .models import (
-    Recipe, MealPlan, Tag, FamilyPreference,
-    GeneratedMealPlan, GeneratedMealPlanEntry, MealPlannerPreferences,
-    RecipeCookingHistory
+    Recipe, MealPlan, Tag, MealPlannerPreferences,
+    Ingredient, RecipeIngredient, CookingNote, ShoppingListItem,
+    UNIT_CHOICES, INGREDIENT_CATEGORY_CHOICES,
 )
 from .forms import (
-    RecipeForm, MealPlanForm, FamilyPreferenceForm, CustomUserCreationForm,
+    RecipeForm, MealPlanForm, CustomUserCreationForm,
     MealPlannerPreferencesForm, WeeklyPlanGeneratorForm
 )
 from .services import (
     AIService, AIConfigurationError, AIValidationError, AIAPIError,
-    MealPlanningAssistantService
+    MealPlanningAssistantService,
+    RecipeService,
 )
 
 import openai
@@ -67,31 +74,16 @@ def recipe_list(request):
     if query:
         recipes = recipes.filter(
             Q(title__icontains=query) |
-            Q(ingredients__icontains=query)
+            Q(ingredients_text__icontains=query)
         )
 
     if tag_id:
         recipes = recipes.filter(tags__id=tag_id)
 
-    if selected_members:
-        recipes = recipes.annotate(
-            matching_likes=Count(
-                'familypreference',
-                filter=Q(familypreference__preference=3, familypreference__family_member__in=selected_members, familypreference__user=request.user),
-                distinct=True
-            )
-        ).filter(matching_likes=len(selected_members))
-
     if favourites_only:
         recipes = recipes.filter(favourited_by=request.user)
 
-    recipes = recipes.annotate(
-        total_likes=Count(
-            'familypreference',
-            filter=Q(familypreference__preference=3, familypreference__user=request.user),
-            distinct=True
-        )
-    ).distinct().select_related(
+    recipes = recipes.distinct().select_related(
         'user'
     ).prefetch_related(
         'tags',
@@ -112,7 +104,6 @@ def recipe_list(request):
         'recipe'
     ).order_by('date', 'meal_type')
     tags = Tag.objects.all()
-    family_members = FamilyPreference.objects.filter(user=request.user).values_list('family_member', flat=True).distinct()
 
     return render(request, 'recipes/recipe_list.html', {
         'page_obj': page_obj,
@@ -121,8 +112,6 @@ def recipe_list(request):
         'tags': tags,
         'query': query,
         'selected_tag': int(tag_id) if tag_id else None,
-        'family_members': family_members,
-        'selected_members': selected_members,
         'favourites_only': favourites_only,
     })
 
@@ -259,28 +248,6 @@ def meal_plan_create(request):
     return render(request, 'recipes/meal_plan_form.html', {'form': form})
 
 @login_required
-def add_preference(request, recipe_id):
-    recipe = get_object_or_404(Recipe, pk=recipe_id, user=request.user)
-    form = FamilyPreferenceForm(request.POST or None)
-
-    if form.is_valid():
-        pref = form.save(commit=False)
-        pref.recipe = recipe
-        pref.user = request.user
-        try:
-            existing = FamilyPreference.objects.get(recipe=recipe, family_member=pref.family_member, user=request.user)
-            existing.preference = pref.preference
-            existing.save()
-        except FamilyPreference.DoesNotExist:
-            pref.save()
-        return redirect('recipe_detail', pk=recipe_id)
-
-    return render(request, 'recipes/add_preference.html', {
-        'form': form,
-        'recipe': recipe,
-    })
-
-@login_required
 def toggle_favourite(request, recipe_id):
     recipe = get_object_or_404(Recipe, id=recipe_id, user=request.user)
     if request.user in recipe.favourited_by.all():
@@ -297,8 +264,8 @@ def generate_shopping_list(request):
         # Combine ingredients (assuming ingredients are stored as text, one per line)
         ingredient_set = set()
         for recipe in recipes:
-            if recipe.ingredients:
-                for line in recipe.ingredients.splitlines():
+            if recipe.ingredients_text:
+                for line in recipe.ingredients_text.splitlines():
                     line = line.strip()
                     if line:
                         ingredient_set.add(line)
@@ -415,12 +382,6 @@ def smart_meal_planner(request):
     """Smart weekly meal plan generator"""
     preferences = MealPlanningAssistantService.get_or_create_preferences(request.user)
 
-    # Get user's most recent generated plan (if any)
-    latest_plan = GeneratedMealPlan.objects.filter(
-        user=request.user,
-        approved=False
-    ).first()
-
     if request.method == 'POST':
         form = WeeklyPlanGeneratorForm(request.POST)
         if form.is_valid():
@@ -435,8 +396,7 @@ def smart_meal_planner(request):
                     meals_per_day=meals_to_plan
                 )
 
-                # Redirect to review page
-                return redirect('review_meal_plan', plan_id=plan.id)
+                return redirect('meal_plan_week')
 
             except ValueError as e:
                 form.add_error(None, str(e))
@@ -446,102 +406,676 @@ def smart_meal_planner(request):
     return render(request, 'recipes/smart_meal_planner.html', {
         'form': form,
         'preferences': preferences,
-        'latest_plan': latest_plan,
     })
 
 
-@login_required
-def review_meal_plan(request, plan_id):
-    """Review and adjust a generated meal plan"""
-    plan = get_object_or_404(
-        GeneratedMealPlan.objects.prefetch_related('entries__recipe__tags'),
-        id=plan_id,
-        user=request.user
-    )
+# --------------------------
+# Redesign Views — This Week
+# --------------------------
 
-    # Organize entries by date
-    entries_by_date = {}
-    for entry in plan.entries.all():
-        if entry.date not in entries_by_date:
-            entries_by_date[entry.date] = {}
-        entries_by_date[entry.date][entry.meal_type] = entry
+def _get_week_dates(offset=0):
+    """Get Monday-Sunday dates for a given week offset."""
+    today = date.today()
+    monday = today - timedelta(days=today.weekday()) + timedelta(weeks=offset)
+    return [monday + timedelta(days=i) for i in range(7)]
 
-    # Create week structure
-    week_days = []
-    for day_offset in range(7):
-        current_date = plan.week_start + timedelta(days=day_offset)
-        day_entries = entries_by_date.get(current_date, {})
-        week_days.append({
-            'date': current_date,
-            'name': current_date.strftime('%A'),
-            'is_today': current_date == date.today(),
-            'entries': day_entries,
+
+def _build_week_context(user, offset=0):
+    """Build template context for the weekly view."""
+    dates = _get_week_dates(offset)
+    start, end = dates[0], dates[-1]
+    meals = MealPlan.objects.with_related().for_user(user).in_date_range(start, end)
+    meal_lookup = {(m.date, m.meal_type): m for m in meals}
+
+    days = []
+    for d in dates:
+        meal = meal_lookup.get((d, 'dinner'))
+        days.append({
+            'date': d,
+            'day_name': d.strftime('%a'),
+            'day_num': d.day,
+            'is_today': d == date.today(),
+            'meal': meal,
         })
 
-    return render(request, 'recipes/review_meal_plan.html', {
-        'plan': plan,
-        'week_days': week_days,
+    return {
+        'days': days,
+        'week_start': start,
+        'week_end': end,
+        'offset': offset,
+    }
+
+
+@login_required
+def week_view(request):
+    """This Week — full page weekly meal plan view."""
+    offset = int(request.GET.get('offset', 0))
+    context = _build_week_context(request.user, offset)
+    return render(request, 'week/week.html', context)
+
+
+@login_required
+def week_slot(request, date_str, meal_type):
+    """HTMX partial: return a single day card."""
+    from datetime import datetime as dt
+    slot_date = dt.strptime(date_str, '%Y-%m-%d').date()
+
+    meal = MealPlan.objects.with_related().for_user(request.user).filter(
+        date=slot_date, meal_type=meal_type
+    ).first()
+
+    day = {
+        'date': slot_date,
+        'day_name': slot_date.strftime('%a'),
+        'day_num': slot_date.day,
+        'is_today': slot_date == date.today(),
+        'meal': meal,
+    }
+    return render(request, 'week/partials/meal_card.html', {'day': day})
+
+
+@login_required
+def week_assign(request, date_str, meal_type):
+    """HTMX partial: recipe picker (GET) or assign a recipe (POST)."""
+    from datetime import datetime as dt
+    slot_date = dt.strptime(date_str, '%Y-%m-%d').date()
+
+    if request.method == 'POST':
+        recipe_id = request.POST.get('recipe_id')
+        recipe = get_object_or_404(Recipe, pk=recipe_id, user=request.user)
+
+        MealPlan.objects.update_or_create(
+            user=request.user,
+            date=slot_date,
+            meal_type=meal_type,
+            defaults={'recipe': recipe},
+        )
+
+        meal = MealPlan.objects.with_related().for_user(request.user).filter(
+            date=slot_date, meal_type=meal_type
+        ).first()
+
+        day = {
+            'date': slot_date,
+            'day_name': slot_date.strftime('%a'),
+            'day_num': slot_date.day,
+            'is_today': slot_date == date.today(),
+            'meal': meal,
+        }
+        return render(request, 'week/partials/meal_card.html', {'day': day})
+
+    # GET — show recipe picker
+    search_query = request.GET.get('q', '').strip()
+    recipes = Recipe.objects.for_user(request.user)
+    if search_query:
+        recipes = recipes.search(search_query)
+    recipes = recipes.order_by('title')
+
+    return render(request, 'week/partials/recipe_picker.html', {
+        'recipes': recipes,
+        'date_str': date_str,
+        'meal_type': meal_type,
+        'day_label': f"{slot_date.strftime('%A %d %b')}",
+        'search_query': search_query,
     })
 
 
 @login_required
-def regenerate_meal(request, entry_id):
-    """Regenerate a single meal in the plan"""
-    entry = get_object_or_404(
-        GeneratedMealPlanEntry,
-        id=entry_id,
-        plan__user=request.user,
-        plan__approved=False
-    )
+def week_suggest(request):
+    """Placeholder for AI meal suggestions — returns empty response."""
+    from django.http import HttpResponse
+    return HttpResponse('')
 
-    try:
-        MealPlanningAssistantService.regenerate_single_meal(entry.plan, entry)
-    except ValueError as e:
-        # Handle case where no alternatives available
-        pass
 
-    return redirect('review_meal_plan', plan_id=entry.plan.id)
+# --------------------------
+# Redesign Views — Auth
+# --------------------------
+
+def register_view(request):
+    """New-style registration view that redirects to week view."""
+    if request.method == 'POST':
+        form = CustomUserCreationForm(request.POST)
+        if form.is_valid():
+            user = form.save()
+            login(request, user)
+            return redirect('week')
+    else:
+        form = CustomUserCreationForm()
+    return render(request, 'registration/register.html', {'form': form})
+
+
+# --------------------------
+# Redesign Views — Recipes
+# --------------------------
+
+def _get_sorted_recipes(queryset, sort, user):
+    """Apply sort ordering to a recipe queryset."""
+    from django.db.models import F
+
+    if sort == 'rating':
+        return queryset.annotate(
+            avg_rating=Avg('cooking_notes__rating')
+        ).order_by(F('avg_rating').desc(nulls_last=True), '-created_at')
+    elif sort == 'times_cooked':
+        return queryset.annotate(
+            cook_count_val=Count('cooking_notes')
+        ).order_by('-cook_count_val', '-created_at')
+    elif sort == 'recently_cooked':
+        return queryset.annotate(
+            last_cooked=Max('cooking_notes__cooked_date')
+        ).order_by(F('last_cooked').desc(nulls_last=True), '-created_at')
+    else:  # 'newest' or default
+        return queryset.order_by('-created_at')
 
 
 @login_required
-def approve_meal_plan(request, plan_id):
-    """Approve and activate a generated meal plan"""
-    plan = get_object_or_404(
-        GeneratedMealPlan,
-        id=plan_id,
+def recipe_list_view(request):
+    """Recipe Collection — full page view with search, filter, sort."""
+    recipes = Recipe.objects.for_user(request.user).with_related()
+
+    query = request.GET.get('q', '').strip()
+    tag_id = request.GET.get('tag', '')
+    sort = request.GET.get('sort', 'newest')
+    favourites_only = request.GET.get('favourites') == '1'
+
+    if query:
+        recipes = recipes.search(query)
+
+    if tag_id:
+        recipes = recipes.with_tag(tag_id)
+
+    if favourites_only:
+        recipes = recipes.favourited_by_user(request.user)
+
+    recipes = _get_sorted_recipes(recipes, sort, request.user)
+
+    paginator = Paginator(recipes, 12)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+
+    tags = Tag.objects.all()
+
+    return render(request, 'recipes/list.html', {
+        'page_obj': page_obj,
+        'recipes': page_obj.object_list,
+        'tags': tags,
+        'query': query,
+        'selected_tag': int(tag_id) if tag_id else None,
+        'sort': sort,
+        'favourites_only': favourites_only,
+    })
+
+
+@login_required
+def recipe_search(request):
+    """HTMX partial — returns filtered recipe cards without page wrapper."""
+    recipes = Recipe.objects.for_user(request.user).with_related()
+
+    query = request.GET.get('q', '').strip()
+    tag_id = request.GET.get('tag', '')
+    sort = request.GET.get('sort', 'newest')
+    favourites_only = request.GET.get('favourites') == '1'
+
+    if query:
+        recipes = recipes.search(query)
+
+    if tag_id:
+        recipes = recipes.with_tag(tag_id)
+
+    if favourites_only:
+        recipes = recipes.favourited_by_user(request.user)
+
+    recipes = _get_sorted_recipes(recipes, sort, request.user)
+
+    paginator = Paginator(recipes, 12)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+
+    return render(request, 'recipes/partials/search_results.html', {
+        'page_obj': page_obj,
+        'recipes': page_obj.object_list,
+        'query': query,
+        'selected_tag': int(tag_id) if tag_id else None,
+        'sort': sort,
+        'favourites_only': favourites_only,
+    })
+
+
+@login_required
+def recipe_detail_view(request, pk):
+    """Recipe Detail — full page view with ingredients, steps, notes."""
+    recipe = get_object_or_404(
+        Recipe.objects.select_related('user').prefetch_related(
+            'tags', 'favourited_by',
+            'recipe_ingredients__ingredient',
+            'cooking_notes',
+        ),
+        pk=pk,
         user=request.user,
-        approved=False
     )
+    structured_ingredients = recipe.recipe_ingredients.all()
+    cooking_notes = recipe.cooking_notes.all()
+    is_favourited = request.user in recipe.favourited_by.all()
 
-    if request.method == 'POST':
-        # Approve the plan
-        MealPlanningAssistantService.approve_plan(plan)
+    return render(request, 'recipes/detail.html', {
+        'recipe': recipe,
+        'structured_ingredients': structured_ingredients,
+        'cooking_notes': cooking_notes,
+        'is_favourited': is_favourited,
+    })
 
-        # Create cooking history entries for tracking
-        for entry in plan.entries.all():
-            RecipeCookingHistory.objects.get_or_create(
-                user=request.user,
-                recipe=entry.recipe,
-                cooked_date=entry.date,
-                meal_type=entry.meal_type
-            )
 
-        return redirect('meal_plan_week')
+def _process_structured_ingredients(request, recipe):
+    """Process dynamically named ingredient fields from the form POST."""
+    # Clear existing structured ingredients
+    recipe.recipe_ingredients.all().delete()
 
-    return redirect('review_meal_plan', plan_id=plan_id)
+    count = int(request.POST.get('ingredient_count', 0))
+    for i in range(count):
+        name = request.POST.get(f'ing_name_{i}', '').strip()
+        if not name:
+            continue
+        ingredient, _ = Ingredient.objects.get_or_create(
+            name=name.lower(),
+            defaults={'category': 'other'},
+        )
+        qty = request.POST.get(f'ing_qty_{i}', '').strip()
+        try:
+            quantity = Decimal(qty) if qty else None
+        except (InvalidOperation, ValueError):
+            quantity = None
+        RecipeIngredient.objects.create(
+            recipe=recipe,
+            ingredient=ingredient,
+            quantity=quantity,
+            unit=request.POST.get(f'ing_unit_{i}', ''),
+            preparation_notes=request.POST.get(f'ing_notes_{i}', '').strip(),
+            order=i,
+        )
 
 
 @login_required
-def delete_generated_plan(request, plan_id):
-    """Delete a generated plan"""
-    plan = get_object_or_404(
-        GeneratedMealPlan,
-        id=plan_id,
-        user=request.user
-    )
+def recipe_create_view(request):
+    """Create a new recipe with structured ingredient entry."""
+    if request.method == 'POST':
+        title = request.POST.get('title', '').strip()
+        if not title:
+            return render(request, 'recipes/form.html', {
+                'error': 'Title is required.',
+                'unit_choices': UNIT_CHOICES,
+            })
+
+        recipe = Recipe.objects.create(
+            user=request.user,
+            title=title,
+            description=request.POST.get('description', '').strip(),
+            prep_time=int(request.POST['prep_time']) if request.POST.get('prep_time') else None,
+            cook_time=int(request.POST['cook_time']) if request.POST.get('cook_time') else None,
+            servings=int(request.POST.get('servings', 4)),
+            difficulty=request.POST.get('difficulty', 'medium'),
+            source=request.POST.get('source', 'manual'),
+            steps=request.POST.get('steps', ''),
+            notes=request.POST.get('notes', ''),
+            ingredients_text=request.POST.get('ingredients_text', ''),
+        )
+        # Tags
+        tag_ids = request.POST.getlist('tags')
+        if tag_ids:
+            recipe.tags.set(tag_ids)
+
+        _process_structured_ingredients(request, recipe)
+
+        return redirect('recipe_detail', pk=recipe.pk)
+
+    tags = Tag.objects.all()
+    return render(request, 'recipes/form.html', {
+        'tags': tags,
+        'unit_choices': UNIT_CHOICES,
+    })
+
+
+@login_required
+def recipe_update_view(request, pk):
+    """Edit an existing recipe."""
+    recipe = get_object_or_404(Recipe, pk=pk, user=request.user)
 
     if request.method == 'POST':
-        plan.delete()
-        return redirect('smart_meal_planner')
+        title = request.POST.get('title', '').strip()
+        if not title:
+            existing_ingredients_data = []
+            for ri in recipe.recipe_ingredients.select_related('ingredient').all():
+                existing_ingredients_data.append({
+                    'name': ri.ingredient.name,
+                    'quantity': str(ri.quantity) if ri.quantity else '',
+                    'unit': ri.unit,
+                    'notes': ri.preparation_notes,
+                })
+            return render(request, 'recipes/form.html', {
+                'recipe': recipe,
+                'error': 'Title is required.',
+                'tags': Tag.objects.all(),
+                'unit_choices': UNIT_CHOICES,
+                'update': True,
+                'existing_ingredients': json.dumps(existing_ingredients_data),
+            })
 
-    return redirect('review_meal_plan', plan_id=plan_id)
+        recipe.title = title
+        recipe.description = request.POST.get('description', '').strip()
+        recipe.prep_time = int(request.POST['prep_time']) if request.POST.get('prep_time') else None
+        recipe.cook_time = int(request.POST['cook_time']) if request.POST.get('cook_time') else None
+        recipe.servings = int(request.POST.get('servings', 4))
+        recipe.difficulty = request.POST.get('difficulty', 'medium')
+        recipe.source = request.POST.get('source', 'manual')
+        recipe.steps = request.POST.get('steps', '')
+        recipe.notes = request.POST.get('notes', '')
+        recipe.ingredients_text = request.POST.get('ingredients_text', '')
+        recipe.save()
+
+        tag_ids = request.POST.getlist('tags')
+        recipe.tags.set(tag_ids)
+
+        _process_structured_ingredients(request, recipe)
+
+        return redirect('recipe_detail', pk=recipe.pk)
+
+    tags = Tag.objects.all()
+    existing_ingredients = []
+    for ri in recipe.recipe_ingredients.select_related('ingredient').all():
+        existing_ingredients.append({
+            'name': ri.ingredient.name,
+            'quantity': str(ri.quantity) if ri.quantity else '',
+            'unit': ri.unit,
+            'notes': ri.preparation_notes,
+        })
+
+    return render(request, 'recipes/form.html', {
+        'recipe': recipe,
+        'tags': tags,
+        'unit_choices': UNIT_CHOICES,
+        'update': True,
+        'existing_ingredients': json.dumps(existing_ingredients),
+    })
+
+
+@login_required
+def recipe_delete_view(request, pk):
+    """Delete confirmation and deletion."""
+    recipe = get_object_or_404(Recipe, pk=pk, user=request.user)
+    if request.method == 'POST':
+        recipe.delete()
+        return redirect('recipe_list')
+    return render(request, 'recipes/confirm_delete.html', {'recipe': recipe})
+
+
+@login_required
+def toggle_favourite_view(request, pk):
+    """HTMX endpoint to toggle favourite status. Returns heart partial."""
+    recipe = get_object_or_404(Recipe, pk=pk, user=request.user)
+    if request.user in recipe.favourited_by.all():
+        recipe.favourited_by.remove(request.user)
+        is_favourited = False
+    else:
+        recipe.favourited_by.add(request.user)
+        is_favourited = True
+
+    return render(request, 'recipes/partials/favourite_button.html', {
+        'recipe': recipe,
+        'is_favourited': is_favourited,
+    })
+
+
+# --------------------------
+# Cooking Mode Views
+# --------------------------
+
+def _parse_cooking_steps(recipe):
+    """Parse recipe into cooking mode steps.
+
+    Returns a list of dicts: [{'text': str, 'ingredients': queryset_or_list}, ...]
+    """
+    if recipe.cooking_mode_steps:
+        # Structured JSON steps
+        steps = []
+        all_ingredients = {
+            ri.pk: ri
+            for ri in recipe.recipe_ingredients.select_related('ingredient').all()
+        }
+        for step_data in recipe.cooking_mode_steps:
+            ingredient_ids = step_data.get('ingredient_ids', [])
+            step_ingredients = [
+                all_ingredients[pk] for pk in ingredient_ids if pk in all_ingredients
+            ]
+            steps.append({
+                'text': step_data.get('text', ''),
+                'ingredients': step_ingredients,
+            })
+        return steps
+
+    # Fallback: split steps text by newlines
+    lines = [line.strip() for line in recipe.steps.splitlines() if line.strip()]
+    all_ingredients = list(recipe.recipe_ingredients.select_related('ingredient').all())
+    steps = []
+    for i, line in enumerate(lines):
+        steps.append({
+            'text': line,
+            'ingredients': all_ingredients if i == 0 else [],
+        })
+    return steps
+
+
+@login_required
+def cook_view(request, pk):
+    """Full-page cooking mode for a recipe."""
+    recipe = get_object_or_404(
+        Recipe.objects.select_related('user').prefetch_related(
+            'recipe_ingredients__ingredient', 'cooking_notes',
+        ),
+        pk=pk,
+        user=request.user,
+    )
+    steps = _parse_cooking_steps(recipe)
+    if not steps:
+        return redirect('recipe_detail', pk=recipe.pk)
+
+    total_steps = len(steps)
+    first_step = steps[0]
+    cooking_notes = list(recipe.cooking_notes.exclude(note='')[:3])
+
+    return render(request, 'cook/cook.html', {
+        'recipe': recipe,
+        'step_num': 1,
+        'step_text': first_step['text'],
+        'step_ingredients': first_step['ingredients'],
+        'total_steps': total_steps,
+        'cooking_notes': cooking_notes,
+    })
+
+
+@login_required
+def cook_step(request, pk, step):
+    """HTMX partial for a single cooking step."""
+    recipe = get_object_or_404(
+        Recipe.objects.select_related('user').prefetch_related(
+            'recipe_ingredients__ingredient', 'cooking_notes',
+        ),
+        pk=pk,
+        user=request.user,
+    )
+    steps = _parse_cooking_steps(recipe)
+    total_steps = len(steps)
+
+    if step < 1 or step > total_steps:
+        from django.http import Http404
+        raise Http404("Step not found")
+
+    current = steps[step - 1]
+    cooking_notes = list(recipe.cooking_notes.exclude(note='')[:3])
+
+    return render(request, 'cook/partials/step.html', {
+        'recipe': recipe,
+        'step_num': step,
+        'step_text': current['text'],
+        'step_ingredients': current['ingredients'],
+        'total_steps': total_steps,
+        'cooking_notes': cooking_notes,
+    })
+
+
+@login_required
+def cook_done(request, pk):
+    """Completion screen with rating form (GET) or save note (POST)."""
+    recipe = get_object_or_404(Recipe, pk=pk, user=request.user)
+    steps = _parse_cooking_steps(recipe)
+    total_steps = len(steps) if steps else 1
+
+    if request.method == 'POST':
+        rating = request.POST.get('rating')
+        note_text = request.POST.get('note', '').strip()
+        would_make_again = 'would_make_again' in request.POST
+
+        CookingNote.objects.create(
+            recipe=recipe,
+            user=request.user,
+            cooked_date=date.today(),
+            rating=int(rating) if rating else None,
+            note=note_text,
+            would_make_again=would_make_again,
+        )
+        django_messages.success(request, f'Cooking note saved for {recipe.title}!')
+        return redirect('recipe_detail', pk=recipe.pk)
+
+    return render(request, 'cook/partials/done.html', {
+        'recipe': recipe,
+        'total_steps': total_steps,
+    })
+
+
+# --------------------------
+# Shopping List Views
+# --------------------------
+
+CATEGORY_EMOJIS = {
+    'produce': '🥬',
+    'dairy': '🧀',
+    'meat': '🥩',
+    'pantry': '🥫',
+    'spices': '🧂',
+    'frozen': '🧊',
+    'bakery': '🍞',
+    'other': '📦',
+}
+
+
+@login_required
+def shop_view(request):
+    """Full shopping list page."""
+    today = date.today()
+    monday = today - timedelta(days=today.weekday())
+    sunday = monday + timedelta(days=6)
+
+    # Get this week's meal plans
+    meals = MealPlan.objects.filter(
+        user=request.user,
+        date__range=[monday, sunday],
+    ).select_related('recipe')
+
+    recipes = [m.recipe for m in meals]
+    meal_count = len(recipes)
+
+    # Generate structured shopping list from recipes
+    generated_items = []
+    if recipes:
+        generated_items = RecipeService.generate_structured_shopping_list(recipes)
+
+    # Group by category
+    from collections import defaultdict
+    categories = defaultdict(list)
+    for item in generated_items:
+        cat = item['category'] or 'other'
+        categories[cat].append(item)
+
+    # Build ordered categories list with emojis
+    category_list = []
+    for cat_key, cat_label in INGREDIENT_CATEGORY_CHOICES:
+        if cat_key in categories:
+            category_list.append({
+                'key': cat_key,
+                'label': cat_label,
+                'emoji': CATEGORY_EMOJIS.get(cat_key, '📦'),
+                'items': categories[cat_key],
+            })
+
+    # Manual items
+    manual_items = ShoppingListItem.objects.filter(user=request.user)
+
+    total_generated = len(generated_items)
+    total_manual = manual_items.count()
+    total_items = total_generated + total_manual
+    checked_items = manual_items.filter(checked=True).count()
+
+    return render(request, 'shop/shop.html', {
+        'categories': category_list,
+        'manual_items': manual_items,
+        'week_start': monday,
+        'week_end': sunday,
+        'meal_count': meal_count,
+        'total_items': total_items,
+        'checked_items': checked_items,
+    })
+
+
+@login_required
+@require_POST
+def shop_generate(request):
+    """Regenerate the shopping list."""
+    ShoppingListItem.objects.filter(user=request.user).delete()
+    django_messages.success(request, 'Shopping list regenerated!')
+    return redirect('shop')
+
+
+@login_required
+@require_POST
+def shop_toggle(request, pk):
+    """Toggle a ShoppingListItem's checked state."""
+    item = get_object_or_404(ShoppingListItem, pk=pk, user=request.user)
+    item.checked = not item.checked
+    item.save()
+    return render(request, 'shop/partials/item.html', {'item': item})
+
+
+@login_required
+@require_POST
+def shop_add(request):
+    """Add a manual shopping list item."""
+    name = request.POST.get('name', '').strip()
+    if name:
+        item = ShoppingListItem.objects.create(
+            user=request.user,
+            name=name,
+        )
+        return render(request, 'shop/partials/item.html', {'item': item})
+    return HttpResponse('')
+
+
+# --------------------------
+# Settings View
+# --------------------------
+
+@login_required
+def settings_view(request):
+    """User settings and preferences."""
+    prefs, _ = MealPlannerPreferences.objects.get_or_create(user=request.user)
+
+    if request.method == 'POST':
+        form = MealPlannerPreferencesForm(request.POST, instance=prefs)
+        if form.is_valid():
+            form.save()
+            django_messages.success(request, 'Settings saved!')
+            return redirect('settings')
+    else:
+        form = MealPlannerPreferencesForm(instance=prefs)
+
+    return render(request, 'settings/settings.html', {
+        'form': form,
+        'preferences': prefs,
+    })

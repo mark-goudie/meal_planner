@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Log In — Meal Planner{% endblock %}
+
+{% block content %}
+<div class="auth-container screen--no-nav">
+    <div class="auth-logo">🍽️</div>
+    <h1 class="auth-title">Welcome back</h1>
+    <p class="auth-subtitle">Log in to your meal planner</p>
+
+    <form class="auth-form" method="post" action="{% url 'login' %}">
+        {% csrf_token %}
+        {% if next %}
+            <input type="hidden" name="next" value="{{ next }}">
+        {% endif %}
+
+        {% if form.non_field_errors %}
+        <ul class="form-error-list" role="alert">
+            {% for error in form.non_field_errors %}
+            <li>{{ error }}</li>
+            {% endfor %}
+        </ul>
+        {% endif %}
+
+        <div class="form-group">
+            <label class="form-label" for="id_username">Username</label>
+            <input
+                type="text"
+                name="username"
+                id="id_username"
+                class="form-input {% if form.username.errors %}form-input--error{% endif %}"
+                placeholder="Your username"
+                autocomplete="username"
+                autocapitalize="none"
+                autocorrect="off"
+                spellcheck="false"
+                value="{{ form.username.value|default:'' }}"
+                required
+            >
+            {% for error in form.username.errors %}
+            <span class="form-error">{{ error }}</span>
+            {% endfor %}
+        </div>
+
+        <div class="form-group">
+            <label class="form-label" for="id_password">Password</label>
+            <input
+                type="password"
+                name="password"
+                id="id_password"
+                class="form-input {% if form.password.errors %}form-input--error{% endif %}"
+                placeholder="Your password"
+                autocomplete="current-password"
+                required
+            >
+            {% for error in form.password.errors %}
+            <span class="form-error">{{ error }}</span>
+            {% endfor %}
+        </div>
+
+        <button type="submit" class="btn btn-primary btn-full mt-md">
+            Log In
+        </button>
+
+        <div class="mt-lg text-center">
+            <a href="{% url 'password_reset' %}" class="text-muted text-sm">Forgot password?</a>
+        </div>
+    </form>
+
+    <p class="auth-link">
+        Don't have an account? <a href="{% url 'register' %}">Sign up</a>
+    </p>
+</div>
+{% endblock %}

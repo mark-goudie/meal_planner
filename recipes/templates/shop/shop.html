@@ -1,0 +1,99 @@
+{% extends "base.html" %}
+
+{% block title %}Shopping List - Meal Planner{% endblock %}
+
+{% block nav_shop %}active{% endblock %}
+
+{% block content %}
+<div class="screen">
+  {% csrf_token %}
+
+  <!-- Header -->
+  <header class="mb-xl">
+    <h1 style="font-size: var(--text-xl); font-weight: 800;">Shopping List</h1>
+    <p class="text-muted text-sm mt-xs">
+      {{ week_start|date:"M d" }} &ndash; {{ week_end|date:"M d, Y" }}
+      &middot; {{ meal_count }} meal{{ meal_count|pluralize }}
+    </p>
+  </header>
+
+  <!-- Progress -->
+  {% if total_items > 0 %}
+  <div style="margin-bottom: var(--space-xl);">
+    <div class="flex justify-between items-center mb-xs">
+      <span class="text-sm text-muted">{{ checked_items }} of {{ total_items }} items</span>
+    </div>
+    <div class="cook-progress">
+      <div class="cook-progress__fill" style="width: {% widthratio checked_items total_items 100 %}%;"></div>
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- Generated items by category -->
+  {% for cat in categories %}
+  <div class="shop-category">
+    <div class="shop-category__header">
+      <span class="shop-category__emoji">{{ cat.emoji }}</span>
+      {{ cat.label }}
+    </div>
+    {% for item in cat.items %}
+    <div class="shop-item">
+      <div class="shop-item__check"></div>
+      <span class="shop-item__label">
+        {{ item.ingredient.name }}
+        {% if item.recipes %}
+          <span class="text-muted text-sm">&middot; {% for r in item.recipes %}{{ r }}{% if not forloop.last %}, {% endif %}{% endfor %}</span>
+        {% endif %}
+      </span>
+      <span class="shop-item__qty">
+        {% if item.total_quantity %}{{ item.total_quantity|floatformat:"-2" }}{% endif %}
+        {{ item.unit }}
+      </span>
+    </div>
+    {% endfor %}
+  </div>
+  {% empty %}
+    {% if not manual_items %}
+    <div style="text-align: center; padding: var(--space-2xl) 0;">
+      <div style="font-size: 48px; margin-bottom: var(--space-md);">🛒</div>
+      <p class="text-muted">No meals planned this week.</p>
+      <a href="{% url 'week' %}" class="btn btn-primary mt-lg">Plan your week</a>
+    </div>
+    {% endif %}
+  {% endfor %}
+
+  <!-- Manual items -->
+  <div class="shop-category">
+    <div class="shop-category__header">
+      <span class="shop-category__emoji">&#10002;</span>
+      Other Items
+    </div>
+    <div id="manual-items-list">
+      {% for item in manual_items %}
+        {% include "shop/partials/item.html" with item=item %}
+      {% endfor %}
+    </div>
+
+    <!-- Add item form -->
+    <form hx-post="{% url 'shop_add' %}"
+          hx-target="#manual-items-list"
+          hx-swap="beforeend"
+          style="display: flex; gap: var(--space-sm); padding: var(--space-md) 0;">
+      {% csrf_token %}
+      <input type="text" name="name" placeholder="Add item..."
+             class="form-input"
+             style="flex: 1; background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-md); padding: var(--space-sm) var(--space-md); color: var(--text-main); font-size: var(--text-base);"
+             required>
+      <button type="submit" class="btn btn-primary btn-sm">Add</button>
+    </form>
+  </div>
+
+  <!-- Regenerate -->
+  <div class="mt-xl mb-lg">
+    <form method="post" action="{% url 'shop_generate' %}">
+      {% csrf_token %}
+      <button type="submit" class="btn btn-outline btn-full">Regenerate List</button>
+    </form>
+  </div>
+</div>
+{% endblock %}

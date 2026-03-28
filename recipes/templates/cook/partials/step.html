@@ -1,0 +1,67 @@
+<div class="cook-content" data-step-num="{{ step_num }}">
+  <!-- Watermark step number -->
+  <div class="cook-step-number">{{ step_num }}</div>
+
+  <!-- Step label -->
+  <div class="cook-step-label">Step {{ step_num }}</div>
+
+  <!-- Step text -->
+  <div class="cook-step-text">{{ step_text }}</div>
+
+  <!-- Ingredients for this step -->
+  {% if step_ingredients %}
+  <div style="margin-bottom: var(--space-xl);">
+    {% for ing in step_ingredients %}
+    <div class="cook-ingredient-card">
+      <span class="cook-ingredient-card__name">{{ ing.ingredient.name }}{% if ing.preparation_notes %} <span style="color: var(--text-muted);">({{ ing.preparation_notes }})</span>{% endif %}</span>
+      <span class="cook-ingredient-card__amount">
+        {% if ing.quantity %}{{ ing.quantity|floatformat:"-2" }}{% endif %}
+        {% if ing.unit %}{{ ing.get_unit_display }}{% endif %}
+      </span>
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  <!-- Previous cooking notes -->
+  {% if cooking_notes %}
+  <div style="margin-bottom: var(--space-xl); padding: var(--space-md); background: var(--bg-card); border-radius: var(--radius-md);">
+    <div style="font-size: var(--text-sm); font-weight: 700; color: var(--text-muted); margin-bottom: var(--space-sm);">Previous Notes</div>
+    {% for note in cooking_notes %}
+    <div style="font-size: var(--text-sm); color: var(--text-muted); margin-bottom: var(--space-xs);">
+      {{ note.cooked_date|date:"M d" }} &mdash; {{ note.note|truncatewords:20 }}
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  <!-- Navigation -->
+  <div class="cook-nav">
+    {% if step_num > 1 %}
+    <button class="btn btn-outline"
+            hx-get="{% url 'cook_step' recipe.pk step_num|add:"-1" %}"
+            hx-target="#cook-step-content"
+            hx-swap="innerHTML">
+      &lsaquo; Prev
+    </button>
+    {% else %}
+    <div></div>
+    {% endif %}
+
+    {% if step_num < total_steps %}
+    <button class="btn btn-primary"
+            hx-get="{% url 'cook_step' recipe.pk step_num|add:"1" %}"
+            hx-target="#cook-step-content"
+            hx-swap="innerHTML">
+      Next &rsaquo;
+    </button>
+    {% else %}
+    <button class="btn btn-accent"
+            hx-get="{% url 'cook_done' recipe.pk %}"
+            hx-target="#cook-step-content"
+            hx-swap="innerHTML">
+      Done &#10003;
+    </button>
+    {% endif %}
+  </div>
+</div>

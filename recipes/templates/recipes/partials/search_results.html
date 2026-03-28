@@ -1,0 +1,31 @@
+{% if recipes %}
+  {% for recipe in recipes %}
+    {% include "recipes/partials/recipe_card.html" with recipe=recipe %}
+  {% endfor %}
+
+  {% if page_obj.has_other_pages %}
+  <div class="flex justify-center mt-lg gap-sm">
+    {% if page_obj.has_previous %}
+      <a href="?page={{ page_obj.previous_page_number }}{% if query %}&q={{ query }}{% endif %}{% if selected_tag %}&tag={{ selected_tag }}{% endif %}{% if sort %}&sort={{ sort }}{% endif %}{% if favourites_only %}&favourites=1{% endif %}"
+         class="btn btn-ghost btn-sm"
+         hx-get="{% url 'recipe_search' %}?page={{ page_obj.previous_page_number }}{% if query %}&q={{ query }}{% endif %}{% if selected_tag %}&tag={{ selected_tag }}{% endif %}{% if sort %}&sort={{ sort }}{% endif %}{% if favourites_only %}&favourites=1{% endif %}"
+         hx-target="#recipe-results"
+         hx-swap="innerHTML">Prev</a>
+    {% endif %}
+    <span class="text-muted text-sm flex items-center">{{ page_obj.number }} / {{ page_obj.paginator.num_pages }}</span>
+    {% if page_obj.has_next %}
+      <a href="?page={{ page_obj.next_page_number }}{% if query %}&q={{ query }}{% endif %}{% if selected_tag %}&tag={{ selected_tag }}{% endif %}{% if sort %}&sort={{ sort }}{% endif %}{% if favourites_only %}&favourites=1{% endif %}"
+         class="btn btn-ghost btn-sm"
+         hx-get="{% url 'recipe_search' %}?page={{ page_obj.next_page_number }}{% if query %}&q={{ query }}{% endif %}{% if selected_tag %}&tag={{ selected_tag }}{% endif %}{% if sort %}&sort={{ sort }}{% endif %}{% if favourites_only %}&favourites=1{% endif %}"
+         hx-target="#recipe-results"
+         hx-swap="innerHTML">Next</a>
+    {% endif %}
+  </div>
+  {% endif %}
+{% else %}
+  <div class="empty-state">
+    <div class="empty-state__icon">📖</div>
+    <div class="empty-state__title">No recipes found</div>
+    <div class="empty-state__text">Try a different search or add a new recipe.</div>
+  </div>
+{% endif %}

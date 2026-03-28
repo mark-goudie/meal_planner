@@ -1,0 +1,8 @@
+<div id="shop-item-{{ item.pk }}"
+     class="shop-item{% if item.checked %} shop-item--checked{% endif %}"
+     hx-post="{% url 'shop_toggle' item.pk %}"
+     hx-target="#shop-item-{{ item.pk }}"
+     hx-swap="outerHTML">
+  <div class="shop-item__check"></div>
+  <span class="shop-item__label">{{ item.name }}</span>
+</div>
