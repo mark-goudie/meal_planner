@@ -64,6 +64,40 @@ class MealPlanningAssistantService:
         return Decimal(str(min(score, 100)))
 
     @staticmethod
+    def calculate_recipe_happiness_score(
+        recipe: Recipe,
+        user: User,
+    ) -> Decimal:
+        """
+        Calculate happiness score for a recipe based on CookingNote ratings.
+
+        Returns: Score from 0-100.  Neutral 50 if no notes exist.
+        Penalised if the latest note has would_make_again=False.
+        """
+        notes = CookingNote.objects.filter(
+            recipe=recipe,
+            user=user,
+            rating__isnull=False,
+        )
+
+        if not notes.exists():
+            return Decimal('50.0')
+
+        avg_rating = notes.aggregate(Avg('rating'))['rating__avg'] or 3.0
+        # Convert 1-5 scale to 0-100
+        score = ((avg_rating - 1) / 4) * 100
+
+        # Penalise if the latest note says would_make_again=False
+        latest_note = CookingNote.objects.filter(
+            recipe=recipe,
+            user=user,
+        ).order_by('-cooked_date').first()
+        if latest_note and not latest_note.would_make_again:
+            score = max(score - 20, 0)
+
+        return Decimal(str(min(score, 100)))
+
+    @staticmethod
     def get_recently_cooked_recipes(
         user: User,
         days: int = 14,
@@ -74,7 +108,7 @@ class MealPlanningAssistantService:
             CookingNote.objects.filter(
                 user=user,
                 cooked_date__gte=cutoff_date,
-            ).values_list('recipe_id', flat=True).distinct()
+            ).order_by().values_list('recipe_id', flat=True).distinct()
         )
 
     @staticmethod

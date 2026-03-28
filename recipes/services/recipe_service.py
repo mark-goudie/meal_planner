@@ -8,6 +8,7 @@ This service encapsulates all recipe-related operations including:
 - Shopping list generation
 """
 
+from decimal import Decimal
 from typing import List, Optional, Set
 from django.db.models import Q, Count, QuerySet
 from django.contrib.auth.models import User
@@ -155,3 +156,30 @@ class RecipeService:
     def get_all_tags() -> QuerySet:
         """Get all available tags."""
         return Tag.objects.all()
+
+    @staticmethod
+    def generate_structured_shopping_list(recipes):
+        """Generate a shopping list with summed quantities from structured ingredients."""
+        from collections import defaultdict
+        from recipes.models import RecipeIngredient
+
+        aggregated = defaultdict(lambda: {
+            'ingredient': None,
+            'category': '',
+            'total_quantity': Decimal('0'),
+            'unit': '',
+            'recipes': set(),
+        })
+
+        for recipe in recipes:
+            for ri in recipe.recipe_ingredients.select_related('ingredient').all():
+                key = (ri.ingredient_id, ri.unit)
+                entry = aggregated[key]
+                entry['ingredient'] = ri.ingredient
+                entry['category'] = ri.ingredient.category
+                if ri.quantity:
+                    entry['total_quantity'] += ri.quantity
+                entry['unit'] = ri.get_unit_display()
+                entry['recipes'].add(recipe.title)
+
+        return sorted(aggregated.values(), key=lambda x: (x['category'], x['ingredient'].name))
