@@ -1,0 +1,194 @@
+<h2>Design Section 3 (continued): Recipe Detail & Cooking Mode</h2>
+<p class="subtitle">The two faces of a recipe — browsing vs actively cooking</p>
+
+<div class="split">
+  <div class="mockup">
+    <div class="mockup-header">Recipe Detail — Browse View</div>
+    <div class="mockup-body" style="background: #1a1a2e; color: #e6e6e6; font-family: -apple-system, sans-serif; padding: 0; max-width: 375px; margin: 0 auto;">
+
+      <!-- Back nav -->
+      <div style="padding: 12px 16px; display: flex; justify-content: space-between; align-items: center;">
+        <span style="color: #7cb9a8; font-size: 14px;">‹ Back</span>
+        <div style="display: flex; gap: 16px;">
+          <span style="font-size: 18px; cursor: pointer;">❤️</span>
+          <span style="font-size: 18px; cursor: pointer;">✏️</span>
+        </div>
+      </div>
+
+      <!-- Recipe header -->
+      <div style="padding: 0 16px 12px;">
+        <h2 style="margin: 0 0 6px; font-size: 22px; font-weight: 800; color: #fff; line-height: 1.2;">Pasta Carbonara</h2>
+        <div style="display: flex; gap: 12px; font-size: 12px; color: #888; margin-bottom: 10px;">
+          <span>⏱ 25 min</span>
+          <span>👥 Serves 4</span>
+          <span>📊 Easy</span>
+        </div>
+        <div style="display: flex; gap: 6px; flex-wrap: wrap;">
+          <span style="font-size: 11px; background: rgba(124,185,168,0.15); color: #7cb9a8; padding: 3px 10px; border-radius: 10px;">Quick</span>
+          <span style="font-size: 11px; background: rgba(124,185,168,0.15); color: #7cb9a8; padding: 3px 10px; border-radius: 10px;">Italian</span>
+          <span style="font-size: 11px; background: rgba(124,185,168,0.15); color: #7cb9a8; padding: 3px 10px; border-radius: 10px;">Pasta</span>
+        </div>
+      </div>
+
+      <!-- Rating summary -->
+      <div style="margin: 0 16px 12px; padding: 10px 14px; background: rgba(255,213,154,0.08); border-radius: 10px; border: 1px solid rgba(255,213,154,0.15);">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+          <div>
+            <span style="font-size: 18px; font-weight: 700; color: #ffd59a;">⭐ 5.0</span>
+            <span style="font-size: 12px; color: #888; margin-left: 6px;">from 3 cooks</span>
+          </div>
+          <span style="font-size: 11px; color: #7cb9a8;">Last cooked: 2 weeks ago</span>
+        </div>
+      </div>
+
+      <!-- Ingredients section -->
+      <div style="padding: 0 16px 12px;">
+        <h3 style="font-size: 14px; font-weight: 700; color: #7cb9a8; text-transform: uppercase; letter-spacing: 1px; margin: 0 0 10px;">Ingredients</h3>
+
+        <div style="background: #242440; border-radius: 10px; padding: 12px;">
+          <div style="padding: 8px 0; border-bottom: 1px solid #2a2a4a; display: flex; justify-content: space-between;">
+            <span style="font-size: 14px; color: #e6e6e6;">Spaghetti</span>
+            <span style="font-size: 14px; color: #888;">400g</span>
+          </div>
+          <div style="padding: 8px 0; border-bottom: 1px solid #2a2a4a; display: flex; justify-content: space-between;">
+            <span style="font-size: 14px; color: #e6e6e6;">Guanciale</span>
+            <span style="font-size: 14px; color: #888;">200g, cubed</span>
+          </div>
+          <div style="padding: 8px 0; border-bottom: 1px solid #2a2a4a; display: flex; justify-content: space-between;">
+            <span style="font-size: 14px; color: #e6e6e6;">Egg yolks</span>
+            <span style="font-size: 14px; color: #888;">4 large</span>
+          </div>
+          <div style="padding: 8px 0; border-bottom: 1px solid #2a2a4a; display: flex; justify-content: space-between;">
+            <span style="font-size: 14px; color: #e6e6e6;">Pecorino Romano</span>
+            <span style="font-size: 14px; color: #888;">100g, finely grated</span>
+          </div>
+          <div style="padding: 8px 0; display: flex; justify-content: space-between;">
+            <span style="font-size: 14px; color: #e6e6e6;">Black pepper</span>
+            <span style="font-size: 14px; color: #888;">2 tsp, freshly cracked</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Steps preview -->
+      <div style="padding: 0 16px 12px;">
+        <h3 style="font-size: 14px; font-weight: 700; color: #7cb9a8; text-transform: uppercase; letter-spacing: 1px; margin: 0 0 10px;">Steps</h3>
+
+        <div style="background: #242440; border-radius: 10px; padding: 12px;">
+          <div style="padding: 8px 0; border-bottom: 1px solid #2a2a4a;">
+            <div style="display: flex; gap: 10px;">
+              <span style="color: #7cb9a8; font-weight: 700; font-size: 14px; min-width: 20px;">1</span>
+              <span style="font-size: 14px; color: #ccc; line-height: 1.5;">Bring a large pot of salted water to boil. Cook spaghetti until al dente.</span>
+            </div>
+          </div>
+          <div style="padding: 8px 0; border-bottom: 1px solid #2a2a4a;">
+            <div style="display: flex; gap: 10px;">
+              <span style="color: #7cb9a8; font-weight: 700; font-size: 14px; min-width: 20px;">2</span>
+              <span style="font-size: 14px; color: #ccc; line-height: 1.5;">While pasta cooks, fry guanciale in a cold pan on medium heat until crispy and golden.</span>
+            </div>
+          </div>
+          <div style="padding: 8px 0;">
+            <div style="display: flex; gap: 10px;">
+              <span style="color: #7cb9a8; font-weight: 700; font-size: 14px; min-width: 20px;">3</span>
+              <span style="font-size: 14px; color: #ccc; line-height: 1.5;">Whisk egg yolks with grated pecorino and cracked pepper in a bowl.</span>
+            </div>
+          </div>
+          <div style="padding: 6px 0; text-align: center;">
+            <span style="font-size: 12px; color: #666;">+ 2 more steps</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Cooking notes from past cooks -->
+      <div style="padding: 0 16px 12px;">
+        <h3 style="font-size: 14px; font-weight: 700; color: #7cb9a8; text-transform: uppercase; letter-spacing: 1px; margin: 0 0 10px;">Cooking Notes</h3>
+
+        <div style="background: #242440; border-radius: 10px; padding: 12px;">
+          <div style="padding: 8px 0; border-bottom: 1px solid #2a2a4a;">
+            <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
+              <span style="font-size: 12px; color: #7cb9a8;">12 Mar 2026</span>
+              <span style="font-size: 12px; color: #ffd59a;">⭐⭐⭐⭐⭐</span>
+            </div>
+            <p style="margin: 0; font-size: 13px; color: #aaa; line-height: 1.4;">Perfect result! Used pancetta instead of guanciale — still great. Kids loved it.</p>
+          </div>
+          <div style="padding: 8px 0;">
+            <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
+              <span style="font-size: 12px; color: #7cb9a8;">28 Feb 2026</span>
+              <span style="font-size: 12px; color: #ffd59a;">⭐⭐⭐⭐</span>
+            </div>
+            <p style="margin: 0; font-size: 13px; color: #aaa; line-height: 1.4;">Good but overcooked the pasta slightly. Set timer for 8 min next time, not 10.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Start cooking CTA -->
+      <div style="padding: 12px 16px 24px;">
+        <button style="background: linear-gradient(135deg, #7cb9a8, #5fa393); border: none; color: #fff; padding: 14px; border-radius: 12px; font-size: 16px; font-weight: 700; width: 100%; cursor: pointer; box-shadow: 0 4px 12px rgba(124,185,168,0.3);">Start Cooking →</button>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="mockup">
+    <div class="mockup-header">Cooking Mode — Step-by-Step</div>
+    <div class="mockup-body" style="background: #0d0d1a; color: #e6e6e6; font-family: -apple-system, sans-serif; padding: 0; max-width: 375px; margin: 0 auto;">
+
+      <!-- Cooking mode header -->
+      <div style="padding: 12px 16px; display: flex; justify-content: space-between; align-items: center; background: rgba(124,185,168,0.08); border-bottom: 1px solid rgba(124,185,168,0.15);">
+        <span style="color: #ff6b6b; font-size: 14px; font-weight: 600;">✕ Exit</span>
+        <span style="font-size: 13px; color: #7cb9a8; font-weight: 600;">Pasta Carbonara</span>
+        <span style="font-size: 13px; color: #888;">Step 2/5</span>
+      </div>
+
+      <!-- Progress bar -->
+      <div style="height: 3px; background: #242440;">
+        <div style="height: 3px; width: 40%; background: linear-gradient(90deg, #7cb9a8, #5fa393); border-radius: 2px;"></div>
+      </div>
+
+      <!-- Main step content -->
+      <div style="padding: 32px 20px; min-height: 200px; display: flex; flex-direction: column; justify-content: center;">
+        <div style="font-size: 48px; font-weight: 800; color: rgba(124,185,168,0.15); margin-bottom: 12px;">02</div>
+        <p style="font-size: 20px; color: #fff; line-height: 1.6; font-weight: 500; margin: 0;">
+          Fry the <span style="color: #ffd59a; font-weight: 700; border-bottom: 1px dashed #ffd59a;">guanciale (200g, cubed)</span> in a cold pan on medium heat until crispy and golden, about 8–10 minutes.
+        </p>
+      </div>
+
+      <!-- Inline ingredients for this step -->
+      <div style="margin: 0 16px 16px; padding: 12px 14px; background: rgba(255,213,154,0.06); border-radius: 10px; border: 1px solid rgba(255,213,154,0.12);">
+        <div style="font-size: 11px; font-weight: 600; color: #ffd59a; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px;">Ingredients for this step</div>
+        <div style="display: flex; justify-content: space-between; padding: 4px 0;">
+          <span style="font-size: 14px; color: #e6e6e6;">Guanciale</span>
+          <span style="font-size: 14px; color: #ffd59a; font-weight: 600;">200g, cubed</span>
+        </div>
+      </div>
+
+      <!-- Timer suggestion -->
+      <div style="margin: 0 16px 16px; padding: 12px 14px; background: rgba(124,185,168,0.06); border-radius: 10px; border: 1px solid rgba(124,185,168,0.12); display: flex; align-items: center; gap: 12px;">
+        <span style="font-size: 24px;">⏱</span>
+        <div>
+          <div style="font-size: 13px; color: #7cb9a8; font-weight: 600;">Set a timer?</div>
+          <div style="font-size: 12px; color: #888;">This step takes about 8–10 minutes</div>
+        </div>
+        <button style="background: rgba(124,185,168,0.2); border: 1px solid rgba(124,185,168,0.3); color: #7cb9a8; padding: 6px 14px; border-radius: 8px; font-size: 12px; font-weight: 600; cursor: pointer; margin-left: auto;">Start</button>
+      </div>
+
+      <!-- Your past note for this step -->
+      <div style="margin: 0 16px 16px; padding: 10px 14px; background: rgba(255,255,255,0.03); border-radius: 10px; border: 1px solid rgba(255,255,255,0.06);">
+        <div style="font-size: 11px; color: #666; margin-bottom: 4px;">📝 Your note from last time</div>
+        <div style="font-size: 13px; color: #aaa; font-style: italic;">Used pancetta instead — still great. Rendered fat nicely in 7 min.</div>
+      </div>
+
+      <!-- Navigation -->
+      <div style="padding: 16px; display: flex; gap: 12px; margin-top: auto;">
+        <button style="flex: 1; background: #242440; border: 1px solid #2a2a4a; color: #888; padding: 14px; border-radius: 12px; font-size: 15px; font-weight: 600; cursor: pointer;">← Prev</button>
+        <button style="flex: 2; background: linear-gradient(135deg, #7cb9a8, #5fa393); border: none; color: #fff; padding: 14px; border-radius: 12px; font-size: 15px; font-weight: 700; cursor: pointer; box-shadow: 0 4px 12px rgba(124,185,168,0.3);">Next Step →</button>
+      </div>
+
+      <!-- Last step would show "Done — Rate this cook" instead of Next -->
+
+      <div style="padding: 8px 16px 24px; text-align: center;">
+        <span style="font-size: 11px; color: #555;">Screen stays on while cooking</span>
+      </div>
+
+    </div>
+  </div>
+</div>

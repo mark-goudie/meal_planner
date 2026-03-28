@@ -1,0 +1,95 @@
+<h2>Three Approaches for the Meal Planner Redesign</h2>
+<p class="subtitle">Each builds on your existing Django codebase — the difference is how far we go</p>
+
+<div class="options">
+  <div class="option" data-choice="a" onclick="toggleSelect(this)">
+    <div class="letter">A</div>
+    <div class="content">
+      <h3>Targeted Fix — Polish What's There</h3>
+      <p><strong>Effort: ~2 weeks</strong></p>
+      <p>Keep the current Django templates, fix the critical bugs (orphaned tables, migration issues, session-based AI flow), restructure CSS to be mobile-first, add ingredient normalization, and improve the meal plan week view to support drag-to-rearrange.</p>
+      <div class="pros-cons">
+        <div class="pros">
+          <h4>Pros</h4>
+          <ul>
+            <li>Fastest path to a working app</li>
+            <li>Minimal risk — incremental changes</li>
+            <li>Existing tests still valid</li>
+          </ul>
+        </div>
+        <div class="cons">
+          <h4>Cons</h4>
+          <ul>
+            <li>Django templates limit interactivity (no drag-drop, no swipe, no cooking mode without heavy JS)</li>
+            <li>Phone experience will always feel like a responsive website, not an app</li>
+            <li>Hard to add real-time features later (live shopping list sync between you and your wife)</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="option" data-choice="b" onclick="toggleSelect(this)">
+    <div class="letter">B</div>
+    <div class="content">
+      <h3>Hybrid — Django API + Modern Frontend</h3>
+      <p><strong>Effort: ~4-5 weeks</strong></p>
+      <p>Convert Django to a REST API backend (using Django REST Framework). Build a new mobile-first frontend with React or HTMX that feels app-like. Keep all existing models, services, and business logic — just replace the template layer with something designed for phones.</p>
+      <div class="pros-cons">
+        <div class="pros">
+          <h4>Pros</h4>
+          <ul>
+            <li>Phone-native interactions: swipe to rearrange meals, cooking mode, pull-to-refresh</li>
+            <li>Could become a PWA (installable on home screen, works offline)</li>
+            <li>Backend stays Django — your models, services, tests all survive</li>
+            <li>Clean API enables future mobile app or sharing features</li>
+          </ul>
+        </div>
+        <div class="cons">
+          <h4>Cons</h4>
+          <ul>
+            <li>More upfront work — need to build API layer + new frontend</li>
+            <li>Two codebases to maintain (backend + frontend)</li>
+            <li>Learning curve if unfamiliar with React/frontend tooling</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="option" data-choice="c" onclick="toggleSelect(this)">
+    <div class="letter">C</div>
+    <div class="content">
+      <h3>Enhanced Django — HTMX + Alpine.js</h3>
+      <p><strong>Effort: ~3 weeks</strong></p>
+      <p>Keep Django templates but supercharge them with HTMX (for dynamic updates without page reloads) and Alpine.js (for client-side interactivity). Rebuild the CSS mobile-first. Add structured ingredients, cooking mode, and draggable meal plans — all within Django's template system.</p>
+      <div class="pros-cons">
+        <div class="pros">
+          <h4>Pros</h4>
+          <ul>
+            <li>Single codebase — everything stays in Django</li>
+            <li>HTMX gives app-like feel (no page reloads) without a JS framework</li>
+            <li>Alpine.js handles cooking mode, drag-drop, swipe gestures</li>
+            <li>Existing services and models untouched</li>
+            <li>Can still become a PWA</li>
+            <li>Much simpler than React — Django developers can maintain it</li>
+          </ul>
+        </div>
+        <div class="cons">
+          <h4>Cons</h4>
+          <ul>
+            <li>Less interactive ceiling than React (complex real-time features harder)</li>
+            <li>HTMX community smaller than React — fewer ready-made components</li>
+            <li>If you later want a native mobile app, you'd still need an API</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="section" style="margin-top: 2rem; padding: 1.5rem; border-radius: 12px; background: rgba(124, 185, 168, 0.08); border: 1px solid rgba(124, 185, 168, 0.2);">
+  <h3>💡 My Recommendation: Option C</h3>
+  <p>For a meal planner used by two people on their phones, HTMX + Alpine.js hits the sweet spot. You get app-like interactions (no page reloads, swipeable meals, cooking mode) without the complexity of a separate frontend. It keeps everything in one Django codebase, your existing backend is largely preserved, and HTMX is perfectly suited for the kind of interactions you need — updating a meal slot, ticking off shopping items, adding notes to a recipe.</p>
+  <p>If the app takes off and you want to commercialise, adding a DRF API layer later is straightforward — the services layer already exists.</p>
+</div>
