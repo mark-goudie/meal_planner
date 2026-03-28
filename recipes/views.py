@@ -545,28 +545,6 @@ def register_view(request):
 
 
 # --------------------------
-# Redesign Views — Placeholders
-# --------------------------
-
-@login_required
-def shop_placeholder(request):
-    """Placeholder shopping list page."""
-    return render(request, 'week/placeholder.html', {
-        'title': 'Shopping List',
-        'message': 'Coming soon!',
-    })
-
-
-@login_required
-def settings_placeholder(request):
-    """Placeholder settings page."""
-    return render(request, 'week/placeholder.html', {
-        'title': 'Settings',
-        'message': 'Coming soon!',
-    })
-
-
-# --------------------------
 # Redesign Views — Recipes
 # --------------------------
 

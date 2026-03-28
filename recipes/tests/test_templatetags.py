@@ -16,13 +16,13 @@ class RecipeExtrasTemplateTagsTest(TestCase):
         self.recipe1 = Recipe.objects.create(
             user=self.user,
             title='Breakfast Recipe',
-            ingredients='Breakfast ingredients',
+            ingredients_text='Breakfast ingredients',
             steps='Breakfast steps'
         )
         self.recipe2 = Recipe.objects.create(
             user=self.user,
             title='Lunch Recipe',
-            ingredients='Lunch ingredients',
+            ingredients_text='Lunch ingredients',
             steps='Lunch steps'
         )
         self.meal_plan1 = MealPlan.objects.create(
@@ -249,13 +249,13 @@ class TemplateTagIntegrationTest(TestCase):
         breakfast_recipe = Recipe.objects.create(
             user=self.user,
             title='Pancakes',
-            ingredients='Flour, eggs, milk',
+            ingredients_text='Flour, eggs, milk',
             steps='Mix and cook'
         )
         lunch_recipe = Recipe.objects.create(
             user=self.user,
             title='Sandwich',
-            ingredients='Bread, meat, cheese',
+            ingredients_text='Bread, meat, cheese',
             steps='Assemble and serve'
         )
         

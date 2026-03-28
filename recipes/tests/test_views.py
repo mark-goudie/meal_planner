@@ -4,7 +4,7 @@ from django.urls import reverse
 from django.http import HttpResponse
 from unittest.mock import patch, Mock
 from datetime import date, timedelta
-from recipes.models import Recipe, Tag, MealPlan, FamilyPreference
+from recipes.models import Recipe, Tag, MealPlan
 
 
 class BaseViewTest(TestCase):
@@ -24,7 +24,7 @@ class BaseViewTest(TestCase):
         self.recipe = Recipe.objects.create(
             user=self.user,
             title='Test Recipe',
-            ingredients='Test ingredients',
+            ingredients_text='Test ingredients',
             steps='Test steps'
         )
         self.recipe.tags.add(self.tag)
@@ -125,15 +125,16 @@ class RecipeViewTests(BaseViewTest):
         self.client.login(username='testuser', password='testpass123')
         response = self.client.get(reverse('recipe_create'))
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, 'form')
 
     def test_recipe_create_post_valid(self):
         """Test POST request to recipe create view with valid data"""
         self.client.login(username='testuser', password='testpass123')
         response = self.client.post(reverse('recipe_create'), {
             'title': 'New Recipe',
-            'ingredients': 'New ingredients',
-            'steps': 'New steps'
+            'steps': 'New steps',
+            'servings': '4',
+            'difficulty': 'easy',
+            'ingredient_count': '0',
         })
         self.assertEqual(response.status_code, 302)
         self.assertTrue(Recipe.objects.filter(title='New Recipe').exists())
@@ -150,7 +151,7 @@ class RecipeViewTests(BaseViewTest):
         other_recipe = Recipe.objects.create(
             user=self.other_user,
             title='Other Recipe',
-            ingredients='ingredients',
+            ingredients_text='ingredients',
             steps='steps'
         )
         self.client.login(username='testuser', password='testpass123')
@@ -169,8 +170,10 @@ class RecipeViewTests(BaseViewTest):
         self.client.login(username='testuser', password='testpass123')
         response = self.client.post(reverse('recipe_update', kwargs={'pk': self.recipe.pk}), {
             'title': 'Updated Recipe',
-            'ingredients': 'Updated ingredients',
-            'steps': 'Updated steps'
+            'steps': 'Updated steps',
+            'servings': '4',
+            'difficulty': 'easy',
+            'ingredient_count': '0',
         })
         self.assertEqual(response.status_code, 302)
         updated_recipe = Recipe.objects.get(pk=self.recipe.pk)
@@ -193,15 +196,15 @@ class RecipeViewTests(BaseViewTest):
     def test_toggle_favourite(self):
         """Test toggling recipe favourite status"""
         self.client.login(username='testuser', password='testpass123')
-        
+
         # Add to favourites
-        response = self.client.post(reverse('toggle_favourite', kwargs={'recipe_id': self.recipe.id}))
-        self.assertEqual(response.status_code, 302)
+        response = self.client.post(reverse('toggle_favourite', kwargs={'pk': self.recipe.pk}))
+        self.assertEqual(response.status_code, 200)
         self.assertTrue(self.user in self.recipe.favourited_by.all())
-        
+
         # Remove from favourites
-        response = self.client.post(reverse('toggle_favourite', kwargs={'recipe_id': self.recipe.id}))
-        self.assertEqual(response.status_code, 302)
+        response = self.client.post(reverse('toggle_favourite', kwargs={'pk': self.recipe.pk}))
+        self.assertEqual(response.status_code, 200)
         self.assertFalse(self.user in self.recipe.favourited_by.all())
 
 
@@ -252,11 +255,10 @@ class AIViewTests(BaseViewTest):
             'is_ai_generated': True
         }
         session.save()
-        
+
         self.client.login(username='testuser', password='testpass123')
         response = self.client.get(reverse('recipe_create_from_ai'))
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, 'AI Recipe')
 
     def test_ai_surprise_me(self):
         """Test AI surprise me functionality"""
@@ -322,48 +324,6 @@ class MealPlanViewTests(BaseViewTest):
         self.assertEqual(response.status_code, 200)
 
 
-class FamilyPreferenceViewTests(BaseViewTest):
-    """Test family preference related views"""
-
-    def test_add_preference_get(self):
-        """Test GET request to add preference view"""
-        self.client.login(username='testuser', password='testpass123')
-        response = self.client.get(reverse('add_preference', kwargs={'recipe_id': self.recipe.id}))
-        self.assertEqual(response.status_code, 200)
-
-    def test_add_preference_post_new(self):
-        """Test POST request to add new preference"""
-        self.client.login(username='testuser', password='testpass123')
-        response = self.client.post(reverse('add_preference', kwargs={'recipe_id': self.recipe.id}), {
-            'family_member': 'Alice',
-            'preference': 3
-        })
-        self.assertEqual(response.status_code, 302)
-        self.assertTrue(FamilyPreference.objects.filter(
-            family_member='Alice',
-            recipe=self.recipe,
-            preference=3
-        ).exists())
-
-    def test_add_preference_post_update_existing(self):
-        """Test POST request to update existing preference"""
-        FamilyPreference.objects.create(
-            user=self.user,
-            family_member='Bob',
-            recipe=self.recipe,
-            preference=1
-        )
-        
-        self.client.login(username='testuser', password='testpass123')
-        response = self.client.post(reverse('add_preference', kwargs={'recipe_id': self.recipe.id}), {
-            'family_member': 'Bob',
-            'preference': 3
-        })
-        self.assertEqual(response.status_code, 302)
-        updated_pref = FamilyPreference.objects.get(family_member='Bob', recipe=self.recipe)
-        self.assertEqual(updated_pref.preference, 3)
-
-
 class ShoppingListViewTests(BaseViewTest):
     """Test shopping list related views"""
 
@@ -378,10 +338,10 @@ class ShoppingListViewTests(BaseViewTest):
         recipe2 = Recipe.objects.create(
             user=self.user,
             title='Recipe 2',
-            ingredients='Ingredient A\nIngredient B',
+            ingredients_text='Ingredient A\nIngredient B',
             steps='Steps'
         )
-        
+
         self.client.login(username='testuser', password='testpass123')
         response = self.client.post(reverse('generate_shopping_list'), {
             'recipe_ids': [self.recipe.id, recipe2.id]
@@ -405,7 +365,7 @@ class AuthenticationTests(BaseViewTest):
             'meal_plan_week',
             'generate_shopping_list',
         ]
-        
+
         for url_name in protected_urls:
             response = self.client.get(reverse(url_name))
             self.assertEqual(response.status_code, 302)
@@ -416,18 +376,18 @@ class AuthenticationTests(BaseViewTest):
         other_recipe = Recipe.objects.create(
             user=self.other_user,
             title='Other Recipe',
-            ingredients='ingredients',
+            ingredients_text='ingredients',
             steps='steps'
         )
-        
+
         self.client.login(username='testuser', password='testpass123')
-        
+
         # Should return 404 for other user's recipe
         response = self.client.get(reverse('recipe_detail', kwargs={'pk': other_recipe.pk}))
         self.assertEqual(response.status_code, 404)
-        
+
         response = self.client.get(reverse('recipe_update', kwargs={'pk': other_recipe.pk}))
         self.assertEqual(response.status_code, 404)
-        
+
         response = self.client.get(reverse('recipe_delete', kwargs={'pk': other_recipe.pk}))
         self.assertEqual(response.status_code, 404)

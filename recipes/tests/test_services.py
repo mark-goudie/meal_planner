@@ -8,7 +8,7 @@ from unittest.mock import patch, MagicMock
 from datetime import date, timedelta
 import openai
 
-from recipes.models import Recipe, MealPlan, Tag, FamilyPreference
+from recipes.models import Recipe, MealPlan, Tag
 from recipes.services import (
     RecipeService,
     MealPlanService,
@@ -29,14 +29,14 @@ class RecipeServiceTest(TestCase):
         self.recipe1 = Recipe.objects.create(
             user=self.user,
             title='Test Recipe 1',
-            ingredients='ingredient 1\ningredient 2',
+            ingredients_text='ingredient 1\ningredient 2',
             steps='step 1\nstep 2'
         )
 
         self.recipe2 = Recipe.objects.create(
             user=self.user,
             title='Test Recipe 2',
-            ingredients='ingredient 3\ningredient 4',
+            ingredients_text='ingredient 3\ningredient 4',
             steps='step 3\nstep 4'
         )
 
@@ -75,7 +75,7 @@ class RecipeServiceTest(TestCase):
         """Test creating a recipe"""
         recipe_data = {
             'title': 'New Recipe',
-            'ingredients': 'New ingredients',
+            'ingredients_text': 'New ingredients',
             'steps': 'New steps'
         }
         recipe = RecipeService.create_recipe(self.user, recipe_data)
@@ -107,27 +107,6 @@ class RecipeServiceTest(TestCase):
         self.assertFalse(is_favourited)
         self.assertNotIn(self.user, self.recipe1.favourited_by.all())
 
-    def test_add_or_update_preference_new(self):
-        """Test adding a new family preference"""
-        pref = RecipeService.add_or_update_preference(
-            self.user, self.recipe1, 'John', 3
-        )
-        self.assertEqual(pref.family_member, 'John')
-        self.assertEqual(pref.preference, 3)
-
-    def test_add_or_update_preference_update(self):
-        """Test updating an existing family preference"""
-        FamilyPreference.objects.create(
-            user=self.user,
-            recipe=self.recipe1,
-            family_member='John',
-            preference=1
-        )
-        pref = RecipeService.add_or_update_preference(
-            self.user, self.recipe1, 'John', 3
-        )
-        self.assertEqual(pref.preference, 3)
-
     def test_generate_shopping_list(self):
         """Test generating shopping list from multiple recipes"""
         recipe_ids = [self.recipe1.id, self.recipe2.id]
@@ -135,23 +114,6 @@ class RecipeServiceTest(TestCase):
         self.assertEqual(len(shopping_list), 4)
         self.assertIn('ingredient 1', shopping_list)
         self.assertIn('ingredient 4', shopping_list)
-
-    def test_get_family_members(self):
-        """Test getting family members for a user"""
-        FamilyPreference.objects.create(
-            user=self.user,
-            recipe=self.recipe1,
-            family_member='John',
-            preference=3
-        )
-        FamilyPreference.objects.create(
-            user=self.user,
-            recipe=self.recipe2,
-            family_member='Jane',
-            preference=2
-        )
-        members = RecipeService.get_family_members(self.user)
-        self.assertEqual(members.count(), 2)
 
 
 class MealPlanServiceTest(TestCase):
@@ -162,7 +124,7 @@ class MealPlanServiceTest(TestCase):
         self.recipe = Recipe.objects.create(
             user=self.user,
             title='Test Recipe',
-            ingredients='ingredients',
+            ingredients_text='ingredients',
             steps='steps'
         )
         self.today = date.today()
@@ -224,7 +186,7 @@ class MealPlanServiceTest(TestCase):
         new_recipe = Recipe.objects.create(
             user=self.user,
             title='New Recipe',
-            ingredients='new ingredients',
+            ingredients_text='new ingredients',
             steps='new steps'
         )
 
