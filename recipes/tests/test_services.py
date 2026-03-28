@@ -5,7 +5,7 @@ Tests for service layer components.
 from datetime import date, timedelta
 from unittest.mock import MagicMock, patch
 
-import openai
+import anthropic
 from django.contrib.auth.models import User
 from django.test import TestCase
 
@@ -184,13 +184,13 @@ class AIServiceTest(TestCase):
 
     def test_validate_api_key_missing(self):
         """Test API key validation with missing key"""
-        with patch("recipes.services.ai_service.settings.OPENAI_API_KEY", None):
+        with patch("recipes.services.ai_service.settings.ANTHROPIC_API_KEY", None):
             with self.assertRaises(AIConfigurationError):
                 AIService.validate_api_key()
 
     def test_validate_api_key_empty(self):
         """Test API key validation with empty key"""
-        with patch("recipes.services.ai_service.settings.OPENAI_API_KEY", "   "):
+        with patch("recipes.services.ai_service.settings.ANTHROPIC_API_KEY", "   "):
             with self.assertRaises(AIConfigurationError):
                 AIService.validate_api_key()
 
@@ -210,38 +210,38 @@ class AIServiceTest(TestCase):
         prompt = AIService.validate_prompt("  Valid prompt  ")
         self.assertEqual(prompt, "Valid prompt")
 
-    @patch("recipes.services.ai_service.openai.OpenAI")
-    @patch("recipes.services.ai_service.settings.OPENAI_API_KEY", "test-key")
-    def test_generate_recipe_from_prompt_success(self, mock_openai_class):
+    @patch("recipes.services.ai_service.anthropic.Anthropic")
+    @patch("recipes.services.ai_service.settings.ANTHROPIC_API_KEY", "test-key")
+    def test_generate_recipe_from_prompt_success(self, mock_anthropic_class):
         """Test successful recipe generation"""
-        # Mock the OpenAI API response
+        # Mock the Anthropic API response
         mock_client = MagicMock()
-        mock_openai_class.return_value = mock_client
+        mock_anthropic_class.return_value = mock_client
 
+        mock_text_block = MagicMock()
+        mock_text_block.type = "text"
+        mock_text_block.text = "Title: Test Recipe\nIngredients: Test ingredients\nSteps: Test steps"
         mock_response = MagicMock()
-        mock_response.choices = [MagicMock()]
-        mock_response.choices[0].message.content = (
-            "Title: Test Recipe\nIngredients: Test ingredients\nSteps: Test steps"
-        )
-        mock_client.chat.completions.create.return_value = mock_response
+        mock_response.content = [mock_text_block]
+        mock_client.messages.create.return_value = mock_response
 
         result = AIService.generate_recipe_from_prompt("chicken and rice")
 
         self.assertIn("Test Recipe", result)
-        mock_client.chat.completions.create.assert_called_once()
+        mock_client.messages.create.assert_called_once()
 
-    @patch("recipes.services.ai_service.openai.OpenAI")
-    @patch("recipes.services.ai_service.settings.OPENAI_API_KEY", "test-key")
-    def test_generate_recipe_authentication_error(self, mock_openai_class):
+    @patch("recipes.services.ai_service.anthropic.Anthropic")
+    @patch("recipes.services.ai_service.settings.ANTHROPIC_API_KEY", "test-key")
+    def test_generate_recipe_authentication_error(self, mock_anthropic_class):
         """Test recipe generation with authentication error"""
         mock_client = MagicMock()
-        mock_openai_class.return_value = mock_client
+        mock_anthropic_class.return_value = mock_client
 
-        # Create a mock response and body for AuthenticationError
+        # Create a mock response for AuthenticationError
         mock_response = MagicMock()
         mock_response.status_code = 401
-        mock_client.chat.completions.create.side_effect = openai.AuthenticationError(
-            "Auth failed", response=mock_response, body={}
+        mock_client.messages.create.side_effect = anthropic.AuthenticationError(
+            message="Auth failed", response=mock_response, body={}
         )
 
         with self.assertRaises(AIAPIError) as context:

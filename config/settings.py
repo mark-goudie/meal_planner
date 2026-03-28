@@ -29,8 +29,8 @@ LOGIN_URL = "/accounts/login/"
 # SECRET_KEY is set in an environment variable for security
 SECRET_KEY = os.getenv("SECRET_KEY", "fallback-unsafe-secret-key")
 
-# OPENAI API Key
-OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+# Anthropic API Key
+ANTHROPIC_API_KEY = os.getenv("ANTHROPIC_API_KEY")
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.getenv("DEBUG", "False") == "True"

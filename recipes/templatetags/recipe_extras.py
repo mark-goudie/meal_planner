@@ -1,4 +1,4 @@
-import openai
+import anthropic
 from django import template
 from django.conf import settings
 
@@ -27,14 +27,14 @@ def ai_generate_surprise_recipe():
         "Include a title, ingredients, and clear steps. Format as:\n"
         "Title:\nIngredients:\nSteps:"
     )
-    client = openai.OpenAI(api_key=settings.OPENAI_API_KEY)
-    response = client.chat.completions.create(
-        model="gpt-4",
+    client = anthropic.Anthropic(api_key=settings.ANTHROPIC_API_KEY)
+    response = client.messages.create(
+        model="claude-haiku-4-5",
+        max_tokens=4096,
+        system="You're a helpful chef assistant.",
         messages=[
-            {"role": "system", "content": "You're a helpful chef assistant."},
             {"role": "user", "content": prompt},
         ],
-        temperature=0.9,
     )
-    content = response.choices[0].message.content
+    content = next((b.text for b in response.content if b.type == "text"), "")
     return content.strip() if content else None

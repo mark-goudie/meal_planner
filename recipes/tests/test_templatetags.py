@@ -111,102 +111,105 @@ class RecipeExtrasTemplateTagsTest(TestCase):
         self.assertEqual(get(test_dict, "complex"), {"nested": "nested_value"})
         self.assertEqual(get(test_dict, "list"), [1, 2, 3])
 
-    @patch("recipes.templatetags.recipe_extras.openai.OpenAI")
-    @patch("recipes.templatetags.recipe_extras.settings.OPENAI_API_KEY", "test-api-key")
-    def test_ai_generate_surprise_recipe_success(self, mock_openai):
+    @patch("recipes.templatetags.recipe_extras.anthropic.Anthropic")
+    @patch("recipes.templatetags.recipe_extras.settings.ANTHROPIC_API_KEY", "test-api-key")
+    def test_ai_generate_surprise_recipe_success(self, mock_anthropic):
         """Test ai_generate_surprise_recipe function with successful API call"""
-        # Mock OpenAI response
+        # Mock Anthropic response
         mock_client = Mock()
-        mock_openai.return_value = mock_client
+        mock_anthropic.return_value = mock_client
+        mock_text_block = Mock()
+        mock_text_block.type = "text"
+        mock_text_block.text = "Title: Surprise Recipe\nIngredients: Surprise ingredients\nSteps: Surprise steps"
         mock_response = Mock()
-        mock_response.choices = [Mock()]
-        mock_response.choices[0].message.content = (
-            "Title: Surprise Recipe\nIngredients: Surprise ingredients\nSteps: Surprise steps"
-        )
-        mock_client.chat.completions.create.return_value = mock_response
+        mock_response.content = [mock_text_block]
+        mock_client.messages.create.return_value = mock_response
 
         result = ai_generate_surprise_recipe()
 
         self.assertEqual(result, "Title: Surprise Recipe\nIngredients: Surprise ingredients\nSteps: Surprise steps")
 
-        # Verify OpenAI was called correctly
-        mock_openai.assert_called_once_with(api_key="test-api-key")
-        mock_client.chat.completions.create.assert_called_once()
+        # Verify Anthropic was called correctly
+        mock_anthropic.assert_called_once_with(api_key="test-api-key")
+        mock_client.messages.create.assert_called_once()
 
         # Check the call arguments
-        call_args = mock_client.chat.completions.create.call_args
-        self.assertEqual(call_args[1]["model"], "gpt-4")
-        self.assertEqual(call_args[1]["temperature"], 0.9)
-        self.assertEqual(len(call_args[1]["messages"]), 2)
+        call_args = mock_client.messages.create.call_args
+        self.assertEqual(call_args[1]["model"], "claude-haiku-4-5")
+        self.assertEqual(len(call_args[1]["messages"]), 1)
 
-    @patch("recipes.templatetags.recipe_extras.openai.OpenAI")
-    @patch("recipes.templatetags.recipe_extras.settings.OPENAI_API_KEY", "test-api-key")
-    def test_ai_generate_surprise_recipe_empty_content(self, mock_openai):
+    @patch("recipes.templatetags.recipe_extras.anthropic.Anthropic")
+    @patch("recipes.templatetags.recipe_extras.settings.ANTHROPIC_API_KEY", "test-api-key")
+    def test_ai_generate_surprise_recipe_empty_content(self, mock_anthropic):
         """Test ai_generate_surprise_recipe function with empty content"""
-        # Mock OpenAI response with empty content
+        # Mock Anthropic response with no text blocks
         mock_client = Mock()
-        mock_openai.return_value = mock_client
+        mock_anthropic.return_value = mock_client
         mock_response = Mock()
-        mock_response.choices = [Mock()]
-        mock_response.choices[0].message.content = None
-        mock_client.chat.completions.create.return_value = mock_response
+        mock_response.content = []
+        mock_client.messages.create.return_value = mock_response
 
         result = ai_generate_surprise_recipe()
         self.assertIsNone(result)
 
-    @patch("recipes.templatetags.recipe_extras.openai.OpenAI")
-    @patch("recipes.templatetags.recipe_extras.settings.OPENAI_API_KEY", "test-api-key")
-    def test_ai_generate_surprise_recipe_whitespace_content(self, mock_openai):
+    @patch("recipes.templatetags.recipe_extras.anthropic.Anthropic")
+    @patch("recipes.templatetags.recipe_extras.settings.ANTHROPIC_API_KEY", "test-api-key")
+    def test_ai_generate_surprise_recipe_whitespace_content(self, mock_anthropic):
         """Test ai_generate_surprise_recipe function with whitespace-only content"""
-        # Mock OpenAI response with whitespace content
+        # Mock Anthropic response with whitespace content
         mock_client = Mock()
-        mock_openai.return_value = mock_client
+        mock_anthropic.return_value = mock_client
+        mock_text_block = Mock()
+        mock_text_block.type = "text"
+        mock_text_block.text = "   \n\t   "
         mock_response = Mock()
-        mock_response.choices = [Mock()]
-        mock_response.choices[0].message.content = "   \n\t   "
-        mock_client.chat.completions.create.return_value = mock_response
+        mock_response.content = [mock_text_block]
+        mock_client.messages.create.return_value = mock_response
 
         result = ai_generate_surprise_recipe()
         self.assertEqual(result, "")  # Should be stripped to empty string
 
-    @patch("recipes.templatetags.recipe_extras.openai.OpenAI")
-    @patch("recipes.templatetags.recipe_extras.settings.OPENAI_API_KEY", "test-api-key")
-    def test_ai_generate_surprise_recipe_strips_whitespace(self, mock_openai):
+    @patch("recipes.templatetags.recipe_extras.anthropic.Anthropic")
+    @patch("recipes.templatetags.recipe_extras.settings.ANTHROPIC_API_KEY", "test-api-key")
+    def test_ai_generate_surprise_recipe_strips_whitespace(self, mock_anthropic):
         """Test ai_generate_surprise_recipe function strips leading/trailing whitespace"""
-        # Mock OpenAI response with content that has whitespace
+        # Mock Anthropic response with content that has whitespace
         mock_client = Mock()
-        mock_openai.return_value = mock_client
+        mock_anthropic.return_value = mock_client
+        mock_text_block = Mock()
+        mock_text_block.type = "text"
+        mock_text_block.text = "  \n  Title: Clean Recipe\nIngredients: Clean ingredients  \n  "
         mock_response = Mock()
-        mock_response.choices = [Mock()]
-        mock_response.choices[0].message.content = "  \n  Title: Clean Recipe\nIngredients: Clean ingredients  \n  "
-        mock_client.chat.completions.create.return_value = mock_response
+        mock_response.content = [mock_text_block]
+        mock_client.messages.create.return_value = mock_response
 
         result = ai_generate_surprise_recipe()
         self.assertEqual(result, "Title: Clean Recipe\nIngredients: Clean ingredients")
 
-    @patch("recipes.templatetags.recipe_extras.openai.OpenAI")
-    @patch("recipes.templatetags.recipe_extras.settings.OPENAI_API_KEY", "test-api-key")
-    def test_ai_generate_surprise_recipe_prompt_content(self, mock_openai):
+    @patch("recipes.templatetags.recipe_extras.anthropic.Anthropic")
+    @patch("recipes.templatetags.recipe_extras.settings.ANTHROPIC_API_KEY", "test-api-key")
+    def test_ai_generate_surprise_recipe_prompt_content(self, mock_anthropic):
         """Test that ai_generate_surprise_recipe sends correct prompt"""
         mock_client = Mock()
-        mock_openai.return_value = mock_client
+        mock_anthropic.return_value = mock_client
+        mock_text_block = Mock()
+        mock_text_block.type = "text"
+        mock_text_block.text = "Mock content"
         mock_response = Mock()
-        mock_response.choices = [Mock()]
-        mock_response.choices[0].message.content = "Mock content"
-        mock_client.chat.completions.create.return_value = mock_response
+        mock_response.content = [mock_text_block]
+        mock_client.messages.create.return_value = mock_response
 
         ai_generate_surprise_recipe()
 
-        # Check the messages sent to OpenAI
-        call_args = mock_client.chat.completions.create.call_args
-        messages = call_args[1]["messages"]
+        # Check the messages sent to Anthropic
+        call_args = mock_client.messages.create.call_args
 
         # Check system message
-        self.assertEqual(messages[0]["role"], "system")
-        self.assertEqual(messages[0]["content"], "You're a helpful chef assistant.")
+        self.assertEqual(call_args[1]["system"], "You're a helpful chef assistant.")
 
         # Check user message contains expected prompt elements
-        user_content = messages[1]["content"]
+        messages = call_args[1]["messages"]
+        user_content = messages[0]["content"]
         self.assertIn("unique, family-friendly recipe", user_content)
         self.assertIn("common and surprising ingredients", user_content)
         self.assertIn("Title:", user_content)

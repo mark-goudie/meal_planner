@@ -43,7 +43,7 @@ ALLOWED_HOSTS={'localhost,127.0.0.1,0.0.0.0' if environment == 'development' els
 TIME_ZONE=Australia/Sydney
 
 # API Keys (add your keys here)
-OPENAI_API_KEY=
+ANTHROPIC_API_KEY=
 
 # Database (PostgreSQL for staging/production)
 DB_NAME=meal_planner_db
@@ -105,7 +105,7 @@ def validate_environment():
     }
     
     optional_vars = {
-        'OPENAI_API_KEY': 'OpenAI API key for AI features',
+        'ANTHROPIC_API_KEY': 'Anthropic API key for AI features',
         'DB_NAME': 'Database name (required for staging/production)',
         'DB_USER': 'Database user (required for staging/production)',
         'DB_PASSWORD': 'Database password (required for staging/production)',

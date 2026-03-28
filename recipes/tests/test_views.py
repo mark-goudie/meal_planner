@@ -213,19 +213,21 @@ class AIViewTests(BaseViewTest):
         response = self.client.get(reverse("ai_generate_recipe"))
         self.assertEqual(response.status_code, 200)
 
-    @patch("recipes.services.ai_service.openai.OpenAI")
+    @patch("recipes.services.ai_service.anthropic.Anthropic")
     @patch("recipes.services.ai_service.settings")
-    def test_ai_generate_recipe_post_with_prompt(self, mock_settings, mock_openai):
+    def test_ai_generate_recipe_post_with_prompt(self, mock_settings, mock_anthropic):
         """Test POST request to AI generate recipe with prompt"""
         # Mock settings to provide API key
-        mock_settings.OPENAI_API_KEY = "test-key"
-        # Mock OpenAI response
+        mock_settings.ANTHROPIC_API_KEY = "test-key"
+        # Mock Anthropic response
         mock_client = Mock()
-        mock_openai.return_value = mock_client
+        mock_anthropic.return_value = mock_client
+        mock_text_block = Mock()
+        mock_text_block.type = "text"
+        mock_text_block.text = "Title: AI Recipe\nIngredients: AI ingredients\nSteps: AI steps"
         mock_response = Mock()
-        mock_response.choices = [Mock()]
-        mock_response.choices[0].message.content = "Title: AI Recipe\nIngredients: AI ingredients\nSteps: AI steps"
-        mock_client.chat.completions.create.return_value = mock_response
+        mock_response.content = [mock_text_block]
+        mock_client.messages.create.return_value = mock_response
 
         self.client.login(username="testuser", password="testpass123")
         response = self.client.post(reverse("ai_generate_recipe"), {"prompt": "chicken and rice"})
