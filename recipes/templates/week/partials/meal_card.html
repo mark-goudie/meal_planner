@@ -8,6 +8,20 @@
     {% endif %}
   </div>
 
+  <div id="day-{{ day.date|date:'Y-m-d' }}-comments">
+    {% if day.comments %}
+    <div class="day-card__comments">
+      {% for comment in day.comments %}
+      <div class="day-comment">
+        <i class="bi bi-chat-dots" style="color: var(--accent); font-size: var(--text-xs);"></i>
+        <span class="text-sm text-muted">{{ comment.user.username }}:</span>
+        <span class="text-sm">{{ comment.text }}</span>
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+  </div>
+
   {% if day.meal %}
     <a href="{% url 'recipe_detail' day.meal.recipe.pk %}" class="day-card__title" style="display:block; color: inherit;">
       {{ day.meal.recipe.title }}
@@ -53,4 +67,26 @@
       Tap to add a meal...
     </div>
   {% endif %}
+
+  <div class="day-card__add-comment" x-data="{ open: false }">
+    <button class="btn btn-ghost btn-sm" @click="open = !open"
+            style="font-size: var(--text-xs); color: var(--text-dim); padding: 4px 8px;">
+      <i class="bi bi-chat-dots"></i> {% if day.comments %}{{ day.comments|length }}{% else %}Note{% endif %}
+    </button>
+    <div x-show="open" x-cloak style="margin-top: var(--space-xs);">
+      <form hx-post="{% url 'day_comment' day.date|date:'Y-m-d' %}"
+            hx-target="#day-{{ day.date|date:'Y-m-d' }}-comments"
+            hx-swap="innerHTML"
+            class="flex gap-xs">
+        {% csrf_token %}
+        <input type="text" name="text" class="form-input"
+               style="flex: 1; min-height: 32px; padding: 4px 8px; font-size: var(--text-sm);"
+               placeholder="e.g. Work dinner tonight" maxlength="200"
+               value="{{ day.my_comment }}">
+        <button type="submit" class="btn btn-primary btn-sm" style="min-height: 32px; padding: 4px 8px;">
+          <i class="bi bi-check-lg"></i>
+        </button>
+      </form>
+    </div>
+  </div>
 </div>

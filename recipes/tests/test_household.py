@@ -118,14 +118,18 @@ class RecipeSharedFieldTests(TestCase):
     def test_shared_default_false(self):
         user = User.objects.create_user("alice", password="pass")
         recipe = Recipe.objects.create(
-            user=user, title="Test Recipe", steps="Step 1",
+            user=user,
+            title="Test Recipe",
+            steps="Step 1",
         )
         self.assertFalse(recipe.shared)
 
     def test_shared_toggle(self):
         user = User.objects.create_user("alice", password="pass")
         recipe = Recipe.objects.create(
-            user=user, title="Test Recipe", steps="Step 1",
+            user=user,
+            title="Test Recipe",
+            steps="Step 1",
         )
         recipe.shared = True
         recipe.save()
@@ -138,7 +142,9 @@ class MealPlanHouseholdTests(TestCase):
         self.user = User.objects.create_user("alice", password="pass")
         self.household = Household.objects.create(name="Test Kitchen", created_by=self.user)
         self.recipe = Recipe.objects.create(
-            user=self.user, title="Test Recipe", steps="Step 1",
+            user=self.user,
+            title="Test Recipe",
+            steps="Step 1",
         )
 
     def test_mealplan_with_household(self):
@@ -189,7 +195,9 @@ class HouseholdSharingTests(TestCase):
         HouseholdMembership.objects.create(user=self.alice, household=self.household)
         HouseholdMembership.objects.create(user=self.bob, household=self.household)
         self.recipe = Recipe.objects.create(
-            user=self.alice, title="Shared Recipe", steps="Step 1",
+            user=self.alice,
+            title="Shared Recipe",
+            steps="Step 1",
         )
 
     def test_both_users_see_same_meal_plan(self):
@@ -226,10 +234,15 @@ class HouseholdSharingTests(TestCase):
 class RegistrationHouseholdTest(TestCase):
     def test_register_creates_new_household(self):
         client = Client()
-        client.post(reverse("register"), {
-            "username": "newuser", "email": "new@example.com",
-            "password1": "Testpass123!", "password2": "Testpass123!",
-        })
+        client.post(
+            reverse("register"),
+            {
+                "username": "newuser",
+                "email": "new@example.com",
+                "password1": "Testpass123!",
+                "password2": "Testpass123!",
+            },
+        )
         user = User.objects.get(username="newuser")
         self.assertTrue(hasattr(user, "household_membership"))
 
@@ -239,23 +252,59 @@ class RegistrationHouseholdTest(TestCase):
         HouseholdMembership.objects.create(user=owner, household=household)
 
         client = Client()
-        client.post(reverse("register"), {
-            "username": "joiner", "email": "joiner@example.com",
-            "password1": "Testpass123!", "password2": "Testpass123!",
-            "household_code": household.code,
-        })
+        client.post(
+            reverse("register"),
+            {
+                "username": "joiner",
+                "email": "joiner@example.com",
+                "password1": "Testpass123!",
+                "password2": "Testpass123!",
+                "household_code": household.code,
+            },
+        )
         joiner = User.objects.get(username="joiner")
         self.assertEqual(joiner.household_membership.household, household)
 
     def test_register_with_invalid_code_shows_error(self):
         client = Client()
-        response = client.post(reverse("register"), {
-            "username": "badcode", "email": "bad@example.com",
-            "password1": "Testpass123!", "password2": "Testpass123!",
-            "household_code": "XXXXXX",
-        })
+        response = client.post(
+            reverse("register"),
+            {
+                "username": "badcode",
+                "email": "bad@example.com",
+                "password1": "Testpass123!",
+                "password2": "Testpass123!",
+                "household_code": "XXXXXX",
+            },
+        )
         self.assertFalse(User.objects.filter(username="badcode").exists())
         self.assertContains(response, "Invalid household code")
+
+
+class DayCommentViewTest(TestCase):
+    def setUp(self):
+        self.household = Household.objects.create(name="Family")
+        self.user = User.objects.create_user("mark", password="testpass123")
+        HouseholdMembership.objects.create(user=self.user, household=self.household)
+        self.client = Client()
+        self.client.login(username="mark", password="testpass123")
+
+    def test_add_day_comment(self):
+        today_str = date.today().strftime("%Y-%m-%d")
+        response = self.client.post(reverse("day_comment", args=[today_str]), {"text": "Work dinner"})
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(DayComment.objects.filter(household=self.household).exists())
+
+    def test_comment_shows_on_week_view(self):
+        DayComment.objects.create(household=self.household, user=self.user, date=date.today(), text="Out tonight")
+        response = self.client.get(reverse("week"))
+        self.assertContains(response, "Out tonight")
+
+    def test_empty_text_deletes_comment(self):
+        DayComment.objects.create(household=self.household, user=self.user, date=date.today(), text="Old note")
+        today_str = date.today().strftime("%Y-%m-%d")
+        self.client.post(reverse("day_comment", args=[today_str]), {"text": ""})
+        self.assertFalse(DayComment.objects.filter(household=self.household, date=date.today()).exists())
 
 
 class HouseholdViewIntegrationTest(TestCase):
@@ -281,8 +330,9 @@ class HouseholdViewIntegrationTest(TestCase):
         self.assertNotContains(response, "Private Meal")
 
     def test_both_users_see_same_meal_plan(self):
-        MealPlan.objects.create(household=self.household, added_by=self.user1,
-            date=date.today(), meal_type="dinner", recipe=self.recipe)
+        MealPlan.objects.create(
+            household=self.household, added_by=self.user1, date=date.today(), meal_type="dinner", recipe=self.recipe
+        )
         resp1 = self.client1.get(reverse("week"))
         resp2 = self.client2.get(reverse("week"))
         self.assertContains(resp1, "Shared Dinner")

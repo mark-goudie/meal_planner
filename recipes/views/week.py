@@ -26,9 +26,7 @@ def _build_week_context(user, household, offset=0):
     meal_lookup = {(m.date, m.meal_type): m for m in meals}
 
     # Load DayComments for the week range
-    comments = DayComment.objects.filter(
-        household=household, date__range=[start, end]
-    ).select_related("user")
+    comments = DayComment.objects.filter(household=household, date__range=[start, end]).select_related("user")
     comment_lookup = {}
     for c in comments:
         comment_lookup.setdefault(c.date, []).append(c)
@@ -37,7 +35,7 @@ def _build_week_context(user, household, offset=0):
     for d in dates:
         meal = meal_lookup.get((d, "dinner"))
         day_comments = comment_lookup.get(d, [])
-        my_comment = next((c for c in day_comments if c.user == user), None)
+        my_comment_obj = next((c for c in day_comments if c.user == user), None)
         days.append(
             {
                 "date": d,
@@ -46,7 +44,7 @@ def _build_week_context(user, household, offset=0):
                 "is_today": d == date.today(),
                 "meal": meal,
                 "comments": day_comments,
-                "my_comment": my_comment,
+                "my_comment": my_comment_obj.text if my_comment_obj else "",
             }
         )
 
@@ -164,9 +162,9 @@ def week_suggest(request):
 
     # Get candidate recipes (own + shared household recipes)
     all_recipes = list(
-        Recipe.objects.filter(
-            Q(user=request.user) | Q(shared=True, user__household_membership__household=household)
-        ).distinct().prefetch_related("tags")
+        Recipe.objects.filter(Q(user=request.user) | Q(shared=True, user__household_membership__household=household))
+        .distinct()
+        .prefetch_related("tags")
     )
     if not all_recipes:
         return render(request, "week/partials/no_suggestions.html", {"reason": "no_recipes"})
@@ -202,7 +200,9 @@ def week_suggest(request):
         max_time = prefs.max_weekend_time if is_weekend else prefs.max_weeknight_time
 
         # Filter by time, then pick from top scorers with some randomness
-        time_ok = [(r, s) for r, s in scored if r.id not in used_ids and (r.total_time is None or r.total_time <= max_time)]
+        time_ok = [
+            (r, s) for r, s in scored if r.id not in used_ids and (r.total_time is None or r.total_time <= max_time)
+        ]
         if not time_ok:
             time_ok = [(r, s) for r, s in scored if r.id not in used_ids]
         if not time_ok:
@@ -257,3 +257,29 @@ def week_accept_suggestion(request, date_str):
 def week_skip_suggestion(request, date_str):
     """HTMX POST: skip a suggestion — remove the suggestion card."""
     return HttpResponse("")
+
+
+@login_required
+def day_comment(request, date_str):
+    """HTMX: add or update a day comment."""
+    household = get_household(request.user)
+    comment_date = date.fromisoformat(date_str)
+
+    if request.method == "POST":
+        text = request.POST.get("text", "").strip()
+        if text:
+            DayComment.objects.update_or_create(
+                household=household,
+                user=request.user,
+                date=comment_date,
+                defaults={"text": text},
+            )
+        else:
+            DayComment.objects.filter(
+                household=household,
+                user=request.user,
+                date=comment_date,
+            ).delete()
+
+    comments = DayComment.objects.filter(household=household, date=comment_date).select_related("user")
+    return render(request, "week/partials/day_comment.html", {"comments": comments, "date_str": date_str})
