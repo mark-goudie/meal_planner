@@ -8,6 +8,7 @@ from django_ratelimit.decorators import ratelimit
 
 from ..forms import MealPlanForm, MealPlannerPreferencesForm, RecipeForm, WeeklyPlanGeneratorForm
 from ..models import MealPlan, Recipe
+from ..models.household import get_household
 from ..services import (
     AIAPIError,
     AIConfigurationError,
@@ -122,8 +123,9 @@ def ai_surprise_me(request):
 
 @login_required
 def meal_plan_list(request):
+    household = get_household(request.user)
     plans = (
-        MealPlan.objects.filter(user=request.user)
+        MealPlan.objects.filter(household=household)
         .select_related("recipe", "recipe__user")
         .prefetch_related("recipe__tags")
         .order_by("date", "meal_type")
@@ -146,16 +148,15 @@ def meal_plan_create(request):
         selected_date = date.today()
     week_offset = (selected_date - date.today()).days // 7
 
+    household = get_household(request.user)
     if request.method == "POST":
         form = MealPlanForm(request.POST, user=request.user)
         if form.is_valid():
-            # Use get_or_create to handle duplicate meal plans
-            # (unique constraint on user, date, meal_type)
             meal_plan, created = MealPlan.objects.update_or_create(
-                user=request.user,
+                household=household,
                 date=form.cleaned_data["date"],
                 meal_type=form.cleaned_data["meal_type"],
-                defaults={"recipe": form.cleaned_data["recipe"]},
+                defaults={"recipe": form.cleaned_data["recipe"], "added_by": request.user},
             )
             # Redirect back to the weekly meal plan with the correct week offset
             return redirect(f"{reverse('meal_plan_week')}?week={week_offset}")
@@ -173,8 +174,9 @@ def meal_plan_week(request):
     end_of_week = start_of_week + timedelta(days=6)
 
     # Fetch meal plans for this week
+    household = get_household(request.user)
     plans = (
-        MealPlan.objects.filter(user=request.user, date__range=[start_of_week, end_of_week])
+        MealPlan.objects.filter(household=household, date__range=[start_of_week, end_of_week])
         .select_related("recipe", "recipe__user")
         .prefetch_related("recipe__tags")
         .order_by("date", "meal_type")

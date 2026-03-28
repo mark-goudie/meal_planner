@@ -2,10 +2,12 @@ import random
 from datetime import date, timedelta
 
 from django.contrib.auth.decorators import login_required
+from django.db.models import Q
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, render
 
 from ..models import MealPlan, Recipe
+from ..models.household import DayComment, get_household
 from ..services.meal_planning_assistant import MealPlanningAssistantService
 
 
@@ -16,16 +18,26 @@ def _get_week_dates(offset=0):
     return [monday + timedelta(days=i) for i in range(7)]
 
 
-def _build_week_context(user, offset=0):
+def _build_week_context(user, household, offset=0):
     """Build template context for the weekly view."""
     dates = _get_week_dates(offset)
     start, end = dates[0], dates[-1]
-    meals = MealPlan.objects.with_related().for_user(user).in_date_range(start, end)
+    meals = MealPlan.objects.with_related().for_household(household).in_date_range(start, end)
     meal_lookup = {(m.date, m.meal_type): m for m in meals}
+
+    # Load DayComments for the week range
+    comments = DayComment.objects.filter(
+        household=household, date__range=[start, end]
+    ).select_related("user")
+    comment_lookup = {}
+    for c in comments:
+        comment_lookup.setdefault(c.date, []).append(c)
 
     days = []
     for d in dates:
         meal = meal_lookup.get((d, "dinner"))
+        day_comments = comment_lookup.get(d, [])
+        my_comment = next((c for c in day_comments if c.user == user), None)
         days.append(
             {
                 "date": d,
@@ -33,6 +45,8 @@ def _build_week_context(user, offset=0):
                 "day_num": d.day,
                 "is_today": d == date.today(),
                 "meal": meal,
+                "comments": day_comments,
+                "my_comment": my_comment,
             }
         )
 
@@ -47,8 +61,11 @@ def _build_week_context(user, offset=0):
 @login_required
 def week_view(request):
     """This Week -- full page weekly meal plan view."""
+    household = get_household(request.user)
+    if not household:
+        return render(request, "week/week.html", {"days": [], "error": "No household found."})
     offset = int(request.GET.get("offset", 0))
-    context = _build_week_context(request.user, offset)
+    context = _build_week_context(request.user, household, offset)
     return render(request, "week/week.html", context)
 
 
@@ -57,9 +74,10 @@ def week_slot(request, date_str, meal_type):
     """HTMX partial: return a single day card."""
     from datetime import datetime as dt
 
+    household = get_household(request.user)
     slot_date = dt.strptime(date_str, "%Y-%m-%d").date()
 
-    meal = MealPlan.objects.with_related().for_user(request.user).filter(date=slot_date, meal_type=meal_type).first()
+    meal = MealPlan.objects.with_related().for_household(household).filter(date=slot_date, meal_type=meal_type).first()
 
     day = {
         "date": slot_date,
@@ -76,21 +94,22 @@ def week_assign(request, date_str, meal_type):
     """HTMX partial: recipe picker (GET) or assign a recipe (POST)."""
     from datetime import datetime as dt
 
+    household = get_household(request.user)
     slot_date = dt.strptime(date_str, "%Y-%m-%d").date()
 
     if request.method == "POST":
         recipe_id = request.POST.get("recipe_id")
-        recipe = get_object_or_404(Recipe, pk=recipe_id, user=request.user)
+        recipe = get_object_or_404(Recipe, pk=recipe_id)
 
         MealPlan.objects.update_or_create(
-            user=request.user,
+            household=household,
             date=slot_date,
             meal_type=meal_type,
-            defaults={"recipe": recipe},
+            defaults={"recipe": recipe, "added_by": request.user},
         )
 
         meal = (
-            MealPlan.objects.with_related().for_user(request.user).filter(date=slot_date, meal_type=meal_type).first()
+            MealPlan.objects.with_related().for_household(household).filter(date=slot_date, meal_type=meal_type).first()
         )
 
         day = {
@@ -102,9 +121,11 @@ def week_assign(request, date_str, meal_type):
         }
         return render(request, "week/partials/meal_card.html", {"day": day})
 
-    # GET -- show recipe picker
+    # GET -- show recipe picker (own recipes + shared household recipes)
     search_query = request.GET.get("q", "").strip()
-    recipes = Recipe.objects.for_user(request.user)
+    recipes = Recipe.objects.filter(
+        Q(user=request.user) | Q(shared=True, user__household_membership__household=household)
+    ).distinct()
     if search_query:
         recipes = recipes.search(search_query)
     recipes = recipes.order_by("title")
@@ -125,13 +146,14 @@ def week_assign(request, date_str, meal_type):
 @login_required
 def week_suggest(request):
     """Suggest recipes for empty dinner slots in the current week."""
+    household = get_household(request.user)
     offset = int(request.GET.get("offset", 0))
     dates = _get_week_dates(offset)
     start, end = dates[0], dates[-1]
 
     # Find empty dinner slots
     existing_meals = set(
-        MealPlan.objects.filter(user=request.user, date__range=[start, end], meal_type="dinner").values_list(
+        MealPlan.objects.filter(household=household, date__range=[start, end], meal_type="dinner").values_list(
             "date", flat=True
         )
     )
@@ -140,8 +162,12 @@ def week_suggest(request):
     if not empty_dates:
         return render(request, "week/partials/no_suggestions.html")
 
-    # Get candidate recipes
-    all_recipes = list(Recipe.objects.filter(user=request.user).prefetch_related("tags"))
+    # Get candidate recipes (own + shared household recipes)
+    all_recipes = list(
+        Recipe.objects.filter(
+            Q(user=request.user) | Q(shared=True, user__household_membership__household=household)
+        ).distinct().prefetch_related("tags")
+    )
     if not all_recipes:
         return render(request, "week/partials/no_suggestions.html", {"reason": "no_recipes"})
 
@@ -152,7 +178,7 @@ def week_suggest(request):
 
     # Also exclude recipes already planned this week
     planned_recipe_ids = set(
-        MealPlan.objects.filter(user=request.user, date__range=[start, end]).values_list("recipe_id", flat=True)
+        MealPlan.objects.filter(household=household, date__range=[start, end]).values_list("recipe_id", flat=True)
     )
 
     candidates = [r for r in all_recipes if r.id not in recently_cooked_ids and r.id not in planned_recipe_ids]
@@ -204,18 +230,19 @@ def week_suggest(request):
 @login_required
 def week_accept_suggestion(request, date_str):
     """HTMX POST: accept a suggestion and assign the recipe to the slot."""
+    household = get_household(request.user)
     slot_date = date.fromisoformat(date_str)
     recipe_id = request.POST.get("recipe_id")
-    recipe = get_object_or_404(Recipe, pk=recipe_id, user=request.user)
+    recipe = get_object_or_404(Recipe, pk=recipe_id)
 
     MealPlan.objects.update_or_create(
-        user=request.user,
+        household=household,
         date=slot_date,
         meal_type="dinner",
-        defaults={"recipe": recipe},
+        defaults={"recipe": recipe, "added_by": request.user},
     )
 
-    meal = MealPlan.objects.with_related().for_user(request.user).filter(date=slot_date, meal_type="dinner").first()
+    meal = MealPlan.objects.with_related().for_household(household).filter(date=slot_date, meal_type="dinner").first()
     day = {
         "date": slot_date,
         "day_name": slot_date.strftime("%a"),

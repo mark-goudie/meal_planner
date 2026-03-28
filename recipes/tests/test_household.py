@@ -256,3 +256,41 @@ class RegistrationHouseholdTest(TestCase):
         })
         self.assertFalse(User.objects.filter(username="badcode").exists())
         self.assertContains(response, "Invalid household code")
+
+
+class HouseholdViewIntegrationTest(TestCase):
+    def setUp(self):
+        self.household = Household.objects.create(name="Family")
+        self.user1 = User.objects.create_user("mark", password="testpass123")
+        self.user2 = User.objects.create_user("lisa", password="testpass123")
+        HouseholdMembership.objects.create(user=self.user1, household=self.household)
+        HouseholdMembership.objects.create(user=self.user2, household=self.household)
+        self.recipe = Recipe.objects.create(user=self.user1, title="Shared Dinner", steps="cook", shared=True)
+        self.client1 = Client()
+        self.client1.login(username="mark", password="testpass123")
+        self.client2 = Client()
+        self.client2.login(username="lisa", password="testpass123")
+
+    def test_user2_sees_shared_recipe(self):
+        response = self.client2.get(reverse("recipe_list"))
+        self.assertContains(response, "Shared Dinner")
+
+    def test_user2_does_not_see_unshared_recipe(self):
+        Recipe.objects.create(user=self.user1, title="Private Meal", steps="cook", shared=False)
+        response = self.client2.get(reverse("recipe_list"))
+        self.assertNotContains(response, "Private Meal")
+
+    def test_both_users_see_same_meal_plan(self):
+        MealPlan.objects.create(household=self.household, added_by=self.user1,
+            date=date.today(), meal_type="dinner", recipe=self.recipe)
+        resp1 = self.client1.get(reverse("week"))
+        resp2 = self.client2.get(reverse("week"))
+        self.assertContains(resp1, "Shared Dinner")
+        self.assertContains(resp2, "Shared Dinner")
+
+    def test_both_users_see_same_shopping_items(self):
+        ShoppingListItem.objects.create(household=self.household, added_by=self.user1, name="Eggs")
+        resp1 = self.client1.get(reverse("shop"))
+        resp2 = self.client2.get(reverse("shop"))
+        self.assertContains(resp1, "Eggs")
+        self.assertContains(resp2, "Eggs")

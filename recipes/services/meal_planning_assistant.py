@@ -21,6 +21,7 @@ from ..models import (
     MealPlannerPreferences,
     Recipe,
 )
+from ..models.household import get_household
 
 
 class MealPlanningAssistantService:
@@ -148,6 +149,7 @@ class MealPlanningAssistantService:
             meals_per_day = ["dinner"]
 
         prefs = MealPlanningAssistantService.get_or_create_preferences(user)
+        household = get_household(user)
 
         available_recipes = list(Recipe.objects.filter(user=user).prefetch_related("tags"))
 
@@ -179,10 +181,10 @@ class MealPlanningAssistantService:
                     recipe = random.choice(candidate_recipes)
 
                 MealPlan.objects.update_or_create(
-                    user=user,
+                    household=household,
                     date=current_date,
                     meal_type=meal_type,
-                    defaults={"recipe": recipe},
+                    defaults={"recipe": recipe, "added_by": user},
                 )
 
                 if recipe in time_appropriate:
