@@ -32,6 +32,9 @@ SECRET_KEY = os.getenv("SECRET_KEY", "fallback-unsafe-secret-key")
 # Anthropic API Key
 ANTHROPIC_API_KEY = os.getenv("ANTHROPIC_API_KEY")
 
+# Unsplash API Key
+UNSPLASH_ACCESS_KEY = os.getenv("UNSPLASH_ACCESS_KEY", "")
+
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.getenv("DEBUG", "False") == "True"
 
@@ -147,3 +150,7 @@ SECURE_CONTENT_TYPE_NOSNIFF = True
 X_FRAME_OPTIONS = "DENY"
 
 STATIC_ROOT = BASE_DIR / "staticfiles"
+
+# Media files (user uploads)
+MEDIA_URL = "/media/"
+MEDIA_ROOT = BASE_DIR / "media"

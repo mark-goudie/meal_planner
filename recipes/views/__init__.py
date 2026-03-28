@@ -17,6 +17,8 @@ from .legacy import (
 )
 from .recipes import (
     ai_generate_recipe_api,
+    image_search,
+    image_select,
     recipe_create_view,
     recipe_delete_view,
     recipe_detail_view,
@@ -52,6 +54,8 @@ __all__ = [
     "terms",
     # Recipes
     "ai_generate_recipe_api",
+    "image_search",
+    "image_select",
     "recipe_create_view",
     "recipe_delete_view",
     "recipe_detail_view",

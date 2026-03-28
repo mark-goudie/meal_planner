@@ -7,6 +7,8 @@ from .views import (
     cook_done,
     cook_step,
     cook_view,
+    image_search,
+    image_select,
     meal_plan_create,
     meal_plan_list,
     recipe_create_from_ai,
@@ -61,6 +63,8 @@ urlpatterns = [
     path("recipes/<int:pk>/edit/", recipe_update_view, name="recipe_update"),
     path("recipes/<int:pk>/delete/", recipe_delete_view, name="recipe_delete"),
     path("recipes/<int:pk>/favourite/", toggle_favourite_view, name="toggle_favourite"),
+    path("recipes/<int:pk>/image-search/", image_search, name="image_search"),
+    path("recipes/<int:pk>/image-select/", image_select, name="image_select"),
     path("recipes/ai-generate/", ai_generate_recipe_api, name="ai_generate_recipe_api"),
     # --- Legacy recipe views (AI-related, still in use) ---
     path("recipes/ai/generate/", ai_generate_recipe, name="ai_generate_recipe"),

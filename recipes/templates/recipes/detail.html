@@ -22,6 +22,13 @@
         <span class="recipe-placeholder__initials" style="font-size: 36px;">{{ recipe.title|recipe_initials }}</span>
       </div>
     {% endif %}
+    <button class="btn btn-ghost btn-sm"
+            style="position: absolute; bottom: var(--space-sm); right: var(--space-sm); background: rgba(0,0,0,0.5); color: white; backdrop-filter: blur(4px);"
+            hx-get="{% url 'image_search' recipe.pk %}"
+            hx-target="body"
+            hx-swap="beforeend">
+      <i class="bi bi-camera"></i> {% if recipe.image %}Change{% else %}Find Image{% endif %}
+    </button>
   </div>
 
   <!-- Recipe Header -->

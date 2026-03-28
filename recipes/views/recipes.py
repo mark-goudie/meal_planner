@@ -1,8 +1,12 @@
 import json
 import logging
+import re
 from decimal import Decimal, InvalidOperation
 
+import requests as http_requests
+from django.conf import settings
 from django.contrib.auth.decorators import login_required
+from django.core.files.base import ContentFile
 from django.core.paginator import Paginator
 from django.db.models import Avg, Count, F, Max
 from django.http import JsonResponse
@@ -344,3 +348,74 @@ def ai_generate_recipe_api(request):
         return JsonResponse(result)
     except AIServiceException as e:
         return JsonResponse({"error": str(e)}, status=400)
+
+
+@login_required
+def image_search(request, pk):
+    """HTMX: Search Unsplash for recipe images and display results."""
+    recipe = get_object_or_404(Recipe, pk=pk, user=request.user)
+
+    query = request.GET.get("q", recipe.title)
+    access_key = settings.UNSPLASH_ACCESS_KEY
+
+    if not access_key:
+        return render(request, "recipes/partials/image_search.html", {
+            "recipe": recipe,
+            "error": "Unsplash API key not configured.",
+        })
+
+    try:
+        resp = http_requests.get(
+            "https://api.unsplash.com/search/photos",
+            params={
+                "query": f"{query} food",
+                "per_page": 8,
+                "orientation": "landscape",
+            },
+            headers={"Authorization": f"Client-ID {access_key}"},
+            timeout=10,
+        )
+        resp.raise_for_status()
+        data = resp.json()
+        photos = [
+            {
+                "id": p["id"],
+                "thumb": p["urls"]["small"],
+                "regular": p["urls"]["regular"],
+                "alt": p.get("alt_description", query),
+                "credit": p["user"]["name"],
+                "credit_link": p["user"]["links"]["html"],
+            }
+            for p in data.get("results", [])
+        ]
+    except Exception:
+        photos = []
+
+    return render(request, "recipes/partials/image_search.html", {
+        "recipe": recipe,
+        "photos": photos,
+        "query": query,
+    })
+
+
+@login_required
+def image_select(request, pk):
+    """Save an Unsplash image URL to the recipe."""
+    recipe = get_object_or_404(Recipe, pk=pk, user=request.user)
+    image_url = request.POST.get("image_url", "")
+
+    if image_url:
+        try:
+            resp = http_requests.get(image_url, timeout=15)
+            resp.raise_for_status()
+
+            # Generate filename from recipe title
+            safe_name = re.sub(r'[^\w\s-]', '', recipe.title.lower())
+            safe_name = re.sub(r'[\s-]+', '_', safe_name)[:50]
+            filename = f"{safe_name}_{recipe.pk}.jpg"
+
+            recipe.image.save(filename, ContentFile(resp.content), save=True)
+        except Exception:
+            pass  # Silently fail -- placeholder will still show
+
+    return redirect("recipe_detail", pk=recipe.pk)
