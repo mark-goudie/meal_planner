@@ -134,16 +134,29 @@ def recipe_search(request):
 
 @login_required
 def recipe_detail_view(request, pk):
-    """Recipe Detail -- full page view with ingredients, steps, notes."""
+    """Recipe Detail -- full page view with ingredients, steps, notes.
+
+    Accessible if:
+    - User owns the recipe, OR
+    - Recipe is shared and user is in the same household, OR
+    - Recipe is assigned to the user's household meal plan
+    """
+    household = get_household(request.user)
+    access_filter = Q(user=request.user)
+    if household:
+        access_filter |= Q(shared=True, user__household_membership__household=household)
+        access_filter |= Q(mealplan__household=household)
     recipe = get_object_or_404(
-        Recipe.objects.select_related("user").prefetch_related(
+        Recipe.objects.filter(access_filter)
+        .distinct()
+        .select_related("user")
+        .prefetch_related(
             "tags",
             "favourited_by",
             "recipe_ingredients__ingredient",
             "cooking_notes",
         ),
         pk=pk,
-        user=request.user,
     )
     structured_ingredients = recipe.recipe_ingredients.all()
     cooking_notes = recipe.cooking_notes.all()

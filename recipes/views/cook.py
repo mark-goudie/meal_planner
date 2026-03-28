@@ -2,10 +2,12 @@ from datetime import date
 
 from django.contrib import messages as django_messages
 from django.contrib.auth.decorators import login_required
+from django.db.models import Q
 from django.http import Http404
 from django.shortcuts import get_object_or_404, redirect, render
 
 from ..models import CookingNote, Recipe
+from ..models.household import get_household
 
 
 def _parse_cooking_steps(recipe):
@@ -45,13 +47,20 @@ def _parse_cooking_steps(recipe):
 @login_required
 def cook_view(request, pk):
     """Full-page cooking mode for a recipe."""
+    household = get_household(request.user)
+    access_filter = Q(user=request.user)
+    if household:
+        access_filter |= Q(shared=True, user__household_membership__household=household)
+        access_filter |= Q(mealplan__household=household)
     recipe = get_object_or_404(
-        Recipe.objects.select_related("user").prefetch_related(
+        Recipe.objects.filter(access_filter)
+        .distinct()
+        .select_related("user")
+        .prefetch_related(
             "recipe_ingredients__ingredient",
             "cooking_notes",
         ),
         pk=pk,
-        user=request.user,
     )
     steps = _parse_cooking_steps(recipe)
     if not steps:
