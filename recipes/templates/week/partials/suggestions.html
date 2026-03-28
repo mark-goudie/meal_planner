@@ -1,0 +1,86 @@
+{% if suggestions %}
+<div class="suggestions-overlay" x-data="{ show: true }" x-show="show"
+     style="position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 200; display: flex; align-items: flex-end; justify-content: center;">
+  <div class="screen" style="background: var(--bg); border-radius: var(--radius-lg) var(--radius-lg) 0 0; max-height: 85vh; overflow-y: auto; padding-bottom: var(--space-2xl);">
+
+    <div class="flex justify-between items-center mb-lg" style="padding-top: var(--space-lg);">
+      <div>
+        <h2 style="margin: 0; font-size: var(--text-xl); font-weight: 800;">
+          <i class="bi bi-stars" style="color: var(--accent);"></i> Meal Suggestions
+        </h2>
+        <p class="text-muted text-sm mt-xs">Based on your ratings and cooking history</p>
+      </div>
+      <button class="btn btn-ghost btn-sm" @click="show = false; $el.closest('.suggestions-overlay').remove()">
+        <i class="bi bi-x-lg"></i>
+      </button>
+    </div>
+
+    <div class="day-list" id="suggestion-list">
+      {% for s in suggestions %}
+      <div class="day-card" id="suggestion-{{ s.date_str }}"
+           style="border-left-color: var(--accent);">
+        <div class="day-card__header">
+          <span class="day-card__label">{{ s.day_name }} {{ s.day_num }}</span>
+          {% if s.score %}
+          <span class="chip chip--accent" style="font-size: var(--text-xs);">
+            <i class="bi bi-heart-fill"></i> {{ s.score }}%
+          </span>
+          {% endif %}
+        </div>
+
+        <div class="day-card__title" style="display: block;">{{ s.recipe.title }}</div>
+
+        <div class="day-card__meta">
+          {% if s.recipe.cook_time %}
+          <span class="day-card__time">
+            <i class="bi bi-clock"></i> {{ s.recipe.cook_time }} min
+          </span>
+          {% endif %}
+          {% if s.recipe.average_rating %}
+          <span class="day-card__time">
+            <i class="bi bi-star-fill"></i> {{ s.recipe.average_rating|floatformat:1 }}
+          </span>
+          {% endif %}
+        </div>
+
+        {% if s.recipe.tags.all %}
+        <div class="day-card__tags">
+          {% for tag in s.recipe.tags.all %}
+          <span class="chip chip--muted">{{ tag.name }}</span>
+          {% endfor %}
+        </div>
+        {% endif %}
+
+        <div class="flex gap-sm mt-md">
+          <button class="btn btn-primary btn-sm flex-1"
+                  hx-post="{% url 'week_accept_suggestion' s.date_str %}"
+                  hx-vals='{"recipe_id": "{{ s.recipe.pk }}"}'
+                  hx-target="#day-{{ s.date_str }}"
+                  hx-swap="outerHTML"
+                  onclick="var el = document.getElementById('suggestion-{{ s.date_str }}'); if(el) el.remove(); checkEmpty();">
+            <i class="bi bi-check-lg"></i> Accept
+          </button>
+          <button class="btn btn-outline btn-sm flex-1"
+                  onclick="document.getElementById('suggestion-{{ s.date_str }}').remove(); checkEmpty();">
+            <i class="bi bi-arrow-right"></i> Skip
+          </button>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+
+  </div>
+</div>
+
+<script>
+function checkEmpty() {
+  var list = document.getElementById('suggestion-list');
+  if (list && list.children.length === 0) {
+    var overlay = document.querySelector('.suggestions-overlay');
+    if (overlay) overlay.remove();
+  }
+}
+</script>
+{% else %}
+{% include "week/partials/no_suggestions.html" %}
+{% endif %}

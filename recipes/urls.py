@@ -23,7 +23,9 @@ from .views import (
     shop_toggle,
     shop_view,
     toggle_favourite_view,
+    week_accept_suggestion,
     week_assign,
+    week_skip_suggestion,
     week_slot,
     week_suggest,
     week_view,
@@ -36,6 +38,8 @@ urlpatterns = [
     path("week/slot/<str:date_str>/<str:meal_type>/", week_slot, name="week_slot"),
     path("week/assign/<str:date_str>/<str:meal_type>/", week_assign, name="week_assign"),
     path("week/suggest/", week_suggest, name="week_suggest"),
+    path("week/accept/<str:date_str>/", week_accept_suggestion, name="week_accept_suggestion"),
+    path("week/skip/<str:date_str>/", week_skip_suggestion, name="week_skip_suggestion"),
     # --- Redesign: Auth ---
     path("register/", register_view, name="register"),
     # --- Redesign: Cooking mode ---

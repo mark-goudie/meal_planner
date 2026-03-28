@@ -27,7 +27,7 @@ from .recipes import (
 )
 from .settings import settings_view
 from .shop import shop_add, shop_generate, shop_toggle, shop_view
-from .week import week_assign, week_slot, week_suggest, week_view
+from .week import week_accept_suggestion, week_assign, week_skip_suggestion, week_slot, week_suggest, week_view
 
 __all__ = [
     # Auth
@@ -67,7 +67,9 @@ __all__ = [
     "shop_toggle",
     "shop_view",
     # Week
+    "week_accept_suggestion",
     "week_assign",
+    "week_skip_suggestion",
     "week_slot",
     "week_suggest",
     "week_view",

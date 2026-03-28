@@ -185,11 +185,32 @@ class WeekViewTest(TestCase):
     # Suggest view
     # ------------------------------------------------------------------
 
-    def test_suggest_returns_empty_response(self):
-        """Suggest endpoint should return 200 with empty body (placeholder)."""
+    def test_suggest_returns_200(self):
+        """Suggest endpoint should return 200."""
         response = self.client.get(reverse("week_suggest"))
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.content, b"")
+
+    def test_suggest_with_empty_slots_shows_suggestions(self):
+        """Suggest should propose recipes for empty dinner slots."""
+        # Current week has meals seeded in setUp — clear them to create empty slots
+        MealPlan.objects.filter(user=self.user).delete()
+        response = self.client.get(reverse("week_suggest"))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Accept")
+
+    def test_accept_suggestion_creates_meal_plan(self):
+        """Accepting a suggestion should create a MealPlan entry."""
+        from datetime import date, timedelta
+
+        tomorrow = date.today() + timedelta(days=1)
+        date_str = tomorrow.strftime("%Y-%m-%d")
+        MealPlan.objects.filter(user=self.user, date=tomorrow).delete()
+        response = self.client.post(
+            reverse("week_accept_suggestion", args=[date_str]),
+            {"recipe_id": self.recipe.pk},
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(MealPlan.objects.filter(user=self.user, date=tomorrow, meal_type="dinner").exists())
 
     # ------------------------------------------------------------------
     # Placeholder views

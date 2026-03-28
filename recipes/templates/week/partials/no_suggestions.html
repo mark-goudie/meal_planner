@@ -1,0 +1,9 @@
+<div class="toast-container" x-data="{ show: true }" x-show="show" x-init="setTimeout(() => { show = false; $el.remove(); }, 4000)">
+  <div class="toast" role="alert">
+    {% if reason == "no_recipes" %}
+      <i class="bi bi-info-circle"></i> Add some recipes first, then I can suggest meals for your week.
+    {% else %}
+      <i class="bi bi-check-circle"></i> All slots are filled — no suggestions needed!
+    {% endif %}
+  </div>
+</div>
