@@ -45,7 +45,7 @@ def _generate_shopping_items(household, user):
     for item in generated_items:
         qty_parts = []
         if item["total_quantity"]:
-            qty_parts.append(f"{item['total_quantity']:g}")
+            qty_parts.append(f"{float(item['total_quantity']):g}")
         if item["unit"]:
             qty_parts.append(item["unit"])
         quantity_str = " ".join(qty_parts)

@@ -175,7 +175,7 @@ class RecipeService:
                 entry["category"] = ri.ingredient.category
                 if ri.quantity:
                     entry["total_quantity"] += ri.quantity
-                entry["unit"] = ri.get_unit_display()
+                entry["unit"] = ri.unit
                 entry["recipes"].add(recipe.title)
 
         return sorted(aggregated.values(), key=lambda x: (x["category"], x["ingredient"].name))
