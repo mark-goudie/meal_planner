@@ -42,6 +42,7 @@ ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', 'localhost,127.0.0.1').split(',')
 INSTALLED_APPS = [
     'recipes.apps.RecipesConfig',
     'widget_tweaks',
+    'django_htmx',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -58,6 +59,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'django_htmx.middleware.HtmxMiddleware',
 ]
 
 ROOT_URLCONF = 'config.urls'
@@ -142,3 +144,5 @@ CSRF_COOKIE_SECURE = True
 SECURE_BROWSER_XSS_FILTER = True
 SECURE_CONTENT_TYPE_NOSNIFF = True
 X_FRAME_OPTIONS = 'DENY'
+
+STATIC_ROOT = BASE_DIR / 'staticfiles'
