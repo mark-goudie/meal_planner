@@ -1,9 +1,11 @@
 import json
+import logging
 from decimal import Decimal, InvalidOperation
 
 from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
 from django.db.models import Avg, Count, F, Max
+from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 
 from ..models import (
@@ -13,6 +15,9 @@ from ..models import (
     RecipeIngredient,
     Tag,
 )
+from ..services.ai_service import AIService, AIServiceException
+
+logger = logging.getLogger(__name__)
 
 
 def _get_sorted_recipes(queryset, sort, user):
@@ -322,3 +327,20 @@ def toggle_favourite_view(request, pk):
             "is_favourited": is_favourited,
         },
     )
+
+
+@login_required
+def ai_generate_recipe_api(request):
+    """HTMX/JSON endpoint: generate a recipe from a prompt using AI."""
+    if request.method != "POST":
+        return JsonResponse({"error": "POST required"}, status=405)
+
+    prompt = request.POST.get("ai_prompt", "").strip()
+    if not prompt:
+        return JsonResponse({"error": "Please describe what you'd like to cook."}, status=400)
+
+    try:
+        result = AIService.generate_structured_recipe(prompt)
+        return JsonResponse(result)
+    except AIServiceException as e:
+        return JsonResponse({"error": str(e)}, status=400)

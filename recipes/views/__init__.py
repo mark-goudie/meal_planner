@@ -16,6 +16,7 @@ from .legacy import (
     terms,
 )
 from .recipes import (
+    ai_generate_recipe_api,
     recipe_create_view,
     recipe_delete_view,
     recipe_detail_view,
@@ -50,6 +51,7 @@ __all__ = [
     "smart_meal_planner",
     "terms",
     # Recipes
+    "ai_generate_recipe_api",
     "recipe_create_view",
     "recipe_delete_view",
     "recipe_detail_view",

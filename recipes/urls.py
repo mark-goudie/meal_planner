@@ -3,6 +3,7 @@ from django.urls import path
 from . import views
 from .views import (
     ai_generate_recipe,
+    ai_generate_recipe_api,
     cook_done,
     cook_step,
     cook_view,
@@ -56,6 +57,7 @@ urlpatterns = [
     path("recipes/<int:pk>/edit/", recipe_update_view, name="recipe_update"),
     path("recipes/<int:pk>/delete/", recipe_delete_view, name="recipe_delete"),
     path("recipes/<int:pk>/favourite/", toggle_favourite_view, name="toggle_favourite"),
+    path("recipes/ai-generate/", ai_generate_recipe_api, name="ai_generate_recipe_api"),
     # --- Legacy recipe views (AI-related, still in use) ---
     path("recipes/ai/generate/", ai_generate_recipe, name="ai_generate_recipe"),
     path("recipes/ai-create/", recipe_create_from_ai, name="recipe_create_from_ai"),

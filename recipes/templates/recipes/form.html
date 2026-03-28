@@ -26,6 +26,35 @@
   </div>
   {% endif %}
 
+  <!-- AI Recipe Generator -->
+  {% if not update %}
+  <div x-data="aiGenerator()" class="mb-xl" style="padding: var(--space-lg); background: var(--bg-card); border-radius: var(--radius-lg); border: 1px solid var(--border);">
+    <div class="flex items-center gap-sm mb-md">
+      <i class="bi bi-stars" style="color: var(--accent); font-size: var(--text-xl);"></i>
+      <h3 style="margin: 0; font-size: var(--text-lg); font-weight: 700;">Generate with AI</h3>
+    </div>
+    <p class="text-muted text-sm mb-md">Describe what you'd like to cook and AI will create the recipe for you.</p>
+    <div class="flex gap-sm">
+      <input type="text" x-model="prompt" class="form-input" style="flex: 1;"
+             placeholder="e.g. spaghetti and meatballs, Thai green curry, something with chicken..."
+             @keydown.enter.prevent="generate()">
+      <button type="button" @click="generate()" class="btn btn-accent btn-sm"
+              :disabled="loading || !prompt.trim()" style="white-space: nowrap;">
+        <template x-if="loading">
+          <span><i class="bi bi-arrow-repeat" style="animation: spin 1s linear infinite;"></i> Generating...</span>
+        </template>
+        <template x-if="!loading">
+          <span><i class="bi bi-stars"></i> Generate</span>
+        </template>
+      </button>
+    </div>
+    <div x-show="error" x-text="error" class="form-error mt-sm" style="display: none;"></div>
+    <div x-show="success" class="mt-sm text-sm" style="color: var(--primary); display: none;">
+      <i class="bi bi-check-circle"></i> Recipe generated! Review and edit below, then save.
+    </div>
+  </div>
+  {% endif %}
+
   <form method="post" action="{% if update %}{% url 'recipe_update' pk=recipe.pk %}{% else %}{% url 'recipe_create' %}{% endif %}">
     {% csrf_token %}
 
@@ -188,6 +217,86 @@ function ingredientManager() {
     ingredients.push({ name: '', quantity: '', unit: '', notes: '' });
   }
   return { ingredients: ingredients };
+}
+
+function aiGenerator() {
+  return {
+    prompt: '',
+    loading: false,
+    error: '',
+    success: false,
+
+    async generate() {
+      if (!this.prompt.trim() || this.loading) return;
+      this.loading = true;
+      this.error = '';
+      this.success = false;
+
+      try {
+        var csrfToken = document.querySelector('[name=csrfmiddlewaretoken]')?.value
+          || document.cookie.match(/csrftoken=([^;]+)/)?.[1] || '';
+
+        var formData = new FormData();
+        formData.append('ai_prompt', this.prompt);
+
+        var response = await fetch('{% url "ai_generate_recipe_api" %}', {
+          method: 'POST',
+          headers: { 'X-CSRFToken': csrfToken },
+          body: formData,
+        });
+
+        var data = await response.json();
+
+        if (!response.ok) {
+          this.error = data.error || 'Something went wrong. Please try again.';
+          return;
+        }
+
+        // Pre-fill form fields
+        document.getElementById('title').value = data.title || '';
+        document.getElementById('description').value = data.description || '';
+        document.getElementById('prep_time').value = data.prep_time || '';
+        document.getElementById('cook_time').value = data.cook_time || '';
+        document.getElementById('servings').value = data.servings || 4;
+
+        // Set difficulty
+        var diffSelect = document.getElementById('difficulty');
+        if (data.difficulty && diffSelect) {
+          diffSelect.value = data.difficulty;
+        }
+
+        // Set source to AI
+        var srcSelect = document.getElementById('source');
+        if (srcSelect) srcSelect.value = 'ai';
+
+        // Set steps
+        var stepsField = document.getElementById('steps');
+        if (data.steps && Array.isArray(data.steps)) {
+          stepsField.value = data.steps.join('\n');
+        }
+
+        // Populate structured ingredients via Alpine
+        var ingManager = document.querySelector('[x-data="ingredientManager()"]');
+        if (ingManager && ingManager.__x && data.ingredients) {
+          var alpineData = ingManager.__x.$data || Alpine.$data(ingManager);
+          alpineData.ingredients = data.ingredients.map(function(ing) {
+            return {
+              name: ing.name || '',
+              quantity: ing.quantity ? String(ing.quantity) : '',
+              unit: ing.unit || '',
+              notes: ing.preparation_notes || '',
+            };
+          });
+        }
+
+        this.success = true;
+      } catch (e) {
+        this.error = 'Network error. Please check your connection and try again.';
+      } finally {
+        this.loading = false;
+      }
+    }
+  };
 }
 </script>
 {% endblock %}
