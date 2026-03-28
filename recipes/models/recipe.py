@@ -1,14 +1,13 @@
-from django.db import models
 from django.contrib.auth.models import User
+from django.db import models
 
 from .managers import RecipeManager
 
-
 TAG_TYPE_CHOICES = [
-    ('dietary', 'Dietary'),
-    ('cuisine', 'Cuisine'),
-    ('method', 'Method'),
-    ('time', 'Time'),
+    ("dietary", "Dietary"),
+    ("cuisine", "Cuisine"),
+    ("method", "Method"),
+    ("time", "Time"),
 ]
 
 
@@ -17,7 +16,7 @@ class Tag(models.Model):
     tag_type = models.CharField(
         max_length=10,
         choices=TAG_TYPE_CHOICES,
-        default='cuisine',
+        default="cuisine",
     )
 
     def __str__(self):
@@ -25,14 +24,14 @@ class Tag(models.Model):
 
 
 INGREDIENT_CATEGORY_CHOICES = [
-    ('produce', 'Produce'),
-    ('dairy', 'Dairy'),
-    ('meat', 'Meat'),
-    ('pantry', 'Pantry'),
-    ('spices', 'Spices'),
-    ('frozen', 'Frozen'),
-    ('bakery', 'Bakery'),
-    ('other', 'Other'),
+    ("produce", "Produce"),
+    ("dairy", "Dairy"),
+    ("meat", "Meat"),
+    ("pantry", "Pantry"),
+    ("spices", "Spices"),
+    ("frozen", "Frozen"),
+    ("bakery", "Bakery"),
+    ("other", "Other"),
 ]
 
 
@@ -41,26 +40,26 @@ class Ingredient(models.Model):
     category = models.CharField(
         max_length=10,
         choices=INGREDIENT_CATEGORY_CHOICES,
-        default='other',
+        default="other",
     )
 
     class Meta:
-        ordering = ['name']
+        ordering = ["name"]
 
     def __str__(self):
         return self.name
 
 
 SOURCE_CHOICES = [
-    ('manual', 'Manual'),
-    ('ai', 'AI Generated'),
-    ('url', 'Imported from URL'),
-    ('family', 'Family Recipe'),
+    ("manual", "Manual"),
+    ("ai", "AI Generated"),
+    ("url", "Imported from URL"),
+    ("family", "Family Recipe"),
 ]
 
 
 class Recipe(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='recipes')
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="recipes")
     title = models.CharField(max_length=200)
     author = models.CharField(max_length=100, blank=True)
     description = models.TextField(blank=True)
@@ -75,44 +74,38 @@ class Recipe(models.Model):
     source = models.CharField(
         max_length=10,
         choices=SOURCE_CHOICES,
-        default='manual',
+        default="manual",
     )
     cooking_mode_steps = models.JSONField(null=True, blank=True)
 
     # Recipe details
-    prep_time = models.PositiveIntegerField(
-        null=True, blank=True, help_text="Preparation time in minutes"
-    )
-    cook_time = models.PositiveIntegerField(
-        null=True, blank=True, help_text="Cooking time in minutes"
-    )
+    prep_time = models.PositiveIntegerField(null=True, blank=True, help_text="Preparation time in minutes")
+    cook_time = models.PositiveIntegerField(null=True, blank=True, help_text="Cooking time in minutes")
     servings = models.PositiveIntegerField(default=4, help_text="Number of servings")
     difficulty = models.CharField(
         max_length=10,
         choices=[
-            ('easy', 'Easy'),
-            ('medium', 'Medium'),
-            ('hard', 'Hard'),
+            ("easy", "Easy"),
+            ("medium", "Medium"),
+            ("hard", "Hard"),
         ],
-        default='medium',
+        default="medium",
         blank=True,
     )
-    image = models.ImageField(upload_to='recipes/', null=True, blank=True)
+    image = models.ImageField(upload_to="recipes/", null=True, blank=True)
 
     # Relationships
-    tags = models.ManyToManyField('Tag', blank=True)
-    favourited_by = models.ManyToManyField(
-        User, related_name='favourites', blank=True
-    )
+    tags = models.ManyToManyField("Tag", blank=True)
+    favourited_by = models.ManyToManyField(User, related_name="favourites", blank=True)
 
     # Custom manager
     objects = RecipeManager()
 
     class Meta:
-        ordering = ['-created_at']
+        ordering = ["-created_at"]
         indexes = [
-            models.Index(fields=['-created_at']),
-            models.Index(fields=['user', '-created_at']),
+            models.Index(fields=["-created_at"]),
+            models.Index(fields=["user", "-created_at"]),
         ]
 
     def __str__(self):
@@ -131,7 +124,7 @@ class Recipe(models.Model):
         notes = self.cooking_notes.exclude(rating__isnull=True)
         if not notes.exists():
             return None
-        return notes.aggregate(avg=models.Avg('rating'))['avg']
+        return notes.aggregate(avg=models.Avg("rating"))["avg"]
 
     @property
     def cook_count(self):
@@ -145,46 +138,44 @@ class Recipe(models.Model):
 
 
 UNIT_CHOICES = [
-    ('', '---'),
-    ('tsp', 'teaspoon'),
-    ('tbsp', 'tablespoon'),
-    ('cup', 'cup'),
-    ('ml', 'millilitre'),
-    ('l', 'litre'),
-    ('g', 'gram'),
-    ('kg', 'kilogram'),
-    ('oz', 'ounce'),
-    ('lb', 'pound'),
-    ('piece', 'piece'),
-    ('slice', 'slice'),
-    ('pinch', 'pinch'),
-    ('handful', 'handful'),
-    ('bunch', 'bunch'),
-    ('can', 'can'),
-    ('clove', 'clove'),
+    ("", "---"),
+    ("tsp", "teaspoon"),
+    ("tbsp", "tablespoon"),
+    ("cup", "cup"),
+    ("ml", "millilitre"),
+    ("l", "litre"),
+    ("g", "gram"),
+    ("kg", "kilogram"),
+    ("oz", "ounce"),
+    ("lb", "pound"),
+    ("piece", "piece"),
+    ("slice", "slice"),
+    ("pinch", "pinch"),
+    ("handful", "handful"),
+    ("bunch", "bunch"),
+    ("can", "can"),
+    ("clove", "clove"),
 ]
 
 
 class RecipeIngredient(models.Model):
     recipe = models.ForeignKey(
-        'Recipe',
+        "Recipe",
         on_delete=models.CASCADE,
-        related_name='recipe_ingredients',
+        related_name="recipe_ingredients",
     )
     ingredient = models.ForeignKey(
-        'Ingredient',
+        "Ingredient",
         on_delete=models.CASCADE,
-        related_name='recipe_ingredients',
+        related_name="recipe_ingredients",
     )
-    quantity = models.DecimalField(
-        max_digits=8, decimal_places=2, null=True, blank=True
-    )
+    quantity = models.DecimalField(max_digits=8, decimal_places=2, null=True, blank=True)
     unit = models.CharField(max_length=10, choices=UNIT_CHOICES, blank=True)
     preparation_notes = models.CharField(max_length=100, blank=True)
     order = models.PositiveIntegerField(default=0)
 
     class Meta:
-        ordering = ['order']
+        ordering = ["order"]
 
     def __str__(self):
         parts = []
@@ -195,4 +186,4 @@ class RecipeIngredient(models.Model):
         parts.append(self.ingredient.name)
         if self.preparation_notes:
             parts.append(f"({self.preparation_notes})")
-        return ' '.join(parts)
+        return " ".join(parts)

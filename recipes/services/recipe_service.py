@@ -10,8 +10,9 @@ This service encapsulates all recipe-related operations including:
 
 from decimal import Decimal
 from typing import List, Optional, Set
-from django.db.models import Q, Count, QuerySet
+
 from django.contrib.auth.models import User
+from django.db.models import Q, QuerySet
 
 from ..models import Recipe, Tag
 
@@ -43,10 +44,7 @@ class RecipeService:
 
         # Apply search filter
         if query:
-            recipes = recipes.filter(
-                Q(title__icontains=query) |
-                Q(ingredients_text__icontains=query)
-            )
+            recipes = recipes.filter(Q(title__icontains=query) | Q(ingredients_text__icontains=query))
 
         # Apply tag filter
         if tag_id:
@@ -57,12 +55,9 @@ class RecipeService:
             recipes = recipes.filter(favourited_by=user)
 
         # Optimize queries
-        recipes = recipes.distinct().select_related(
-            'user'
-        ).prefetch_related(
-            'tags',
-            'favourited_by'
-        ).order_by('-created_at')
+        recipes = (
+            recipes.distinct().select_related("user").prefetch_related("tags", "favourited_by").order_by("-created_at")
+        )
 
         return recipes
 
@@ -78,7 +73,7 @@ class RecipeService:
         Returns:
             The created Recipe instance
         """
-        tags = recipe_data.pop('tags', [])
+        tags = recipe_data.pop("tags", [])
         recipe = Recipe.objects.create(user=user, **recipe_data)
         if tags:
             recipe.tags.set(tags)
@@ -96,7 +91,7 @@ class RecipeService:
         Returns:
             The updated Recipe instance
         """
-        tags = recipe_data.pop('tags', None)
+        tags = recipe_data.pop("tags", None)
         for key, value in recipe_data.items():
             setattr(recipe, key, value)
         recipe.save()
@@ -161,25 +156,26 @@ class RecipeService:
     def generate_structured_shopping_list(recipes):
         """Generate a shopping list with summed quantities from structured ingredients."""
         from collections import defaultdict
-        from recipes.models import RecipeIngredient
 
-        aggregated = defaultdict(lambda: {
-            'ingredient': None,
-            'category': '',
-            'total_quantity': Decimal('0'),
-            'unit': '',
-            'recipes': set(),
-        })
+        aggregated = defaultdict(
+            lambda: {
+                "ingredient": None,
+                "category": "",
+                "total_quantity": Decimal("0"),
+                "unit": "",
+                "recipes": set(),
+            }
+        )
 
         for recipe in recipes:
-            for ri in recipe.recipe_ingredients.select_related('ingredient').all():
+            for ri in recipe.recipe_ingredients.select_related("ingredient").all():
                 key = (ri.ingredient_id, ri.unit)
                 entry = aggregated[key]
-                entry['ingredient'] = ri.ingredient
-                entry['category'] = ri.ingredient.category
+                entry["ingredient"] = ri.ingredient
+                entry["category"] = ri.ingredient.category
                 if ri.quantity:
-                    entry['total_quantity'] += ri.quantity
-                entry['unit'] = ri.get_unit_display()
-                entry['recipes'].add(recipe.title)
+                    entry["total_quantity"] += ri.quantity
+                entry["unit"] = ri.get_unit_display()
+                entry["recipes"].add(recipe.title)
 
-        return sorted(aggregated.values(), key=lambda x: (x['category'], x['ingredient'].name))
+        return sorted(aggregated.values(), key=lambda x: (x["category"], x["ingredient"].name))

@@ -9,28 +9,33 @@ This service encapsulates all AI-related operations including:
 """
 
 import re
-from typing import Tuple, Optional
-from django.conf import settings
+from typing import Tuple
+
 import openai
+from django.conf import settings
 
 
 class AIServiceException(Exception):
     """Base exception for AI service errors."""
+
     pass
 
 
 class AIConfigurationError(AIServiceException):
     """Raised when AI service is not properly configured."""
+
     pass
 
 
 class AIValidationError(AIServiceException):
     """Raised when input validation fails."""
+
     pass
 
 
 class AIAPIError(AIServiceException):
     """Raised when AI API call fails."""
+
     pass
 
 
@@ -51,8 +56,7 @@ class AIService:
         """
         if not settings.OPENAI_API_KEY or not settings.OPENAI_API_KEY.strip():
             raise AIConfigurationError(
-                "AI recipe generation is not currently available. "
-                "Please configure the OpenAI API key."
+                "AI recipe generation is not currently available. " "Please configure the OpenAI API key."
             )
 
     @staticmethod
@@ -75,9 +79,7 @@ class AIService:
         cleaned_prompt = prompt.strip()
 
         if len(cleaned_prompt) > AIService.MAX_PROMPT_LENGTH:
-            raise AIValidationError(
-                f"Prompt is too long. Please limit to {AIService.MAX_PROMPT_LENGTH} characters."
-            )
+            raise AIValidationError(f"Prompt is too long. Please limit to {AIService.MAX_PROMPT_LENGTH} characters.")
 
         return cleaned_prompt
 
@@ -118,7 +120,7 @@ class AIService:
                     {"role": "system", "content": "You're a helpful chef assistant."},
                     {"role": "user", "content": full_prompt},
                 ],
-                temperature=AIService.TEMPERATURE
+                temperature=AIService.TEMPERATURE,
             )
 
             content = response.choices[0].message.content
@@ -128,21 +130,15 @@ class AIService:
             return content.strip()
 
         except openai.AuthenticationError:
-            raise AIAPIError(
-                "AI service authentication failed. Please check the API configuration."
-            )
+            raise AIAPIError("AI service authentication failed. Please check the API configuration.")
         except openai.RateLimitError:
-            raise AIAPIError(
-                "AI service is currently busy. Please try again in a few minutes."
-            )
+            raise AIAPIError("AI service is currently busy. Please try again in a few minutes.")
         except openai.APIError:
-            raise AIAPIError(
-                "AI service is temporarily unavailable. Please try again later."
-            )
+            raise AIAPIError("AI service is temporarily unavailable. Please try again later.")
         except AIServiceException:
             # Re-raise our own exceptions
             raise
-        except Exception as e:
+        except Exception:
             raise AIAPIError("An unexpected error occurred. Please try again.")
 
     @staticmethod
@@ -174,7 +170,7 @@ class AIService:
                     {"role": "system", "content": "You're a helpful chef assistant."},
                     {"role": "user", "content": prompt},
                 ],
-                temperature=AIService.TEMPERATURE
+                temperature=AIService.TEMPERATURE,
             )
 
             content = response.choices[0].message.content
@@ -184,17 +180,11 @@ class AIService:
             return content.strip()
 
         except openai.AuthenticationError:
-            raise AIAPIError(
-                "AI service authentication failed. Please check the API configuration."
-            )
+            raise AIAPIError("AI service authentication failed. Please check the API configuration.")
         except openai.RateLimitError:
-            raise AIAPIError(
-                "AI service is currently busy. Please try again in a few minutes."
-            )
+            raise AIAPIError("AI service is currently busy. Please try again in a few minutes.")
         except openai.APIError:
-            raise AIAPIError(
-                "AI service is temporarily unavailable. Please try again later."
-            )
+            raise AIAPIError("AI service is temporarily unavailable. Please try again later.")
         except AIServiceException:
             # Re-raise our own exceptions
             raise
@@ -223,21 +213,19 @@ class AIService:
                         '"category": "meat", "preparation_notes": "diced"}], '
                         '"steps": ["Step 1 text", "Step 2 text"]}'
                         " Return ONLY valid JSON, no markdown or extra text."
-                    )
+                    ),
                 },
-                {
-                    "role": "user",
-                    "content": f"Create a family-friendly recipe using: {clean_prompt}"
-                }
-            ]
+                {"role": "user", "content": f"Create a family-friendly recipe using: {clean_prompt}"},
+            ],
         )
 
         import json
+
         content = response.choices[0].message.content.strip()
         # Strip markdown code fences if present
-        if content.startswith('```'):
-            content = content.split('\n', 1)[1] if '\n' in content else content[3:]
-            if content.endswith('```'):
+        if content.startswith("```"):
+            content = content.split("\n", 1)[1] if "\n" in content else content[3:]
+            if content.endswith("```"):
                 content = content[:-3]
             content = content.strip()
 
@@ -264,9 +252,7 @@ class AIService:
             title = title_match.group(1).strip()
 
         # Match everything between "Ingredients:" and "Steps:" or "Directions:"
-        ingredients_match = re.search(
-            r"Ingredients:\s*([\s\S]*?)(?:\n(?:Steps:|Directions:))", text, re.IGNORECASE
-        )
+        ingredients_match = re.search(r"Ingredients:\s*([\s\S]*?)(?:\n(?:Steps:|Directions:))", text, re.IGNORECASE)
         if ingredients_match:
             ingredients = ingredients_match.group(1).strip()
 

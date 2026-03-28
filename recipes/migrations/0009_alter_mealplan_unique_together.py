@@ -7,13 +7,13 @@ from django.db import migrations
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('recipes', '0008_alter_mealplan_options_alter_recipe_options_and_more'),
+        ("recipes", "0008_alter_mealplan_options_alter_recipe_options_and_more"),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
     ]
 
     operations = [
         migrations.AlterUniqueTogether(
-            name='mealplan',
-            unique_together={('user', 'date', 'meal_type')},
+            name="mealplan",
+            unique_together={("user", "date", "meal_type")},
         ),
     ]

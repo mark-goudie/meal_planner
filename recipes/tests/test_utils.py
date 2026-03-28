@@ -1,50 +1,42 @@
-from django.test import TestCase
-from django.contrib.auth.models import User
-from recipes.models import Recipe, Tag, MealPlan
-from recipes.services import AIService
 from datetime import date, timedelta
+
+from django.contrib.auth.models import User
+from django.test import TestCase
+
+from recipes.models import MealPlan, Recipe, Tag
+from recipes.services import AIService
 
 
 class TestUtilities:
     """Utility class for common test operations"""
 
     @staticmethod
-    def create_test_user(username='testuser', email='test@example.com', password='testpass123'):
+    def create_test_user(username="testuser", email="test@example.com", password="testpass123"):
         """Create a test user with default or custom credentials"""
-        return User.objects.create_user(
-            username=username,
-            email=email,
-            password=password
-        )
+        return User.objects.create_user(username=username, email=email, password=password)
 
     @staticmethod
-    def create_test_recipe(user, title='Test Recipe', ingredients_text='Test ingredients', steps='Test steps', **kwargs):
+    def create_test_recipe(
+        user, title="Test Recipe", ingredients_text="Test ingredients", steps="Test steps", **kwargs
+    ):
         """Create a test recipe with default or custom data"""
-        defaults = {
-            'user': user,
-            'title': title,
-            'ingredients_text': ingredients_text,
-            'steps': steps
-        }
+        defaults = {"user": user, "title": title, "ingredients_text": ingredients_text, "steps": steps}
         defaults.update(kwargs)
         return Recipe.objects.create(**defaults)
 
     @staticmethod
-    def create_test_tag(name='Test Tag'):
+    def create_test_tag(name="Test Tag"):
         """Create a test tag"""
         tag, _ = Tag.objects.get_or_create(name=name)
         return tag
 
     @staticmethod
-    def create_test_meal_plan(user, recipe, meal_type='breakfast', plan_date=None):
+    def create_test_meal_plan(user, recipe, meal_type="breakfast", plan_date=None):
         """Create a test meal plan (or get existing one)"""
         if plan_date is None:
             plan_date = date.today()
         meal_plan, created = MealPlan.objects.get_or_create(
-            user=user,
-            date=plan_date,
-            meal_type=meal_type,
-            defaults={'recipe': recipe}
+            user=user, date=plan_date, meal_type=meal_type, defaults={"recipe": recipe}
         )
         # Update recipe if meal plan already exists
         if not created and meal_plan.recipe != recipe:
@@ -53,41 +45,38 @@ class TestUtilities:
         return meal_plan
 
     @staticmethod
-    def create_complete_test_data(username='testuser'):
+    def create_complete_test_data(username="testuser"):
         """Create a complete set of test data including user, recipes, tags, and meal plans"""
         user = TestUtilities.create_test_user(username=username)
 
         # Create tags
-        tag1 = TestUtilities.create_test_tag('Breakfast')
-        tag2 = TestUtilities.create_test_tag('Quick')
-        tag3 = TestUtilities.create_test_tag('Healthy')
+        tag1 = TestUtilities.create_test_tag("Breakfast")
+        tag2 = TestUtilities.create_test_tag("Quick")
+        tag3 = TestUtilities.create_test_tag("Healthy")
 
         # Create recipes
         recipe1 = TestUtilities.create_test_recipe(
-            user=user,
-            title='Pancakes',
-            ingredients_text='Flour\nEggs\nMilk',
-            steps='Mix ingredients\nCook on griddle'
+            user=user, title="Pancakes", ingredients_text="Flour\nEggs\nMilk", steps="Mix ingredients\nCook on griddle"
         )
         recipe1.tags.add(tag1, tag2)
 
         recipe2 = TestUtilities.create_test_recipe(
             user=user,
-            title='Salad',
-            ingredients_text='Lettuce\nTomatoes\nCucumber',
-            steps='Chop vegetables\nMix together'
+            title="Salad",
+            ingredients_text="Lettuce\nTomatoes\nCucumber",
+            steps="Chop vegetables\nMix together",
         )
         recipe2.tags.add(tag3)
 
         # Create meal plans
-        meal_plan1 = TestUtilities.create_test_meal_plan(user, recipe1, 'breakfast')
-        meal_plan2 = TestUtilities.create_test_meal_plan(user, recipe2, 'lunch')
+        meal_plan1 = TestUtilities.create_test_meal_plan(user, recipe1, "breakfast")
+        meal_plan2 = TestUtilities.create_test_meal_plan(user, recipe2, "lunch")
 
         return {
-            'user': user,
-            'tags': [tag1, tag2, tag3],
-            'recipes': [recipe1, recipe2],
-            'meal_plans': [meal_plan1, meal_plan2],
+            "user": user,
+            "tags": [tag1, tag2, tag3],
+            "recipes": [recipe1, recipe2],
+            "meal_plans": [meal_plan1, meal_plan2],
         }
 
 
@@ -108,13 +97,13 @@ Steps:
 
         title, ingredients, steps = AIService.parse_generated_recipe(generated_text)
 
-        self.assertEqual(title, 'Delicious Pasta')
-        self.assertIn('2 cups pasta', ingredients)
-        self.assertIn('1 cup tomato sauce', ingredients)
-        self.assertIn('1/2 cup cheese', ingredients)
-        self.assertIn('1. Boil pasta', steps)
-        self.assertIn('2. Add sauce', steps)
-        self.assertIn('3. Top with cheese', steps)
+        self.assertEqual(title, "Delicious Pasta")
+        self.assertIn("2 cups pasta", ingredients)
+        self.assertIn("1 cup tomato sauce", ingredients)
+        self.assertIn("1/2 cup cheese", ingredients)
+        self.assertIn("1. Boil pasta", steps)
+        self.assertIn("2. Add sauce", steps)
+        self.assertIn("3. Top with cheese", steps)
 
     def test_parse_recipe_with_directions_instead_of_steps(self):
         """Test parsing recipe that uses 'Directions:' instead of 'Steps:'"""
@@ -130,10 +119,10 @@ Directions:
 
         title, ingredients, steps = AIService.parse_generated_recipe(generated_text)
 
-        self.assertEqual(title, 'Quick Sandwich')
-        self.assertIn('Bread', ingredients)
-        self.assertIn('Toast bread', steps)
-        self.assertIn('Add ham and cheese', steps)
+        self.assertEqual(title, "Quick Sandwich")
+        self.assertIn("Bread", ingredients)
+        self.assertIn("Toast bread", steps)
+        self.assertIn("Add ham and cheese", steps)
 
     def test_parse_recipe_case_insensitive(self):
         """Test parsing recipe with different case variations"""
@@ -145,9 +134,9 @@ steps:
 
         title, ingredients, steps = AIService.parse_generated_recipe(generated_text)
 
-        self.assertEqual(title, 'Lowercase Recipe')
-        self.assertIn('Some ingredient', ingredients)
-        self.assertIn('Some step', steps)
+        self.assertEqual(title, "Lowercase Recipe")
+        self.assertIn("Some ingredient", ingredients)
+        self.assertIn("Some step", steps)
 
     def test_parse_recipe_missing_sections(self):
         """Test parsing recipe with missing sections"""
@@ -158,9 +147,9 @@ Steps:"""
 
         title, ingredients, steps = AIService.parse_generated_recipe(generated_text)
 
-        self.assertEqual(title, 'Incomplete Recipe')
-        self.assertIn('Only ingredients here', ingredients)
-        self.assertEqual(steps, '')  # Should be empty string
+        self.assertEqual(title, "Incomplete Recipe")
+        self.assertIn("Only ingredients here", ingredients)
+        self.assertEqual(steps, "")  # Should be empty string
 
     def test_parse_recipe_no_title(self):
         """Test parsing recipe without title"""
@@ -171,9 +160,9 @@ Steps:
 
         title, ingredients, steps = AIService.parse_generated_recipe(generated_text)
 
-        self.assertEqual(title, '')  # Should be empty string
-        self.assertIn('Some ingredients', ingredients)
-        self.assertIn('Some steps', steps)
+        self.assertEqual(title, "")  # Should be empty string
+        self.assertIn("Some ingredients", ingredients)
+        self.assertIn("Some steps", steps)
 
     def test_parse_recipe_malformed_text(self):
         """Test parsing completely malformed text"""
@@ -181,9 +170,9 @@ Steps:
 
         title, ingredients, steps = AIService.parse_generated_recipe(generated_text)
 
-        self.assertEqual(title, '')
-        self.assertEqual(ingredients, '')
-        self.assertEqual(steps, '')
+        self.assertEqual(title, "")
+        self.assertEqual(ingredients, "")
+        self.assertEqual(steps, "")
 
     def test_parse_recipe_empty_text(self):
         """Test parsing empty text"""
@@ -191,9 +180,9 @@ Steps:
 
         title, ingredients, steps = AIService.parse_generated_recipe(generated_text)
 
-        self.assertEqual(title, '')
-        self.assertEqual(ingredients, '')
-        self.assertEqual(steps, '')
+        self.assertEqual(title, "")
+        self.assertEqual(ingredients, "")
+        self.assertEqual(steps, "")
 
     def test_parse_recipe_strips_whitespace(self):
         """Test that parsing strips whitespace from extracted sections"""
@@ -207,10 +196,10 @@ Steps:
 
         title, ingredients, steps = AIService.parse_generated_recipe(generated_text)
 
-        self.assertEqual(title, 'Recipe with Spaces')
+        self.assertEqual(title, "Recipe with Spaces")
         # Check that title was stripped of whitespace
-        self.assertFalse(title.startswith(' '))
-        self.assertFalse(title.endswith(' '))
+        self.assertFalse(title.startswith(" "))
+        self.assertFalse(title.endswith(" "))
 
     def test_parse_recipe_multiline_sections(self):
         """Test parsing recipe with multi-line sections"""
@@ -228,11 +217,11 @@ Steps:
 
         title, ingredients, steps = AIService.parse_generated_recipe(generated_text)
 
-        self.assertEqual(title, 'Complex Recipe')
-        self.assertIn('First ingredient', ingredients)
-        self.assertIn('multiple lines', ingredients)
-        self.assertIn('First step', steps)
-        self.assertIn('multiple lines for clarity', steps)
+        self.assertEqual(title, "Complex Recipe")
+        self.assertIn("First ingredient", ingredients)
+        self.assertIn("multiple lines", ingredients)
+        self.assertIn("First step", steps)
+        self.assertIn("multiple lines for clarity", steps)
 
 
 class TestUtilitiesTest(TestCase):
@@ -241,20 +230,16 @@ class TestUtilitiesTest(TestCase):
     def test_create_test_user(self):
         """Test creating a test user with defaults"""
         user = TestUtilities.create_test_user()
-        self.assertEqual(user.username, 'testuser')
-        self.assertEqual(user.email, 'test@example.com')
-        self.assertTrue(user.check_password('testpass123'))
+        self.assertEqual(user.username, "testuser")
+        self.assertEqual(user.email, "test@example.com")
+        self.assertTrue(user.check_password("testpass123"))
 
     def test_create_test_user_custom(self):
         """Test creating a test user with custom values"""
-        user = TestUtilities.create_test_user(
-            username='customuser',
-            email='custom@example.com',
-            password='custompass'
-        )
-        self.assertEqual(user.username, 'customuser')
-        self.assertEqual(user.email, 'custom@example.com')
-        self.assertTrue(user.check_password('custompass'))
+        user = TestUtilities.create_test_user(username="customuser", email="custom@example.com", password="custompass")
+        self.assertEqual(user.username, "customuser")
+        self.assertEqual(user.email, "custom@example.com")
+        self.assertTrue(user.check_password("custompass"))
 
     def test_create_test_recipe(self):
         """Test creating a test recipe"""
@@ -262,36 +247,33 @@ class TestUtilitiesTest(TestCase):
         recipe = TestUtilities.create_test_recipe(user)
 
         self.assertEqual(recipe.user, user)
-        self.assertEqual(recipe.title, 'Test Recipe')
-        self.assertEqual(recipe.ingredients_text, 'Test ingredients')
-        self.assertEqual(recipe.steps, 'Test steps')
+        self.assertEqual(recipe.title, "Test Recipe")
+        self.assertEqual(recipe.ingredients_text, "Test ingredients")
+        self.assertEqual(recipe.steps, "Test steps")
 
     def test_create_test_recipe_custom(self):
         """Test creating a test recipe with custom values"""
         user = TestUtilities.create_test_user()
         recipe = TestUtilities.create_test_recipe(
-            user,
-            title='Custom Recipe',
-            author='Custom Author',
-            is_ai_generated=True
+            user, title="Custom Recipe", author="Custom Author", is_ai_generated=True
         )
 
-        self.assertEqual(recipe.title, 'Custom Recipe')
-        self.assertEqual(recipe.author, 'Custom Author')
+        self.assertEqual(recipe.title, "Custom Recipe")
+        self.assertEqual(recipe.author, "Custom Author")
         self.assertTrue(recipe.is_ai_generated)
 
     def test_create_complete_test_data(self):
         """Test creating complete test data set"""
-        data = TestUtilities.create_complete_test_data('completeuser')
+        data = TestUtilities.create_complete_test_data("completeuser")
 
-        self.assertEqual(data['user'].username, 'completeuser')
-        self.assertEqual(len(data['tags']), 3)
-        self.assertEqual(len(data['recipes']), 2)
-        self.assertEqual(len(data['meal_plans']), 2)
+        self.assertEqual(data["user"].username, "completeuser")
+        self.assertEqual(len(data["tags"]), 3)
+        self.assertEqual(len(data["recipes"]), 2)
+        self.assertEqual(len(data["meal_plans"]), 2)
 
         # Check relationships
-        self.assertEqual(data['recipes'][0].user, data['user'])
-        self.assertEqual(data['meal_plans'][0].user, data['user'])
+        self.assertEqual(data["recipes"][0].user, data["user"])
+        self.assertEqual(data["meal_plans"][0].user, data["user"])
 
     def test_create_test_meal_plan_default_date(self):
         """Test creating meal plan with default date"""
@@ -300,19 +282,17 @@ class TestUtilitiesTest(TestCase):
         meal_plan = TestUtilities.create_test_meal_plan(user, recipe)
 
         self.assertEqual(meal_plan.date, date.today())
-        self.assertEqual(meal_plan.meal_type, 'breakfast')
+        self.assertEqual(meal_plan.meal_type, "breakfast")
 
     def test_create_test_meal_plan_custom_date(self):
         """Test creating meal plan with custom date"""
         user = TestUtilities.create_test_user()
         recipe = TestUtilities.create_test_recipe(user)
         custom_date = date.today() + timedelta(days=7)
-        meal_plan = TestUtilities.create_test_meal_plan(
-            user, recipe, 'dinner', custom_date
-        )
+        meal_plan = TestUtilities.create_test_meal_plan(user, recipe, "dinner", custom_date)
 
         self.assertEqual(meal_plan.date, custom_date)
-        self.assertEqual(meal_plan.meal_type, 'dinner')
+        self.assertEqual(meal_plan.meal_type, "dinner")
 
 
 class DatabaseTestCase(TestCase):
@@ -321,9 +301,9 @@ class DatabaseTestCase(TestCase):
     def setUp(self):
         """Set up common test data"""
         self.test_data = TestUtilities.create_complete_test_data()
-        self.user = self.test_data['user']
-        self.recipes = self.test_data['recipes']
-        self.tags = self.test_data['tags']
+        self.user = self.test_data["user"]
+        self.recipes = self.test_data["recipes"]
+        self.tags = self.test_data["tags"]
 
     def tearDown(self):
         """Clean up after tests"""
@@ -331,21 +311,18 @@ class DatabaseTestCase(TestCase):
 
     def assertRecipeExists(self, title):
         """Assert that a recipe with the given title exists"""
-        self.assertTrue(
-            Recipe.objects.filter(title=title).exists(),
-            f"Recipe '{title}' does not exist"
-        )
+        self.assertTrue(Recipe.objects.filter(title=title).exists(), f"Recipe '{title}' does not exist")
 
     def assertUserHasRecipe(self, user, recipe_title):
         """Assert that a user has a recipe with the given title"""
         self.assertTrue(
             Recipe.objects.filter(user=user, title=recipe_title).exists(),
-            f"User '{user.username}' does not have recipe '{recipe_title}'"
+            f"User '{user.username}' does not have recipe '{recipe_title}'",
         )
 
     def assertMealPlanExists(self, user, date, meal_type):
         """Assert that a meal plan exists for the given user, date, and meal type"""
         self.assertTrue(
             MealPlan.objects.filter(user=user, date=date, meal_type=meal_type).exists(),
-            f"Meal plan for {meal_type} on {date} does not exist for user {user.username}"
+            f"Meal plan for {meal_type} on {date} does not exist for user {user.username}",
         )

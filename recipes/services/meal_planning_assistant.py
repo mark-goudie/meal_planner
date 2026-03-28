@@ -7,20 +7,19 @@ This service generates intelligent weekly meal plans based on:
 - Recipe variety optimization
 """
 
+import random
 from datetime import date, timedelta
 from decimal import Decimal
 from typing import List, Optional
-import random
 
 from django.contrib.auth.models import User
 from django.db.models import Avg
 
 from ..models import (
-    Recipe,
+    CookingNote,
     MealPlan,
     MealPlannerPreferences,
-    CookingNote,
-    MEAL_CHOICES,
+    Recipe,
 )
 
 
@@ -34,9 +33,7 @@ class MealPlanningAssistantService:
     @staticmethod
     def get_or_create_preferences(user: User) -> MealPlannerPreferences:
         """Get or create user preferences with defaults."""
-        preferences, created = MealPlannerPreferences.objects.get_or_create(
-            user=user
-        )
+        preferences, created = MealPlannerPreferences.objects.get_or_create(user=user)
         return preferences
 
     @staticmethod
@@ -56,9 +53,9 @@ class MealPlanningAssistantService:
         )
 
         if not notes.exists():
-            return Decimal('50.0')
+            return Decimal("50.0")
 
-        avg_rating = notes.aggregate(Avg('rating'))['rating__avg'] or 3.0
+        avg_rating = notes.aggregate(Avg("rating"))["rating__avg"] or 3.0
         # Convert 1-5 scale to 0-100
         score = ((avg_rating - 1) / 4) * 100
         return Decimal(str(min(score, 100)))
@@ -81,17 +78,21 @@ class MealPlanningAssistantService:
         )
 
         if not notes.exists():
-            return Decimal('50.0')
+            return Decimal("50.0")
 
-        avg_rating = notes.aggregate(Avg('rating'))['rating__avg'] or 3.0
+        avg_rating = notes.aggregate(Avg("rating"))["rating__avg"] or 3.0
         # Convert 1-5 scale to 0-100
         score = ((avg_rating - 1) / 4) * 100
 
         # Penalise if the latest note says would_make_again=False
-        latest_note = CookingNote.objects.filter(
-            recipe=recipe,
-            user=user,
-        ).order_by('-cooked_date').first()
+        latest_note = (
+            CookingNote.objects.filter(
+                recipe=recipe,
+                user=user,
+            )
+            .order_by("-cooked_date")
+            .first()
+        )
         if latest_note and not latest_note.would_make_again:
             score = max(score - 20, 0)
 
@@ -108,7 +109,10 @@ class MealPlanningAssistantService:
             CookingNote.objects.filter(
                 user=user,
                 cooked_date__gte=cutoff_date,
-            ).order_by().values_list('recipe_id', flat=True).distinct()
+            )
+            .order_by()
+            .values_list("recipe_id", flat=True)
+            .distinct()
         )
 
     @staticmethod
@@ -117,10 +121,7 @@ class MealPlanningAssistantService:
         max_time: int,
     ) -> List[Recipe]:
         """Filter recipes that can be cooked within time limit."""
-        return [
-            r for r in recipes
-            if r.total_time is None or r.total_time <= max_time
-        ]
+        return [r for r in recipes if r.total_time is None or r.total_time <= max_time]
 
     @staticmethod
     def generate_weekly_plan(
@@ -144,25 +145,18 @@ class MealPlanningAssistantService:
             week_start = today + timedelta(days=days_ahead)
 
         if meals_per_day is None:
-            meals_per_day = ['dinner']
+            meals_per_day = ["dinner"]
 
         prefs = MealPlanningAssistantService.get_or_create_preferences(user)
 
-        available_recipes = list(
-            Recipe.objects.filter(user=user).prefetch_related('tags')
-        )
+        available_recipes = list(Recipe.objects.filter(user=user).prefetch_related("tags"))
 
         if not available_recipes:
             raise ValueError("No recipes available. Please add some recipes first.")
 
-        recently_cooked_ids = MealPlanningAssistantService.get_recently_cooked_recipes(
-            user, prefs.avoid_repeat_days
-        )
+        recently_cooked_ids = MealPlanningAssistantService.get_recently_cooked_recipes(user, prefs.avoid_repeat_days)
 
-        candidate_recipes = [
-            r for r in available_recipes
-            if r.id not in recently_cooked_ids
-        ]
+        candidate_recipes = [r for r in available_recipes if r.id not in recently_cooked_ids]
 
         if not candidate_recipes:
             candidate_recipes = available_recipes
@@ -188,7 +182,7 @@ class MealPlanningAssistantService:
                     user=user,
                     date=current_date,
                     meal_type=meal_type,
-                    defaults={'recipe': recipe},
+                    defaults={"recipe": recipe},
                 )
 
                 if recipe in time_appropriate:

@@ -19,6 +19,7 @@ from django.db import IntegrityError
 from django.test import TestCase
 
 from recipes.models import (
+    MEAL_CHOICES,
     CookingNote,
     Ingredient,
     MealPlan,
@@ -26,7 +27,6 @@ from recipes.models import (
     RecipeIngredient,
     ShoppingListItem,
     Tag,
-    MEAL_CHOICES,
 )
 
 
@@ -100,12 +100,8 @@ class RecipeIngredientModelTests(TestCase):
 
     def test_ordering(self):
         salt = Ingredient.objects.create(name="Salt", category="spices")
-        RecipeIngredient.objects.create(
-            recipe=self.recipe, ingredient=salt, order=2
-        )
-        RecipeIngredient.objects.create(
-            recipe=self.recipe, ingredient=self.ingredient, order=1
-        )
+        RecipeIngredient.objects.create(recipe=self.recipe, ingredient=salt, order=2)
+        RecipeIngredient.objects.create(recipe=self.recipe, ingredient=self.ingredient, order=1)
         ris = list(self.recipe.recipe_ingredients.all())
         self.assertEqual(ris[0].ingredient.name, "Flour")
         self.assertEqual(ris[1].ingredient.name, "Salt")
@@ -224,16 +220,12 @@ class ShoppingListItemModelTests(TestCase):
         self.user = User.objects.create_user("shopper", password="pass1234")
 
     def test_create_item(self):
-        item = ShoppingListItem.objects.create(
-            user=self.user, name="Milk"
-        )
+        item = ShoppingListItem.objects.create(user=self.user, name="Milk")
         self.assertEqual(item.name, "Milk")
         self.assertFalse(item.checked)
 
     def test_toggle_checked(self):
-        item = ShoppingListItem.objects.create(
-            user=self.user, name="Eggs"
-        )
+        item = ShoppingListItem.objects.create(user=self.user, name="Eggs")
         self.assertFalse(item.checked)
 
         item.checked = True
@@ -243,9 +235,7 @@ class ShoppingListItemModelTests(TestCase):
 
     def test_ordering_checked_last(self):
         ShoppingListItem.objects.create(user=self.user, name="Bread")
-        checked_item = ShoppingListItem.objects.create(
-            user=self.user, name="Butter", checked=True
-        )
+        ShoppingListItem.objects.create(user=self.user, name="Butter", checked=True)
         ShoppingListItem.objects.create(user=self.user, name="Cheese")
 
         items = list(ShoppingListItem.objects.filter(user=self.user))

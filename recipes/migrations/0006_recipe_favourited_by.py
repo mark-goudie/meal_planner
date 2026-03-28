@@ -7,14 +7,14 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('recipes', '0005_familypreference'),
+        ("recipes", "0005_familypreference"),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='recipe',
-            name='favourited_by',
-            field=models.ManyToManyField(blank=True, related_name='favourites', to=settings.AUTH_USER_MODEL),
+            model_name="recipe",
+            name="favourited_by",
+            field=models.ManyToManyField(blank=True, related_name="favourites", to=settings.AUTH_USER_MODEL),
         ),
     ]

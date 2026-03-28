@@ -1,7 +1,9 @@
 from django.contrib.auth.models import User
 from django.db.models.signals import post_save
 from django.dispatch import receiver
+
 from .models import Recipe
+
 
 @receiver(post_save, sender=User)
 def create_demo_recipes(sender, instance, created, **kwargs):
@@ -19,7 +21,7 @@ def create_demo_recipes(sender, instance, created, **kwargs):
                 servings=1,
                 prep_time=5,
                 cook_time=5,
-                source='manual',
+                source="manual",
             )
             Recipe.objects.create(
                 user=instance,
@@ -32,5 +34,5 @@ def create_demo_recipes(sender, instance, created, **kwargs):
                 servings=2,
                 prep_time=10,
                 cook_time=0,
-                source='manual',
+                source="manual",
             )

@@ -7,20 +7,20 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('recipes', '0004_auto_20250603_2359'),
+        ("recipes", "0004_auto_20250603_2359"),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='FamilyPreference',
+            name="FamilyPreference",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('family_member', models.CharField(max_length=50)),
-                ('preference', models.IntegerField(choices=[(1, 'Dislike'), (2, 'Neutral'), (3, 'Like')])),
-                ('recipe', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='recipes.recipe')),
+                ("id", models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name="ID")),
+                ("family_member", models.CharField(max_length=50)),
+                ("preference", models.IntegerField(choices=[(1, "Dislike"), (2, "Neutral"), (3, "Like")])),
+                ("recipe", models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to="recipes.recipe")),
             ],
             options={
-                'unique_together': {('family_member', 'recipe')},
+                "unique_together": {("family_member", "recipe")},
             },
         ),
     ]

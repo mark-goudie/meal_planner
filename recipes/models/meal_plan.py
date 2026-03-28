@@ -1,36 +1,33 @@
 from datetime import date
 
-from django.db import models
 from django.contrib.auth.models import User
+from django.db import models
 
 from .managers import MealPlanManager
 
-
 MEAL_CHOICES = [
-    ('breakfast', 'Breakfast'),
-    ('lunch', 'Lunch'),
-    ('dinner', 'Dinner'),
+    ("breakfast", "Breakfast"),
+    ("lunch", "Lunch"),
+    ("dinner", "Dinner"),
 ]
 
 
 class MealPlan(models.Model):
-    user = models.ForeignKey(
-        User, on_delete=models.CASCADE, related_name='meal_plans'
-    )
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="meal_plans")
     date = models.DateField(default=date.today)
     meal_type = models.CharField(max_length=10, choices=MEAL_CHOICES)
-    recipe = models.ForeignKey('Recipe', on_delete=models.CASCADE)
+    recipe = models.ForeignKey("Recipe", on_delete=models.CASCADE)
     notes = models.TextField(blank=True)
 
     # Custom manager
     objects = MealPlanManager()
 
     class Meta:
-        ordering = ['date', 'meal_type']
-        unique_together = ('user', 'date', 'meal_type')
+        ordering = ["date", "meal_type"]
+        unique_together = ("user", "date", "meal_type")
         indexes = [
-            models.Index(fields=['user', 'date']),
-            models.Index(fields=['user', 'date', 'meal_type']),
+            models.Index(fields=["user", "date"]),
+            models.Index(fields=["user", "date", "meal_type"]),
         ]
 
     def __str__(self):
@@ -41,9 +38,7 @@ class MealPlan(models.Model):
 class MealPlannerPreferences(models.Model):
     """User preferences for the smart meal planner."""
 
-    user = models.OneToOneField(
-        User, on_delete=models.CASCADE, related_name='planner_preferences'
-    )
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="planner_preferences")
 
     # Time constraints
     max_weeknight_time = models.IntegerField(
@@ -65,7 +60,7 @@ class MealPlannerPreferences(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
-        verbose_name_plural = 'Meal planner preferences'
+        verbose_name_plural = "Meal planner preferences"
 
     def __str__(self):
         return f"Preferences for {self.user.username}"

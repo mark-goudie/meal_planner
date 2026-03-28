@@ -9,9 +9,7 @@ class RecipeQuerySet(models.QuerySet):
 
     def with_related(self):
         """Optimize queries by prefetching related objects."""
-        return self.select_related('user').prefetch_related(
-            'tags', 'favourited_by', 'recipe_ingredients__ingredient'
-        )
+        return self.select_related("user").prefetch_related("tags", "favourited_by", "recipe_ingredients__ingredient")
 
     def for_user(self, user):
         """Filter recipes for a specific user."""
@@ -61,9 +59,7 @@ class MealPlanQuerySet(models.QuerySet):
 
     def with_related(self):
         """Optimize queries by prefetching related objects."""
-        return self.select_related(
-            'recipe', 'recipe__user'
-        ).prefetch_related('recipe__tags')
+        return self.select_related("recipe", "recipe__user").prefetch_related("recipe__tags")
 
     def for_user(self, user):
         """Filter meal plans for a specific user."""

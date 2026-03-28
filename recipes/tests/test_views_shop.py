@@ -1,11 +1,15 @@
 from datetime import date, timedelta
 
 from django.contrib.auth.models import User
-from django.test import TestCase, Client
+from django.test import Client, TestCase
 from django.urls import reverse
 
 from recipes.models import (
-    Recipe, MealPlan, Ingredient, RecipeIngredient, ShoppingListItem,
+    Ingredient,
+    MealPlan,
+    Recipe,
+    RecipeIngredient,
+    ShoppingListItem,
 )
 
 
@@ -14,40 +18,36 @@ class ShopViewTest(TestCase):
 
     def setUp(self):
         self.client = Client()
-        self.user = User.objects.create_user(
-            username='testuser', password='testpass123'
-        )
+        self.user = User.objects.create_user(username="testuser", password="testpass123")
         self.recipe = Recipe.objects.create(
             user=self.user,
-            title='Test Soup',
-            steps='Make soup.',
+            title="Test Soup",
+            steps="Make soup.",
             cook_time=30,
         )
         # Create a structured ingredient
-        self.ingredient = Ingredient.objects.create(
-            name='carrots', category='produce'
-        )
+        self.ingredient = Ingredient.objects.create(name="carrots", category="produce")
         RecipeIngredient.objects.create(
             recipe=self.recipe,
             ingredient=self.ingredient,
             quantity=3,
-            unit='piece',
+            unit="piece",
             order=0,
         )
-        self.client.login(username='testuser', password='testpass123')
+        self.client.login(username="testuser", password="testpass123")
 
     def test_shop_view_returns_200(self):
         """Shop view should return 200 for authenticated users."""
-        response = self.client.get(reverse('shop'))
+        response = self.client.get(reverse("shop"))
         self.assertEqual(response.status_code, 200)
-        self.assertTemplateUsed(response, 'shop/shop.html')
+        self.assertTemplateUsed(response, "shop/shop.html")
 
     def test_shop_view_requires_login(self):
         """Shop view should redirect unauthenticated users."""
         self.client.logout()
-        response = self.client.get(reverse('shop'))
+        response = self.client.get(reverse("shop"))
         self.assertEqual(response.status_code, 302)
-        self.assertIn('login', response.url)
+        self.assertIn("login", response.url)
 
     def test_shop_view_shows_generated_items(self):
         """Shop view should show ingredients from planned meals."""
@@ -56,89 +56,65 @@ class ShopViewTest(TestCase):
         MealPlan.objects.create(
             user=self.user,
             date=monday,
-            meal_type='dinner',
+            meal_type="dinner",
             recipe=self.recipe,
         )
-        response = self.client.get(reverse('shop'))
-        self.assertContains(response, 'carrots')
+        response = self.client.get(reverse("shop"))
+        self.assertContains(response, "carrots")
 
     def test_shop_view_empty_when_no_meals(self):
         """Shop view should show empty state when no meals are planned."""
-        response = self.client.get(reverse('shop'))
-        self.assertContains(response, 'No meals planned')
+        response = self.client.get(reverse("shop"))
+        self.assertContains(response, "No meals planned")
 
     def test_shop_toggle_toggles_checked(self):
         """Toggle should switch checked state of a shopping item."""
-        item = ShoppingListItem.objects.create(
-            user=self.user, name='Milk', checked=False
-        )
-        response = self.client.post(
-            reverse('shop_toggle', args=[item.pk])
-        )
+        item = ShoppingListItem.objects.create(user=self.user, name="Milk", checked=False)
+        response = self.client.post(reverse("shop_toggle", args=[item.pk]))
         self.assertEqual(response.status_code, 200)
         item.refresh_from_db()
         self.assertTrue(item.checked)
 
         # Toggle back
-        response = self.client.post(
-            reverse('shop_toggle', args=[item.pk])
-        )
+        response = self.client.post(reverse("shop_toggle", args=[item.pk]))
         item.refresh_from_db()
         self.assertFalse(item.checked)
 
     def test_shop_toggle_returns_item_partial(self):
         """Toggle should return the updated item partial."""
-        item = ShoppingListItem.objects.create(
-            user=self.user, name='Bread', checked=False
-        )
-        response = self.client.post(
-            reverse('shop_toggle', args=[item.pk])
-        )
-        self.assertTemplateUsed(response, 'shop/partials/item.html')
-        self.assertContains(response, 'Bread')
+        item = ShoppingListItem.objects.create(user=self.user, name="Bread", checked=False)
+        response = self.client.post(reverse("shop_toggle", args=[item.pk]))
+        self.assertTemplateUsed(response, "shop/partials/item.html")
+        self.assertContains(response, "Bread")
 
     def test_shop_add_creates_manual_item(self):
         """Adding a manual item should create a ShoppingListItem."""
         response = self.client.post(
-            reverse('shop_add'),
-            data={'name': 'Bananas'},
+            reverse("shop_add"),
+            data={"name": "Bananas"},
         )
         self.assertEqual(response.status_code, 200)
-        self.assertTrue(
-            ShoppingListItem.objects.filter(
-                user=self.user, name='Bananas'
-            ).exists()
-        )
+        self.assertTrue(ShoppingListItem.objects.filter(user=self.user, name="Bananas").exists())
 
     def test_shop_add_empty_name_returns_empty(self):
         """Adding with empty name should return empty response."""
         response = self.client.post(
-            reverse('shop_add'),
-            data={'name': ''},
+            reverse("shop_add"),
+            data={"name": ""},
         )
         self.assertEqual(response.status_code, 200)
         self.assertEqual(ShoppingListItem.objects.filter(user=self.user).count(), 0)
 
     def test_shop_generate_clears_items(self):
         """Regenerate should clear existing manual items."""
-        ShoppingListItem.objects.create(
-            user=self.user, name='Old Item'
-        )
-        response = self.client.post(reverse('shop_generate'))
+        ShoppingListItem.objects.create(user=self.user, name="Old Item")
+        response = self.client.post(reverse("shop_generate"))
         self.assertEqual(response.status_code, 302)
-        self.assertFalse(
-            ShoppingListItem.objects.filter(user=self.user).exists()
-        )
+        self.assertFalse(ShoppingListItem.objects.filter(user=self.user).exists())
 
     def test_shop_toggle_other_user_returns_404(self):
         """Toggling another user's item should return 404."""
-        other_user = User.objects.create_user(
-            username='otheruser', password='testpass123'
-        )
-        item = ShoppingListItem.objects.create(
-            user=other_user, name='Secret Item'
-        )
-        response = self.client.post(
-            reverse('shop_toggle', args=[item.pk])
-        )
+        other_user = User.objects.create_user(username="otheruser", password="testpass123")
+        item = ShoppingListItem.objects.create(user=other_user, name="Secret Item")
+        response = self.client.post(reverse("shop_toggle", args=[item.pk]))
         self.assertEqual(response.status_code, 404)
