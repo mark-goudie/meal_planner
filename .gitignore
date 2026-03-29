@@ -42,7 +42,6 @@ htmlcov/
 .tox/
 nosetests.xml
 coverage.xml
-*.log
 
 # Pytest
 .pytest_cache/
@@ -57,3 +56,9 @@ frontend/dist/
 
 # Superpowers
 .superpowers/
+
+# Claude Code
+.claude/
+
+# Elastic Beanstalk logs
+.elasticbeanstalk/logs/
