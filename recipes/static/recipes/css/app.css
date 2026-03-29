@@ -391,6 +391,30 @@ small {
   margin-top: var(--space-md);
 }
 
+/* Brighten sub-text on cards with background images/gradients */
+.day-card--has-meal .day-card__label {
+  color: #bbb;
+}
+.day-card--has-meal .day-card__time,
+.day-card--has-meal .day-card__meta {
+  color: #bbb;
+}
+.day-card--has-meal .chip--muted {
+  color: #bbb;
+  border-color: rgba(187, 187, 187, 0.3);
+}
+.day-card--has-meal .day-card__add-comment .btn {
+  color: #aaa;
+}
+.day-card--has-meal .day-comment .text-muted,
+.day-card--has-meal .day-comment .text-sm {
+  color: #bbb;
+}
+/* Keep today label accent coloured */
+.day-card--today.day-card--has-meal .day-card__label {
+  color: var(--accent);
+}
+
 /* ============================================================
    7. RECIPE CARDS
    ============================================================ */
