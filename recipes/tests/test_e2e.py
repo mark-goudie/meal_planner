@@ -24,6 +24,8 @@ from recipes.models import (  # noqa: E402
     CookingNote,
     Ingredient,
     MealPlan,
+    MealPlanTemplate,
+    MealPlanTemplateEntry,
     Recipe,
     RecipeIngredient,
     ShoppingListItem,
@@ -534,3 +536,143 @@ class HouseholdSharingE2ETest(PlaywrightTestCase):
         self.login()
         self.page.goto(self.url("/settings/"))
         assert self.page.locator(f"text={self.household.code}").is_visible()
+
+
+class RecipeImportE2ETest(PlaywrightTestCase):
+    """Test recipe import from URL UI elements."""
+
+    def test_import_url_section_visible_on_new_recipe(self):
+        """Navigate to /recipes/new/, verify the 'Import from URL' section is visible."""
+        self.login()
+        self.page.goto(self.url("/recipes/new/"))
+        section = self.page.locator("text=Import from URL")
+        assert section.is_visible()
+        # Verify the input and Import button are present within the section
+        assert self.page.locator('input[type="url"]').is_visible()
+        assert self.page.locator("button", has_text="Import").is_visible()
+
+    def test_import_url_form_present(self):
+        """Verify the URL input field and Import button exist on the new recipe page."""
+        self.login()
+        self.page.goto(self.url("/recipes/new/"))
+        url_input = self.page.locator('input[type="url"]')
+        assert url_input.is_visible()
+        assert url_input.get_attribute("placeholder") is not None
+        import_btn = self.page.locator("button", has_text="Import")
+        assert import_btn.is_visible()
+
+
+class MealPlanTemplateE2ETest(PlaywrightTestCase):
+    """Test meal plan template flows."""
+
+    def setUp(self):
+        super().setUp()
+        self.recipe = Recipe.objects.create(
+            user=self.user, title="Template Pasta", steps="Cook pasta", cook_time=20
+        )
+
+    def test_save_template_button_visible(self):
+        """Log in, go to /week/, verify 'Save Template' button exists."""
+        self.login()
+        self.page.goto(self.url("/week/"))
+        assert self.page.locator("button", has_text="Save Template").is_visible()
+
+    def test_use_template_button_visible(self):
+        """Verify 'Use Template' button exists on week page."""
+        self.login()
+        self.page.goto(self.url("/week/"))
+        assert self.page.locator("button", has_text="Use Template").is_visible()
+
+    def test_save_template_flow(self):
+        """Create a meal plan, click Save Template, fill name, submit, verify DB."""
+        # Create a meal plan for today
+        MealPlan.objects.create(
+            household=self.household,
+            added_by=self.user,
+            date=date.today(),
+            meal_type="dinner",
+            recipe=self.recipe,
+        )
+        self.login()
+        self.page.goto(self.url("/week/"))
+        # Click the Save Template button to reveal the inline form
+        self.page.locator("button", has_text="Save Template").click()
+        # Wait for the template name input to appear
+        self.page.wait_for_selector('input[name="name"]', timeout=3000)
+        # Fill in the template name
+        self.page.fill('input[name="name"]', "My Weekly Template")
+        # Submit the template save form — locate the form that posts to save-template
+        self.page.locator('form[action*="save-template"] button[type="submit"]').click()
+        # Wait for redirect back to week page
+        self.page.wait_for_timeout(2000)
+        # Verify the template was created in the database
+        assert MealPlanTemplate.objects.filter(name="My Weekly Template").exists()
+
+    def test_templates_shown_in_settings(self):
+        """Save a template, navigate to /settings/, verify template name appears."""
+        # Create a meal plan and template
+        MealPlan.objects.create(
+            household=self.household,
+            added_by=self.user,
+            date=date.today(),
+            meal_type="dinner",
+            recipe=self.recipe,
+        )
+        template = MealPlanTemplate.objects.create(
+            household=self.household,
+            name="Saved Template",
+            created_by=self.user,
+        )
+        MealPlanTemplateEntry.objects.create(
+            template=template,
+            day_of_week=date.today().weekday(),
+            meal_type="dinner",
+            recipe=self.recipe,
+        )
+        self.login()
+        self.page.goto(self.url("/settings/"))
+        assert self.page.locator("text=Saved Template").is_visible()
+
+    def test_delete_template_from_settings(self):
+        """Save a template, go to settings, click delete, verify it's removed."""
+        template = MealPlanTemplate.objects.create(
+            household=self.household,
+            name="Delete Me Template",
+            created_by=self.user,
+        )
+        MealPlanTemplateEntry.objects.create(
+            template=template,
+            day_of_week=0,
+            meal_type="dinner",
+            recipe=self.recipe,
+        )
+        self.login()
+        self.page.goto(self.url("/settings/"))
+        # Verify template is visible
+        assert self.page.locator("text=Delete Me Template").is_visible()
+        # Click the delete button (trash icon) for this template
+        self.page.locator("text=Delete Me Template").locator("..").locator("..").locator(
+            'button[type="submit"]'
+        ).click()
+        # Wait for page reload after deletion
+        self.page.wait_for_timeout(2000)
+        # Verify the template is gone from the database
+        assert not MealPlanTemplate.objects.filter(name="Delete Me Template").exists()
+
+
+class PushNotificationE2ETest(PlaywrightTestCase):
+    """Test push notification UI elements in settings."""
+
+    def test_notifications_section_in_settings(self):
+        """Navigate to /settings/, verify 'Notifications' section with 'Dinner Reminders' text."""
+        self.login()
+        self.page.goto(self.url("/settings/"))
+        assert self.page.locator("text=Notifications").is_visible()
+        assert self.page.locator("text=Dinner Reminders").is_visible()
+
+    def test_reminder_time_field_in_settings(self):
+        """Verify the reminder time input exists in the preferences form."""
+        self.login()
+        self.page.goto(self.url("/settings/"))
+        reminder_input = self.page.locator('input[name="reminder_time"]')
+        assert reminder_input.is_visible()
