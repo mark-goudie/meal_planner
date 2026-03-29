@@ -230,6 +230,93 @@ class AIService:
         return json.loads(content)
 
     @staticmethod
+    def import_recipe_from_url(url):
+        """Fetch a recipe URL, extract content, and parse with Claude."""
+        import json
+
+        import requests as http_requests
+
+        # Validate URL
+        if not url or not url.strip():
+            raise AIValidationError("Please provide a URL.")
+        url = url.strip()
+        if not url.startswith(("http://", "https://")):
+            raise AIValidationError("Please provide a valid URL.")
+
+        AIService.validate_api_key()
+
+        # Fetch page
+        try:
+            resp = http_requests.get(
+                url,
+                timeout=15,
+                headers={"User-Agent": "Mozilla/5.0 (compatible; MealPlanner/1.0)"},
+            )
+            resp.raise_for_status()
+        except Exception:
+            raise AIAPIError("Couldn't access that URL. Please check it's correct.")
+
+        # Strip HTML to text
+        html_content = resp.text
+        # Remove script, style, nav, footer, header tags and their content
+        for tag in ["script", "style", "nav", "footer", "header", "aside"]:
+            html_content = re.sub(
+                f"<{tag}[^>]*>.*?</{tag}>", "", html_content, flags=re.DOTALL | re.IGNORECASE
+            )
+        # Remove all remaining HTML tags
+        text = re.sub(r"<[^>]+>", " ", html_content)
+        # Collapse whitespace
+        text = re.sub(r"\s+", " ", text).strip()
+        # Truncate to 5000 chars
+        text = text[:5000]
+
+        if len(text) < 50:
+            raise AIValidationError("Couldn't find enough content on that page.")
+
+        # Send to Claude
+        client = anthropic.Anthropic(api_key=settings.ANTHROPIC_API_KEY)
+        try:
+            response = client.messages.create(
+                model=AIService.MODEL,
+                max_tokens=4096,
+                system=(
+                    "Extract the recipe from this webpage content. Return JSON with this exact structure: "
+                    '{"title": "...", "description": "...", "prep_time": 10, "cook_time": 30, '
+                    '"servings": 4, "difficulty": "easy|medium|hard", '
+                    '"ingredients": [{"name": "chicken breast", "quantity": 500, "unit": "g", '
+                    '"category": "meat", "preparation_notes": "diced"}], '
+                    '"steps": ["Step 1 text", "Step 2 text"]} '
+                    "Return ONLY valid JSON. If no recipe is found, return "
+                    '{"error": "No recipe found on this page."}'
+                ),
+                messages=[{"role": "user", "content": f"Extract the recipe from this webpage:\n\n{text}"}],
+            )
+            content = next((b.text for b in response.content if b.type == "text"), "")
+            # Strip markdown fences
+            if content.startswith("```"):
+                content = content.split("\n", 1)[1] if "\n" in content else content[3:]
+                if content.endswith("```"):
+                    content = content[:-3]
+                content = content.strip()
+
+            result = json.loads(content)
+            if "error" in result:
+                raise AIValidationError(result["error"])
+            return result
+        except json.JSONDecodeError:
+            raise AIAPIError("Couldn't parse the recipe from that page. Try a different URL.")
+        except anthropic.AuthenticationError:
+            raise AIAPIError("AI service authentication failed.")
+        except anthropic.RateLimitError:
+            raise AIAPIError("AI service is busy. Please try again in a few minutes.")
+        except anthropic.APIError:
+            raise AIAPIError("AI service is temporarily unavailable.")
+        except AIServiceException:
+            raise
+        except Exception:
+            raise AIAPIError("An unexpected error occurred. Please try again.")
+
+    @staticmethod
     def parse_generated_recipe(text: str) -> Tuple[str, str, str]:
         """
         Parse AI-generated recipe text into structured components.

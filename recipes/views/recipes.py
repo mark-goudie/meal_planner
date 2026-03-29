@@ -377,6 +377,23 @@ def ai_generate_recipe_api(request):
 
 
 @login_required
+def import_recipe_url(request):
+    """HTMX/JSON endpoint: import a recipe from a URL using AI."""
+    if request.method != "POST":
+        return JsonResponse({"error": "POST required"}, status=405)
+
+    url = request.POST.get("url", "").strip()
+    if not url:
+        return JsonResponse({"error": "Please provide a URL."}, status=400)
+
+    try:
+        result = AIService.import_recipe_from_url(url)
+        return JsonResponse(result)
+    except AIServiceException as e:
+        return JsonResponse({"error": str(e)}, status=400)
+
+
+@login_required
 def image_search(request, pk):
     """HTMX: Search Unsplash for recipe images and display results."""
     recipe = get_object_or_404(Recipe, pk=pk, user=request.user)

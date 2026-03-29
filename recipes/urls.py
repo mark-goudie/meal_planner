@@ -10,6 +10,7 @@ from .views import (
     day_comment,
     image_search,
     image_select,
+    import_recipe_url,
     meal_plan_create,
     meal_plan_list,
     recipe_create_from_ai,
@@ -70,6 +71,7 @@ urlpatterns = [
     path("recipes/<int:pk>/image-search/", image_search, name="image_search"),
     path("recipes/<int:pk>/image-select/", image_select, name="image_select"),
     path("recipes/ai-generate/", ai_generate_recipe_api, name="ai_generate_recipe_api"),
+    path("recipes/import-url/", import_recipe_url, name="import_recipe_url"),
     # --- Legacy recipe views (AI-related, still in use) ---
     path("recipes/ai/generate/", ai_generate_recipe, name="ai_generate_recipe"),
     path("recipes/ai-create/", recipe_create_from_ai, name="recipe_create_from_ai"),

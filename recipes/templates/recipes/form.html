@@ -55,6 +55,35 @@
   </div>
   {% endif %}
 
+  <!-- Import from URL -->
+  {% if not update %}
+  <div x-data="urlImporter()" class="mb-xl" style="padding: var(--space-lg); background: var(--bg-card); border-radius: var(--radius-lg); border: 1px solid var(--border);">
+    <div class="flex items-center gap-sm mb-md">
+      <i class="bi bi-link-45deg" style="color: var(--primary); font-size: var(--text-xl);"></i>
+      <h3 style="margin: 0; font-size: var(--text-lg); font-weight: 700;">Import from URL</h3>
+    </div>
+    <p class="text-muted text-sm mb-md">Paste a recipe URL and we'll extract the details for you.</p>
+    <div class="flex gap-sm">
+      <input type="url" x-model="url" class="form-input" style="flex: 1;"
+             placeholder="https://www.bbcgoodfood.com/recipes/..."
+             @keydown.enter.prevent="importRecipe()">
+      <button type="button" @click="importRecipe()" class="btn btn-primary btn-sm"
+              :disabled="loading || !url.trim()" style="white-space: nowrap;">
+        <template x-if="loading">
+          <span><i class="bi bi-arrow-repeat" style="animation: spin 1s linear infinite;"></i> Importing...</span>
+        </template>
+        <template x-if="!loading">
+          <span><i class="bi bi-download"></i> Import</span>
+        </template>
+      </button>
+    </div>
+    <div x-show="error" x-text="error" class="form-error mt-sm" style="display: none;"></div>
+    <div x-show="success" class="mt-sm text-sm" style="color: var(--primary); display: none;">
+      <i class="bi bi-check-circle"></i> Recipe imported! Review and edit below, then save.
+    </div>
+  </div>
+  {% endif %}
+
   <form method="post" action="{% if update %}{% url 'recipe_update' pk=recipe.pk %}{% else %}{% url 'recipe_create' %}{% endif %}">
     {% csrf_token %}
 
@@ -228,6 +257,76 @@ function ingredientManager() {
     ingredients.push({ name: '', quantity: '', unit: '', notes: '' });
   }
   return { ingredients: ingredients };
+}
+
+function urlImporter() {
+  return {
+    url: '',
+    loading: false,
+    error: '',
+    success: false,
+
+    async importRecipe() {
+      if (!this.url.trim() || this.loading) return;
+      this.loading = true;
+      this.error = '';
+      this.success = false;
+
+      try {
+        var csrfToken = document.querySelector('[name=csrfmiddlewaretoken]')?.value
+          || document.cookie.match(/csrftoken=([^;]+)/)?.[1] || '';
+
+        var formData = new FormData();
+        formData.append('url', this.url);
+
+        var response = await fetch('/recipes/import-url/', {
+          method: 'POST',
+          headers: { 'X-CSRFToken': csrfToken },
+          body: formData,
+        });
+
+        var data = await response.json();
+
+        if (!response.ok) {
+          this.error = data.error || 'Something went wrong.';
+          return;
+        }
+
+        // Pre-fill form fields (same as aiGenerator)
+        document.getElementById('title').value = data.title || '';
+        document.getElementById('description').value = data.description || '';
+        document.getElementById('prep_time').value = data.prep_time || '';
+        document.getElementById('cook_time').value = data.cook_time || '';
+        document.getElementById('servings').value = data.servings || 4;
+        var diffSelect = document.getElementById('difficulty');
+        if (data.difficulty && diffSelect) diffSelect.value = data.difficulty;
+        var srcSelect = document.getElementById('source');
+        if (srcSelect) srcSelect.value = 'url';
+        var stepsField = document.getElementById('steps');
+        if (data.steps && Array.isArray(data.steps)) {
+          stepsField.value = data.steps.join('\n');
+        }
+        // Populate ingredients
+        var ingManager = document.querySelector('[x-data="ingredientManager()"]');
+        if (ingManager && data.ingredients) {
+          var alpineData = Alpine.$data(ingManager);
+          alpineData.ingredients = data.ingredients.map(function(ing) {
+            return {
+              name: ing.name || '',
+              quantity: ing.quantity ? String(ing.quantity) : '',
+              unit: ing.unit || '',
+              notes: ing.preparation_notes || '',
+            };
+          });
+        }
+        this.success = true;
+      } catch (e) {
+        this.error = 'Network error. Please check your connection.';
+      } finally {
+        this.loading = false;
+      }
+    }
+  };
 }
 
 function aiGenerator() {
