@@ -61,6 +61,7 @@
             || document.cookie.match(/csrftoken=([^;]+)/)?.[1] || '';
     });</script>
     <script src="{% static 'recipes/js/app.js' %}"></script>
+    <script src="{% static 'recipes/js/push.js' %}"></script>
     <script>
     if ('serviceWorker' in navigator) {
         navigator.serviceWorker.register("{% static 'recipes/sw.js' %}");

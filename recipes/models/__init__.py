@@ -27,6 +27,7 @@ from .recipe import (
     RecipeIngredient,
     Tag,
 )
+from .push import PushSubscription
 from .shopping import ShoppingListItem
 
 __all__ = [
@@ -53,6 +54,8 @@ __all__ = [
     "MEAL_CHOICES",
     "MealPlan",
     "MealPlannerPreferences",
+    # Push notifications
+    "PushSubscription",
     # Managers
     "RecipeQuerySet",
     "RecipeManager",

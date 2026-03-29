@@ -4,6 +4,9 @@ from . import views
 from .views import (
     ai_generate_recipe,
     ai_generate_recipe_api,
+    push_subscribe,
+    push_unsubscribe,
+    vapid_public_key,
     cook_done,
     cook_step,
     cook_view,
@@ -86,6 +89,10 @@ urlpatterns = [
     path("disclaimer/", views.disclaimer, name="disclaimer"),
     path("getting-started/", views.getting_started, name="getting_started"),
     path("ai-surprise-me/", views.ai_surprise_me, name="ai_surprise_me"),
+    # --- Push Notifications ---
+    path("api/push/vapid-key/", vapid_public_key, name="vapid_public_key"),
+    path("api/push/subscribe/", push_subscribe, name="push_subscribe"),
+    path("api/push/unsubscribe/", push_unsubscribe, name="push_unsubscribe"),
     # --- Smart Meal Planner ---
     path("smart-planner/", views.smart_meal_planner, name="smart_meal_planner"),
     path("smart-planner/preferences/", views.meal_planner_preferences, name="meal_planner_preferences"),

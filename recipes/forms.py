@@ -83,6 +83,7 @@ class MealPlannerPreferencesForm(forms.ModelForm):
             "max_weeknight_time",
             "max_weekend_time",
             "avoid_repeat_days",
+            "reminder_time",
         ]
         widgets = {
             "max_weeknight_time": forms.NumberInput(
@@ -94,16 +95,21 @@ class MealPlannerPreferencesForm(forms.ModelForm):
             "avoid_repeat_days": forms.NumberInput(
                 attrs={"class": "form-control", "min": "7", "max": "90", "step": "7"}
             ),
+            "reminder_time": forms.TimeInput(
+                attrs={"class": "form-control", "type": "time"}
+            ),
         }
         labels = {
             "max_weeknight_time": "Max Weeknight Cooking Time (minutes)",
             "max_weekend_time": "Max Weekend Cooking Time (minutes)",
             "avoid_repeat_days": "Don't Repeat Recipes Within (days)",
+            "reminder_time": "Dinner Reminder Time",
         }
         help_texts = {
             "max_weeknight_time": "Maximum time you want to spend cooking on weeknights",
             "max_weekend_time": "Maximum time you want to spend cooking on weekends",
             "avoid_repeat_days": "How long before the same recipe can be suggested again",
+            "reminder_time": "When to send a daily push notification for tonight's dinner",
         }
 
 

@@ -1,4 +1,4 @@
-from datetime import date
+from datetime import date, time
 
 from django.contrib.auth.models import User
 from django.db import models
@@ -62,6 +62,9 @@ class MealPlannerPreferences(models.Model):
         default=90,
         help_text="Maximum cooking time for weekends (minutes)",
     )
+
+    # Reminder time for push notifications
+    reminder_time = models.TimeField(default=time(16, 0), help_text="Daily dinner reminder time")
 
     # Variety preferences
     avoid_repeat_days = models.IntegerField(

@@ -192,6 +192,7 @@ class MealPlannerViewsTest(TestCase):
             "max_weeknight_time": 30,
             "max_weekend_time": 60,
             "avoid_repeat_days": 7,
+            "reminder_time": "16:00",
         }
         response = self.client.post(reverse("meal_planner_preferences"), data)
         self.assertEqual(response.status_code, 302)  # Redirect after success

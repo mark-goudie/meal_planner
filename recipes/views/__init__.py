@@ -1,4 +1,5 @@
 from .auth import register_view
+from .push import push_subscribe, push_unsubscribe, vapid_public_key
 from .cook import cook_done, cook_step, cook_view
 from .legacy import (
     ai_generate_recipe,
@@ -43,6 +44,10 @@ from .week import (
 __all__ = [
     # Auth
     "register_view",
+    # Push notifications
+    "push_subscribe",
+    "push_unsubscribe",
+    "vapid_public_key",
     # Cook
     "cook_done",
     "cook_step",

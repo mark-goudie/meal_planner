@@ -71,6 +71,28 @@
   </div>
   {% endif %}
 
+  <!-- Notifications -->
+  <div style="padding: var(--space-lg); background: var(--bg-card); border-radius: var(--radius-md); margin-bottom: var(--space-xl);"
+       x-data="{ subscribed: false, loading: false }"
+       x-init="isPushSubscribed().then(v => subscribed = v)">
+    <div class="section-header">
+      <h2 class="section-title" style="margin-bottom: var(--space-md);">Notifications</h2>
+    </div>
+
+    <div class="flex justify-between items-center mb-lg" style="padding: var(--space-sm) 0;">
+      <div>
+        <div class="text-main text-sm font-semibold">Dinner Reminders</div>
+        <div class="text-muted text-sm">Daily notification for tonight's meal</div>
+      </div>
+      <button class="btn btn-sm"
+              :class="subscribed ? 'btn-outline' : 'btn-primary'"
+              :disabled="loading"
+              @click="loading = true; (subscribed ? unsubscribePush() : setupPushNotifications()).then(ok => { if(ok) subscribed = !subscribed; loading = false; })">
+        <span x-text="loading ? 'Working...' : (subscribed ? 'Disable' : 'Enable')"></span>
+      </button>
+    </div>
+  </div>
+
   <!-- Preferences form -->
   <form method="post" action="{% url 'settings' %}">
     {% csrf_token %}
@@ -86,6 +108,13 @@
                style="display: block; font-size: var(--text-sm); font-weight: 700; color: var(--text-muted); margin-bottom: var(--space-xs);">
           {{ field.label }}
         </label>
+        {% if field.name == "reminder_time" %}
+        <input type="time"
+               id="{{ field.id_for_label }}"
+               name="{{ field.html_name }}"
+               value="{{ field.value|default:'16:00' }}"
+               style="width: 100%; background: var(--bg-surface); border: 1px solid var(--border); border-radius: var(--radius-md); padding: var(--space-sm) var(--space-md); color: var(--text-main); font-size: var(--text-base);">
+        {% else %}
         <input type="number"
                id="{{ field.id_for_label }}"
                name="{{ field.html_name }}"
@@ -94,6 +123,7 @@
                max="{{ field.field.widget.attrs.max }}"
                step="{{ field.field.widget.attrs.step }}"
                style="width: 100%; background: var(--bg-surface); border: 1px solid var(--border); border-radius: var(--radius-md); padding: var(--space-sm) var(--space-md); color: var(--text-main); font-size: var(--text-base);">
+        {% endif %}
         {% if field.help_text %}
         <p style="font-size: var(--text-xs); color: var(--text-dim); margin-top: var(--space-xs);">{{ field.help_text }}</p>
         {% endif %}
