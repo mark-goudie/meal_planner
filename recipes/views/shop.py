@@ -30,6 +30,14 @@ def _get_week_range():
     return monday, sunday
 
 
+def _get_shop_date_range():
+    """Get the date range for the meal selector: today through end of next week."""
+    today = date.today()
+    monday = today - timedelta(days=today.weekday())
+    next_sunday = monday + timedelta(days=13)  # end of next week
+    return today, next_sunday
+
+
 def _generate_shopping_items(household, user, meal_ids=None):
     """Generate ShoppingListItem records from selected meals.
 
@@ -46,10 +54,11 @@ def _generate_shopping_items(household, user, meal_ids=None):
             pk__in=meal_ids,
         ).select_related("recipe")
     else:
-        # Default: today and future meals only
+        # Default: today through end of next week
+        shop_start, shop_end = _get_shop_date_range()
         meals = MealPlan.objects.filter(
             household=household,
-            date__range=[date.today(), sunday],
+            date__range=[shop_start, shop_end],
         ).select_related("recipe")
 
     recipes = [m.recipe for m in meals]
@@ -126,27 +135,33 @@ def shop_view(request):
                 }
             )
 
-    # Build meal selector: all meals this week with past/future indicator
-    week_meals = (
-        MealPlan.objects.filter(household=household, date__range=[monday, sunday])
+    # Build meal selector: today through end of next week
+    shop_start, shop_end = _get_shop_date_range()
+    next_monday = monday + timedelta(days=7)
+
+    upcoming_meals = (
+        MealPlan.objects.filter(household=household, date__range=[shop_start, shop_end])
         .select_related("recipe")
         .order_by("date")
     )
     meal_selector = []
-    for meal in week_meals:
+    for meal in upcoming_meals:
         meal_selector.append(
             {
                 "id": meal.pk,
                 "date": meal.date,
                 "day_name": meal.date.strftime("%a"),
                 "day_num": meal.date.day,
+                "month": meal.date.strftime("%b"),
                 "recipe_title": meal.recipe.title,
-                "is_past": meal.date < today,
                 "is_today": meal.date == today,
+                "is_next_week": meal.date >= next_monday,
             }
         )
 
-    meal_count = len([m for m in meal_selector if not m["is_past"]])
+    this_week_meals = [m for m in meal_selector if not m["is_next_week"]]
+    next_week_meals = [m for m in meal_selector if m["is_next_week"]]
+    meal_count = len(meal_selector)
     total_items = all_items.count()
     checked_items = all_items.filter(checked=True).count()
 
@@ -157,6 +172,8 @@ def shop_view(request):
             "categories": category_list,
             "manual_items": manual_items,
             "meal_selector": meal_selector,
+            "this_week_meals": this_week_meals,
+            "next_week_meals": next_week_meals,
             "week_start": monday,
             "week_end": sunday,
             "meal_count": meal_count,

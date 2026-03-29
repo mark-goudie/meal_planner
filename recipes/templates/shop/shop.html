@@ -12,7 +12,7 @@
   <header class="mb-xl">
     <h1 style="font-size: var(--text-xl); font-weight: 800;">Shopping List</h1>
     <p class="text-muted text-sm mt-xs">
-      {{ week_start|date:"M d" }} &ndash; {{ week_end|date:"M d, Y" }}
+      {{ meal_count }} upcoming meal{{ meal_count|pluralize }}
     </p>
   </header>
 
@@ -30,20 +30,32 @@
       </div>
 
       <div x-show="expanded" x-cloak style="margin-top: var(--space-md);">
-        {% for meal in meal_selector %}
-        <label class="flex items-center gap-sm" style="padding: var(--space-sm) 0; cursor: pointer; {% if meal.is_past %}opacity: 0.5;{% endif %}">
-          <input type="checkbox" name="meals" value="{{ meal.id }}"
-                 {% if not meal.is_past %}checked{% endif %}
+        {% if this_week_meals %}
+        <div class="text-muted font-semibold mb-xs" style="font-size: 10px; text-transform: uppercase; letter-spacing: 0.08em;">This week</div>
+        {% for meal in this_week_meals %}
+        <label class="flex items-center gap-sm" style="padding: var(--space-sm) 0; cursor: pointer;">
+          <input type="checkbox" name="meals" value="{{ meal.id }}" checked
                  style="width: 18px; height: 18px; accent-color: var(--primary); flex-shrink: 0;">
-          <span class="text-sm {% if meal.is_past %}text-dim{% else %}text-main{% endif %}">
-            <span style="color: {% if meal.is_today %}var(--accent){% elif meal.is_past %}var(--text-dim){% else %}var(--primary){% endif %}; font-weight: 600; min-width: 52px; display: inline-block;">{{ meal.day_name }} {{ meal.day_num }}</span>
+          <span class="text-sm text-main">
+            <span style="color: {% if meal.is_today %}var(--accent){% else %}var(--primary){% endif %}; font-weight: 600; min-width: 65px; display: inline-block;">{{ meal.day_name }} {{ meal.day_num }} {{ meal.month }}</span>
             {{ meal.recipe_title }}
           </span>
-          {% if meal.is_past %}
-          <span class="text-dim" style="font-size: 9px; margin-left: auto;">past</span>
-          {% endif %}
         </label>
         {% endfor %}
+        {% endif %}
+        {% if next_week_meals %}
+        <div class="text-muted font-semibold mb-xs{% if this_week_meals %} mt-md{% endif %}" style="font-size: 10px; text-transform: uppercase; letter-spacing: 0.08em;">Next week</div>
+        {% for meal in next_week_meals %}
+        <label class="flex items-center gap-sm" style="padding: var(--space-sm) 0; cursor: pointer;">
+          <input type="checkbox" name="meals" value="{{ meal.id }}" checked
+                 style="width: 18px; height: 18px; accent-color: var(--primary); flex-shrink: 0;">
+          <span class="text-sm text-main">
+            <span style="color: var(--primary); font-weight: 600; min-width: 65px; display: inline-block;">{{ meal.day_name }} {{ meal.day_num }} {{ meal.month }}</span>
+            {{ meal.recipe_title }}
+          </span>
+        </label>
+        {% endfor %}
+        {% endif %}
       </div>
     </div>
     {% endif %}
