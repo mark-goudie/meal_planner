@@ -64,7 +64,7 @@
     <script src="{% static 'recipes/js/push.js' %}"></script>
     <script>
     if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register("{% static 'recipes/sw.js' %}");
+        navigator.serviceWorker.register("/sw.js");
     }
     </script>
     {% block extra_js %}{% endblock %}

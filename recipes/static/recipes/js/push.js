@@ -11,28 +11,33 @@ async function setupPushNotifications() {
     }
 
     try {
-        const registration = await navigator.serviceWorker.ready;
+        // Wait for service worker with a timeout
+        const registration = await Promise.race([
+            navigator.serviceWorker.ready,
+            new Promise((_, reject) => setTimeout(() => reject(new Error('SW timeout')), 5000)),
+        ]);
 
         // Get VAPID public key
         const keyResponse = await fetch('/api/push/vapid-key/');
-        const { public_key } = await keyResponse.json();
+        const keyData = await keyResponse.json();
+        const public_key = keyData.public_key;
 
         if (!public_key) {
             console.log('No VAPID key configured');
             return false;
         }
 
-        // Subscribe
+        // Subscribe to push
         const subscription = await registration.pushManager.subscribe({
             userVisibleOnly: true,
             applicationServerKey: urlBase64ToUint8Array(public_key),
         });
 
-        // Send to server
+        // Send subscription to server
         const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]')?.value
             || document.cookie.match(/csrftoken=([^;]+)/)?.[1] || '';
 
-        await fetch('/api/push/subscribe/', {
+        const resp = await fetch('/api/push/subscribe/', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -40,6 +45,11 @@ async function setupPushNotifications() {
             },
             body: JSON.stringify(subscription.toJSON()),
         });
+
+        if (!resp.ok) {
+            console.error('Server rejected subscription:', resp.status);
+            return false;
+        }
 
         return true;
     } catch (err) {
