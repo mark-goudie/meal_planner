@@ -73,24 +73,50 @@
 
   <!-- Notifications -->
   <div style="padding: var(--space-lg); background: var(--bg-card); border-radius: var(--radius-md); margin-bottom: var(--space-xl);"
-       x-data="{ subscribed: false, loading: false }"
-       x-init="isPushSubscribed().then(v => subscribed = v)">
+       x-data="{ subscribed: false, loading: false, supported: true, error: '' }"
+       x-init="
+         if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
+           supported = false;
+         } else {
+           isPushSubscribed().then(v => subscribed = v);
+         }
+       ">
     <div class="section-header">
       <h2 class="section-title" style="margin-bottom: var(--space-md);">Notifications</h2>
     </div>
 
-    <div class="flex justify-between items-center mb-lg" style="padding: var(--space-sm) 0;">
+    <div class="flex justify-between items-center" style="padding: var(--space-sm) 0;">
       <div>
         <div class="text-main text-sm font-semibold">Dinner Reminders</div>
         <div class="text-muted text-sm">Daily notification for tonight's meal</div>
       </div>
-      <button class="btn btn-sm"
-              :class="subscribed ? 'btn-outline' : 'btn-primary'"
-              :disabled="loading"
-              @click="loading = true; (subscribed ? unsubscribePush() : setupPushNotifications()).then(ok => { if(ok) subscribed = !subscribed; loading = false; })">
-        <span x-text="loading ? 'Working...' : (subscribed ? 'Disable' : 'Enable')"></span>
-      </button>
+      <template x-if="supported">
+        <button class="btn btn-sm"
+                :class="subscribed ? 'btn-outline' : 'btn-primary'"
+                :disabled="loading"
+                @click="
+                  loading = true; error = '';
+                  (subscribed ? unsubscribePush() : setupPushNotifications()).then(ok => {
+                    if (ok) { subscribed = !subscribed; }
+                    else if (!subscribed) { error = 'Permission denied or push not available.'; }
+                    loading = false;
+                  });
+                ">
+          <span x-text="loading ? 'Working...' : (subscribed ? 'Disable' : 'Enable')"></span>
+        </button>
+      </template>
     </div>
+    <div x-show="error" x-text="error" class="form-error mt-sm" style="display: none;"></div>
+    <template x-if="!supported">
+      <p class="text-muted text-sm mt-sm">
+        <i class="bi bi-info-circle"></i> Push notifications require HTTPS. They'll be available once the app is deployed to a real URL.
+      </p>
+    </template>
+    <template x-if="supported && subscribed">
+      <p class="text-sm mt-sm" style="color: var(--primary);">
+        <i class="bi bi-check-circle"></i> Reminders enabled
+      </p>
+    </template>
   </div>
 
   <!-- Meal Templates -->
