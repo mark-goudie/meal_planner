@@ -1,13 +1,15 @@
 import random
 from datetime import date, timedelta
 
+from django.contrib import messages as django_messages
 from django.contrib.auth.decorators import login_required
 from django.db.models import Q
 from django.http import HttpResponse
-from django.shortcuts import get_object_or_404, render
+from django.shortcuts import get_object_or_404, redirect, render
 
 from ..models import MealPlan, Recipe
 from ..models.household import DayComment, get_household
+from ..models.template import MealPlanTemplate, MealPlanTemplateEntry
 from ..services.meal_planning_assistant import MealPlanningAssistantService
 
 
@@ -283,3 +285,107 @@ def day_comment(request, date_str):
 
     comments = DayComment.objects.filter(household=household, date=comment_date).select_related("user")
     return render(request, "week/partials/day_comment.html", {"comments": comments, "date_str": date_str})
+
+
+@login_required
+def save_template(request):
+    """POST: Save the current week's meals as a reusable template."""
+    if request.method != "POST":
+        return redirect("week")
+
+    household = get_household(request.user)
+    name = request.POST.get("name", "").strip()
+    offset = int(request.POST.get("offset", 0))
+
+    if not name:
+        django_messages.error(request, "Template name is required.")
+        return redirect(f"/week/?offset={offset}")
+
+    dates = _get_week_dates(offset)
+    start, end = dates[0], dates[-1]
+    meals = MealPlan.objects.filter(
+        household=household, date__range=[start, end]
+    ).select_related("recipe")
+
+    if not meals.exists():
+        django_messages.error(request, "No meals to save this week.")
+        return redirect(f"/week/?offset={offset}")
+
+    template = MealPlanTemplate.objects.create(
+        household=household,
+        name=name,
+        created_by=request.user,
+    )
+
+    for meal in meals:
+        MealPlanTemplateEntry.objects.create(
+            template=template,
+            day_of_week=meal.date.weekday(),
+            meal_type=meal.meal_type,
+            recipe=meal.recipe,
+        )
+
+    django_messages.success(request, f'Template "{name}" saved!')
+    return redirect(f"/week/?offset={offset}")
+
+
+@login_required
+def list_templates(request):
+    """GET: HTMX partial showing template picker overlay."""
+    household = get_household(request.user)
+    offset = request.GET.get("offset", 0)
+    templates = MealPlanTemplate.objects.filter(
+        household=household
+    ).prefetch_related("entries__recipe")
+
+    return render(
+        request,
+        "week/partials/template_picker.html",
+        {"templates": templates, "offset": offset},
+    )
+
+
+@login_required
+def apply_template(request, pk):
+    """POST: Apply a template to the target week, filling only empty slots."""
+    if request.method != "POST":
+        return redirect("week")
+
+    household = get_household(request.user)
+    template = get_object_or_404(MealPlanTemplate, pk=pk, household=household)
+    offset = int(request.POST.get("offset", 0))
+
+    dates = _get_week_dates(offset)
+    monday = dates[0]
+
+    added = 0
+    for entry in template.entries.all():
+        target_date = monday + timedelta(days=entry.day_of_week)
+        exists = MealPlan.objects.filter(
+            household=household, date=target_date, meal_type=entry.meal_type
+        ).exists()
+        if not exists:
+            MealPlan.objects.create(
+                household=household,
+                added_by=request.user,
+                date=target_date,
+                meal_type=entry.meal_type,
+                recipe=entry.recipe,
+            )
+            added += 1
+
+    django_messages.success(request, f"Template applied! {added} meal(s) added.")
+    return redirect(f"/week/?offset={offset}")
+
+
+@login_required
+def delete_template(request, pk):
+    """POST: Delete a template (verify household ownership)."""
+    if request.method != "POST":
+        return redirect("settings")
+
+    household = get_household(request.user)
+    template = get_object_or_404(MealPlanTemplate, pk=pk, household=household)
+    template.delete()
+    django_messages.success(request, "Template deleted.")
+    return redirect("settings")

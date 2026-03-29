@@ -32,7 +32,11 @@ from .recipes import (
 from .settings import settings_view
 from .shop import shop_add, shop_generate, shop_toggle, shop_update_qty, shop_view
 from .week import (
+    apply_template,
     day_comment,
+    delete_template,
+    list_templates,
+    save_template,
     week_accept_suggestion,
     week_assign,
     week_skip_suggestion,
@@ -87,7 +91,11 @@ __all__ = [
     "shop_update_qty",
     "shop_view",
     # Week
+    "apply_template",
     "day_comment",
+    "delete_template",
+    "list_templates",
+    "save_template",
     "week_accept_suggestion",
     "week_assign",
     "week_skip_suggestion",

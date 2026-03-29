@@ -29,6 +29,7 @@ from .recipe import (
 )
 from .push import PushSubscription
 from .shopping import ShoppingListItem
+from .template import MealPlanTemplate, MealPlanTemplateEntry
 
 __all__ = [
     # Household models
@@ -56,6 +57,9 @@ __all__ = [
     "MealPlannerPreferences",
     # Push notifications
     "PushSubscription",
+    # Templates
+    "MealPlanTemplate",
+    "MealPlanTemplateEntry",
     # Managers
     "RecipeQuerySet",
     "RecipeManager",

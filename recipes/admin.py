@@ -8,6 +8,8 @@ from .models import (
     Ingredient,
     MealPlan,
     MealPlannerPreferences,
+    MealPlanTemplate,
+    MealPlanTemplateEntry,
     Recipe,
     RecipeIngredient,
     ShoppingListItem,
@@ -90,3 +92,15 @@ class ShoppingListItemAdmin(admin.ModelAdmin):
     list_display = ("name", "household", "added_by", "checked", "created_at")
     list_filter = ("checked",)
     search_fields = ("name", "household__name")
+
+
+class MealPlanTemplateEntryInline(admin.TabularInline):
+    model = MealPlanTemplateEntry
+    extra = 0
+
+
+@admin.register(MealPlanTemplate)
+class MealPlanTemplateAdmin(admin.ModelAdmin):
+    list_display = ("name", "household", "created_by", "created_at")
+    search_fields = ("name", "household__name")
+    inlines = [MealPlanTemplateEntryInline]

@@ -4,6 +4,7 @@ from . import views
 from .views import (
     ai_generate_recipe,
     ai_generate_recipe_api,
+    apply_template,
     push_subscribe,
     push_unsubscribe,
     vapid_public_key,
@@ -11,9 +12,11 @@ from .views import (
     cook_step,
     cook_view,
     day_comment,
+    delete_template,
     image_search,
     image_select,
     import_recipe_url,
+    list_templates,
     meal_plan_create,
     meal_plan_list,
     recipe_create_from_ai,
@@ -24,6 +27,7 @@ from .views import (
     recipe_search,
     recipe_update_view,
     register_view,
+    save_template,
     settings_view,
     shop_add,
     shop_generate,
@@ -49,6 +53,11 @@ urlpatterns = [
     path("week/accept/<str:date_str>/", week_accept_suggestion, name="week_accept_suggestion"),
     path("week/skip/<str:date_str>/", week_skip_suggestion, name="week_skip_suggestion"),
     path("week/comment/<str:date_str>/", day_comment, name="day_comment"),
+    # --- Templates ---
+    path("week/save-template/", save_template, name="save_template"),
+    path("week/templates/", list_templates, name="list_templates"),
+    path("week/apply-template/<int:pk>/", apply_template, name="apply_template"),
+    path("week/delete-template/<int:pk>/", delete_template, name="delete_template"),
     # --- Redesign: Auth ---
     path("register/", register_view, name="register"),
     # --- Redesign: Cooking mode ---

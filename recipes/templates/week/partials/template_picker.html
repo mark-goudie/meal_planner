@@ -1,0 +1,45 @@
+<div class="picker-overlay"
+     x-data="{ open: true }"
+     x-show="open"
+     @click.self="open = false; $el.remove()"
+     x-transition>
+
+  <div class="picker">
+    <div class="picker__handle"></div>
+
+    <div class="picker__header">
+      <span class="picker__title">Use a Template</span>
+      <button class="btn btn-ghost btn-sm"
+              @click="open = false; $el.closest('.picker-overlay').remove()"
+              aria-label="Close"><i class="bi bi-x-lg"></i></button>
+    </div>
+
+    <div class="picker__body">
+      {% if templates %}
+        {% for template in templates %}
+          <div style="padding: var(--space-md); border-bottom: 1px solid var(--border);">
+            <div class="flex justify-between items-center" style="margin-bottom: var(--space-xs);">
+              <span class="text-main font-semibold">{{ template.name }}</span>
+              <span class="text-dim" style="font-size: 10px;">{{ template.created_at|date:"M d, Y" }}</span>
+            </div>
+            <div class="text-dim text-sm" style="margin-bottom: var(--space-sm);">
+              {{ template.entries.count }} meal{{ template.entries.count|pluralize }}:
+              {% for entry in template.entries.all %}{{ entry.recipe.title }}{% if not forloop.last %}, {% endif %}{% endfor %}
+            </div>
+            <form method="post" action="{% url 'apply_template' template.pk %}" style="margin: 0;">
+              {% csrf_token %}
+              <input type="hidden" name="offset" value="{{ offset }}">
+              <button type="submit" class="btn btn-primary btn-sm btn-full">
+                <i class="bi bi-check-lg"></i> Apply
+              </button>
+            </form>
+          </div>
+        {% endfor %}
+      {% else %}
+        <div style="text-align: center; padding: var(--space-xl); color: var(--text-dim);">
+          No templates saved yet. Save a week to create one.
+        </div>
+      {% endif %}
+    </div>
+  </div>
+</div>

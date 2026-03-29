@@ -5,6 +5,7 @@ from django.shortcuts import redirect, render
 from ..forms import MealPlannerPreferencesForm
 from ..models import MealPlannerPreferences
 from ..models.household import generate_household_code, get_household
+from ..models.template import MealPlanTemplate
 
 
 @login_required
@@ -41,8 +42,12 @@ def settings_view(request):
 
     # Build household context
     household_members = []
+    templates = []
     if household:
         household_members = [m.user for m in household.members.select_related("user").all()]
+        templates = MealPlanTemplate.objects.filter(
+            household=household
+        ).prefetch_related("entries__recipe")
 
     return render(
         request,
@@ -52,5 +57,6 @@ def settings_view(request):
             "preferences": prefs,
             "household": household,
             "household_members": household_members,
+            "templates": templates,
         },
     )
