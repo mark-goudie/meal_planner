@@ -1,4 +1,4 @@
-from datetime import date, timedelta
+from datetime import date
 
 from django.contrib.auth.models import User
 from django.test import Client, TestCase
@@ -125,8 +125,11 @@ class ShopViewTest(TestCase):
     def test_shop_generate_with_selected_meals(self):
         """Regenerate with selected meals should only include those meals."""
         meal = MealPlan.objects.create(
-            household=self.household, added_by=self.user,
-            date=date.today(), meal_type="dinner", recipe=self.recipe,
+            household=self.household,
+            added_by=self.user,
+            date=date.today(),
+            meal_type="dinner",
+            recipe=self.recipe,
         )
         response = self.client.post(reverse("shop_generate"), {"meals": [meal.pk]})
         self.assertEqual(response.status_code, 302)

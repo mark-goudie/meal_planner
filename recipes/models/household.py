@@ -3,6 +3,7 @@ import string
 
 from django.contrib.auth.models import User
 from django.db import models
+from django.db.models import UniqueConstraint
 
 
 def generate_household_code():
@@ -46,7 +47,9 @@ class DayComment(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        unique_together = ("household", "user", "date")
+        constraints = [
+            UniqueConstraint(fields=["household", "user", "date"], name="unique_household_user_date"),
+        ]
 
     def __str__(self):
         return f"{self.user.username} on {self.date}: {self.text[:30]}"

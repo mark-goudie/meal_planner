@@ -2,6 +2,7 @@ from datetime import date
 
 from django.contrib.auth.models import User
 from django.db import models
+from django.db.models import UniqueConstraint
 
 from .managers import MealPlanManager
 
@@ -34,7 +35,9 @@ class MealPlan(models.Model):
 
     class Meta:
         ordering = ["date", "meal_type"]
-        unique_together = ("household", "date", "meal_type")
+        constraints = [
+            UniqueConstraint(fields=["household", "date", "meal_type"], name="unique_household_date_meal"),
+        ]
         indexes = [
             models.Index(fields=["household", "date"]),
             models.Index(fields=["household", "date", "meal_type"]),
