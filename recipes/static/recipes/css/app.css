@@ -72,7 +72,7 @@
 html {
   scroll-behavior: smooth;
   -webkit-text-size-adjust: 100%;
-  height: -webkit-fill-available;
+  height: 100%;
 }
 
 body {
@@ -83,9 +83,10 @@ body {
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  min-height: 100dvh;
-  min-height: -webkit-fill-available;
+  height: 100%;
   overflow-x: hidden;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 .main-content {
@@ -178,22 +179,19 @@ small {
    4. SCREEN CONTAINER
    ============================================================ */
 .screen {
-  max-width: 500px;
+  width: 100%;
   margin: 0 auto;
-  padding: var(--space-lg);
-  padding-top: env(safe-area-inset-top, var(--space-lg));
-  padding-bottom: calc(var(--nav-height) + env(safe-area-inset-bottom, 0px) + var(--space-lg));
-  padding-left: max(var(--space-lg), env(safe-area-inset-left));
-  padding-right: max(var(--space-lg), env(safe-area-inset-right));
+  padding: var(--space-md);
+  padding-top: max(var(--space-md), env(safe-area-inset-top));
+  padding-bottom: calc(var(--nav-height) + env(safe-area-inset-bottom, 0px) + var(--space-md));
+  padding-left: max(var(--space-md), env(safe-area-inset-left));
+  padding-right: max(var(--space-md), env(safe-area-inset-right));
   min-height: 100dvh;
+  min-height: -webkit-fill-available;
 }
 
 .screen--no-nav {
   padding-bottom: var(--space-2xl);
-}
-
-.main-content {
-  position: relative;
 }
 
 /* ============================================================
@@ -1837,6 +1835,7 @@ body.light-mode .cook-step-number {
     max-width: 600px;
     padding: var(--space-xl);
     padding-bottom: calc(var(--nav-height) + var(--space-xl));
+    min-height: 100dvh;
   }
 
   .week-grid {
