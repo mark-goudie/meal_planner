@@ -78,7 +78,11 @@ def shop_view(request):
         _generate_shopping_items(household, request.user)
 
     # Get all items
-    all_items = ShoppingListItem.objects.filter(household=household).select_related("added_by").order_by("checked", "category", "name")
+    all_items = (
+        ShoppingListItem.objects.filter(household=household)
+        .select_related("added_by")
+        .order_by("checked", "category", "name")
+    )
 
     # Group generated items by category
     from collections import defaultdict

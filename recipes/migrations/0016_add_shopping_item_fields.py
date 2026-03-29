@@ -28,8 +28,6 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name="shoppinglistitem",
             name="recipe_sources",
-            field=models.CharField(
-                blank=True, help_text="Comma-separated recipe names", max_length=500
-            ),
+            field=models.CharField(blank=True, help_text="Comma-separated recipe names", max_length=500),
         ),
     ]
