@@ -16,11 +16,11 @@
     </p>
   </header>
 
-  <!-- Meal Selector -->
-  {% if meal_selector %}
+  <!-- Meal Selector + Regenerate -->
   <form method="post" action="{% url 'shop_generate' %}" x-data="{ expanded: false }">
     {% csrf_token %}
-    <div style="background: var(--bg-card); border-radius: var(--radius-lg); padding: var(--space-md) var(--space-lg); margin-bottom: var(--space-xl); border: 1px solid var(--border);">
+    {% if meal_selector %}
+    <div style="background: var(--bg-card); border-radius: var(--radius-lg); padding: var(--space-md) var(--space-lg); margin-bottom: var(--space-md); border: 1px solid var(--border);">
       <div class="flex justify-between items-center" @click="expanded = !expanded" style="cursor: pointer;">
         <div class="flex items-center gap-sm">
           <i class="bi bi-calendar-check" style="color: var(--primary);"></i>
@@ -44,14 +44,13 @@
           {% endif %}
         </label>
         {% endfor %}
-
-        <button type="submit" class="btn btn-primary btn-full btn-sm mt-md">
-          <i class="bi bi-arrow-repeat"></i> Update Shopping List
-        </button>
       </div>
     </div>
+    {% endif %}
+    <button type="submit" class="btn btn-outline btn-full btn-sm mb-xl">
+      <i class="bi bi-arrow-repeat"></i> {% if meal_selector %}Update Shopping List{% else %}Regenerate List{% endif %}
+    </button>
   </form>
-  {% endif %}
 
   <!-- Progress -->
   {% if total_items > 0 %}
