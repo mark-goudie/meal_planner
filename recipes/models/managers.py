@@ -1,7 +1,6 @@
-from datetime import date
-
 from django.db import models
 from django.db.models import Q
+from django.utils import timezone
 
 
 class RecipeQuerySet(models.QuerySet):
@@ -67,7 +66,7 @@ class MealPlanQuerySet(models.QuerySet):
 
     def upcoming(self):
         """Filter meal plans for today and future dates."""
-        today = date.today()
+        today = timezone.localdate()
         return self.filter(date__gte=today)
 
     def in_date_range(self, start_date, end_date):

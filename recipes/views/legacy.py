@@ -1,6 +1,7 @@
 from datetime import date, timedelta
 
 from django.contrib.auth.decorators import login_required
+from django.utils import timezone
 from django.shortcuts import redirect, render
 from django.urls import reverse
 from django.utils.dateparse import parse_date
@@ -142,10 +143,10 @@ def meal_plan_create(request):
         initial["meal_type"] = request.GET["meal_type"]
 
     # Determine the week offset for redirect
-    selected_date = parse_date(request.GET.get("date", str(date.today())))
+    selected_date = parse_date(request.GET.get("date", str(timezone.localdate())))
     if selected_date is None:
-        selected_date = date.today()
-    week_offset = (selected_date - date.today()).days // 7
+        selected_date = timezone.localdate()
+    week_offset = (selected_date - timezone.localdate()).days // 7
 
     household = get_household(request.user)
     if request.method == "POST":
@@ -168,7 +169,7 @@ def meal_plan_create(request):
 def meal_plan_week(request):
     # Get week offset from query param (?week=0 for current, -1 for prev, 1 for next)
     week_offset = int(request.GET.get("week", 0))
-    today = date.today()
+    today = timezone.localdate()
     start_of_week = today - timedelta(days=today.weekday()) + timedelta(weeks=week_offset)
     end_of_week = start_of_week + timedelta(days=6)
 

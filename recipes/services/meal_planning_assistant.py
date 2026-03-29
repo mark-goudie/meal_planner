@@ -14,6 +14,7 @@ from typing import List, Optional
 
 from django.contrib.auth.models import User
 from django.db.models import Avg
+from django.utils import timezone
 
 from ..models import (
     CookingNote,
@@ -105,7 +106,7 @@ class MealPlanningAssistantService:
         days: int = 14,
     ) -> List[int]:
         """Get recipe IDs cooked within the last N days."""
-        cutoff_date = date.today() - timedelta(days=days)
+        cutoff_date = timezone.localdate() - timedelta(days=days)
         return list(
             CookingNote.objects.filter(
                 user=user,
@@ -139,7 +140,7 @@ class MealPlanningAssistantService:
             meals_per_day: Which meals to plan (defaults to ['dinner'])
         """
         if week_start is None:
-            today = date.today()
+            today = timezone.localdate()
             days_ahead = 0 - today.weekday()
             if days_ahead <= 0:
                 days_ahead += 7

@@ -1,6 +1,7 @@
 from datetime import date
 
 from django.contrib import messages as django_messages
+from django.utils import timezone
 from django.contrib.auth.decorators import login_required
 from django.db.models import Q
 from django.http import Http404
@@ -133,7 +134,7 @@ def cook_done(request, pk):
         CookingNote.objects.create(
             recipe=recipe,
             user=request.user,
-            cooked_date=date.today(),
+            cooked_date=timezone.localdate(),
             rating=int(rating) if rating else None,
             note=note_text,
             would_make_again=would_make_again,

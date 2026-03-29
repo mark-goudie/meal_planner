@@ -12,6 +12,7 @@ from typing import Dict, List, Optional
 
 from django.contrib.auth.models import User
 from django.db.models import QuerySet
+from django.utils import timezone
 
 from ..models import MealPlan, Recipe
 from ..models.household import get_household
@@ -42,7 +43,7 @@ class MealPlanService:
         plans = MealPlan.objects.filter(household=household)
 
         if upcoming_only:
-            today = date.today()
+            today = timezone.localdate()
             plans = plans.filter(date__gte=today)
 
         if start_date:
@@ -102,7 +103,7 @@ class MealPlanService:
             - prev_week: Previous week offset
             - next_week: Next week offset
         """
-        today = date.today()
+        today = timezone.localdate()
         start_of_week = today - timedelta(days=today.weekday()) + timedelta(weeks=week_offset)
         end_of_week = start_of_week + timedelta(days=6)
 

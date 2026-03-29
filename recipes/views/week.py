@@ -6,6 +6,7 @@ from django.contrib.auth.decorators import login_required
 from django.db.models import Q
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
+from django.utils import timezone
 
 from ..models import MealPlan, Recipe
 from ..models.household import DayComment, get_household
@@ -15,7 +16,7 @@ from ..services.meal_planning_assistant import MealPlanningAssistantService
 
 def _get_week_dates(offset=0):
     """Get Monday-Sunday dates for a given week offset."""
-    today = date.today()
+    today = timezone.localdate()
     monday = today - timedelta(days=today.weekday()) + timedelta(weeks=offset)
     return [monday + timedelta(days=i) for i in range(7)]
 
@@ -43,7 +44,7 @@ def _build_week_context(user, household, offset=0):
                 "date": d,
                 "day_name": d.strftime("%a"),
                 "day_num": d.day,
-                "is_today": d == date.today(),
+                "is_today": d == timezone.localdate(),
                 "meal": meal,
                 "comments": day_comments,
                 "my_comment": my_comment_obj.text if my_comment_obj else "",
@@ -83,7 +84,7 @@ def week_slot(request, date_str, meal_type):
         "date": slot_date,
         "day_name": slot_date.strftime("%a"),
         "day_num": slot_date.day,
-        "is_today": slot_date == date.today(),
+        "is_today": slot_date == timezone.localdate(),
         "meal": meal,
     }
     return render(request, "week/partials/meal_card.html", {"day": day})
@@ -116,7 +117,7 @@ def week_assign(request, date_str, meal_type):
             "date": slot_date,
             "day_name": slot_date.strftime("%a"),
             "day_num": slot_date.day,
-            "is_today": slot_date == date.today(),
+            "is_today": slot_date == timezone.localdate(),
             "meal": meal,
         }
         return render(request, "week/partials/meal_card.html", {"day": day})
@@ -249,7 +250,7 @@ def week_accept_suggestion(request, date_str):
         "date": slot_date,
         "day_name": slot_date.strftime("%a"),
         "day_num": slot_date.day,
-        "is_today": slot_date == date.today(),
+        "is_today": slot_date == timezone.localdate(),
         "meal": meal,
     }
     return render(request, "week/partials/meal_card.html", {"day": day})

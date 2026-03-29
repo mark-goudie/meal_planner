@@ -1,3 +1,4 @@
+from django.utils import timezone
 from datetime import date, timedelta
 
 from django.contrib import messages as django_messages
@@ -24,7 +25,7 @@ CATEGORY_ICONS = {
 
 def _get_week_range():
     """Get Monday-Sunday for the current week."""
-    today = date.today()
+    today = timezone.localdate()
     monday = today - timedelta(days=today.weekday())
     sunday = monday + timedelta(days=6)
     return monday, sunday
@@ -32,7 +33,7 @@ def _get_week_range():
 
 def _get_shop_date_range():
     """Get the date range for the meal selector: today through end of next week."""
-    today = date.today()
+    today = timezone.localdate()
     monday = today - timedelta(days=today.weekday())
     next_sunday = monday + timedelta(days=13)  # end of next week
     return today, next_sunday
@@ -98,7 +99,7 @@ def shop_view(request):
         return render(request, "shop/shop.html", {"categories": [], "items": []})
 
     monday, sunday = _get_week_range()
-    today = date.today()
+    today = timezone.localdate()
 
     # Auto-generate if no generated items exist yet
     has_generated = ShoppingListItem.objects.filter(household=household, is_generated=True).exists()
