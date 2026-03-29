@@ -22,20 +22,6 @@ def create_icon(size):
     radius = size // 5
     draw.rounded_rectangle([(0, 0), (size - 1, size - 1)], radius=radius, fill=bg_color)
 
-    # Draw a subtle gradient overlay (top-left corner glow)
-    for i in range(size // 3):
-        alpha = int(12 * (1 - i / (size // 3)))
-        if alpha <= 0:
-            continue
-        x0 = i
-        y0 = i
-        x1 = size // 2 - i
-        y1 = size // 2 - i
-        if x1 <= x0 or y1 <= y0:
-            continue
-        overlay_color = (primary[0], primary[1], primary[2], alpha)
-        draw.ellipse([(x0, y0), (x1, y1)], fill=overlay_color)
-
     # Draw a stylized plate/bowl shape
     center_x = size // 2
     center_y = size // 2 + size // 20

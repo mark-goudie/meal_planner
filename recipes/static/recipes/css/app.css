@@ -72,6 +72,7 @@
 html {
   scroll-behavior: smooth;
   -webkit-text-size-adjust: 100%;
+  height: -webkit-fill-available;
 }
 
 body {
@@ -83,7 +84,19 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   min-height: 100dvh;
+  min-height: -webkit-fill-available;
   overflow-x: hidden;
+}
+
+.main-content {
+  min-height: 100dvh;
+  min-height: -webkit-fill-available;
+  display: flex;
+  flex-direction: column;
+}
+
+.main-content > .screen {
+  flex: 1;
 }
 
 a {
