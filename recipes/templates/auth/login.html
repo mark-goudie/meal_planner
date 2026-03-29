@@ -5,9 +5,9 @@
 
 {% block content %}
 <div class="auth-container screen--no-nav">
-    <div class="auth-logo"><i class="bi bi-egg-fried"></i></div>
-    <h1 class="auth-title">Welcome back</h1>
-    <p class="auth-subtitle">Log in to your meal planner</p>
+    <div class="auth-logo"><img src="{% static 'recipes/icons/icon-192.png' %}" alt="Meal Planner" style="width: 80px; height: 80px; border-radius: 20px;"></div>
+    <h1 class="auth-title">Meal Planner</h1>
+    <p class="auth-subtitle">Your living cookbook</p>
 
     <form class="auth-form" method="post" action="{% url 'login' %}">
         {% csrf_token %}
