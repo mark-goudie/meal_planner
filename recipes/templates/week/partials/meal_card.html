@@ -76,8 +76,7 @@
     {% endif %}
 
     <div class="day-card__add-comment" x-data="{ open: false }">
-      <button class="btn btn-ghost btn-sm" @click="open = !open"
-              style="font-size: var(--text-xs); color: var(--text-dim); padding: 4px 8px;">
+      <button class="btn btn-ghost btn-sm day-card__note-btn" @click="open = !open">
         <i class="bi bi-chat-dots"></i> {% if day.comments %}{{ day.comments|length }}{% else %}Note{% endif %}
       </button>
       <div x-show="open" x-cloak style="margin-top: var(--space-xs);">

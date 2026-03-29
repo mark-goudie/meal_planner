@@ -403,8 +403,13 @@ small {
   color: #bbb;
   border-color: rgba(187, 187, 187, 0.3);
 }
-.day-card--has-meal .day-card__add-comment .btn {
-  color: #aaa;
+.day-card__note-btn {
+  font-size: var(--text-xs);
+  color: var(--text-dim);
+  padding: 4px 8px;
+}
+.day-card--has-meal .day-card__note-btn {
+  color: #bbb;
 }
 .day-card--has-meal .day-comment .text-muted,
 .day-card--has-meal .day-comment .text-sm {
