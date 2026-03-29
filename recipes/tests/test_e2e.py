@@ -4,11 +4,10 @@ End-to-end tests using Playwright.
 Tests the key user flows through a real browser to catch UI/interaction bugs
 that unit tests miss.
 
-Run with: DJANGO_ALLOW_ASYNC_UNSAFE=true python manage.py test recipes.tests.test_e2e -v2
+Run with: python manage.py test recipes.tests.test_e2e -v2
 
-NOTE: LiveServerTestCase does NOT serve static files, so HTMX and Alpine.js
-scripts will not load. Only tests using standard form submissions and page
-navigations are included. Tests that depend on HTMX or Alpine.js are skipped.
+Uses StaticLiveServerTestCase so HTMX and Alpine.js scripts load via
+Django's static file serving.
 """
 
 import os
@@ -17,11 +16,12 @@ from decimal import Decimal
 
 os.environ["DJANGO_ALLOW_ASYNC_UNSAFE"] = "true"
 
-from django.contrib.auth.models import User
-from django.test import LiveServerTestCase
-from playwright.sync_api import sync_playwright
+from django.contrib.auth.models import User  # noqa: E402
+from django.contrib.staticfiles.testing import StaticLiveServerTestCase  # noqa: E402
+from playwright.sync_api import sync_playwright  # noqa: E402
 
-from recipes.models import (
+from recipes.models import (  # noqa: E402
+    CookingNote,
     Ingredient,
     MealPlan,
     Recipe,
@@ -29,10 +29,10 @@ from recipes.models import (
     ShoppingListItem,
     Tag,
 )
-from recipes.models.household import Household, HouseholdMembership
+from recipes.models.household import DayComment, Household, HouseholdMembership  # noqa: E402
 
 
-class PlaywrightTestCase(LiveServerTestCase):
+class PlaywrightTestCase(StaticLiveServerTestCase):
     """Base class for Playwright E2E tests."""
 
     @classmethod
@@ -144,9 +144,7 @@ class WeekViewE2ETest(PlaywrightTestCase):
 
     def setUp(self):
         super().setUp()
-        self.recipe = Recipe.objects.create(
-            user=self.user, title="Test Pasta", steps="Cook pasta", cook_time=20
-        )
+        self.recipe = Recipe.objects.create(user=self.user, title="Test Pasta", steps="Cook pasta", cook_time=20)
         tag = Tag.objects.create(name="Italian", tag_type="cuisine")
         self.recipe.tags.add(tag)
 
@@ -164,33 +162,61 @@ class WeekViewE2ETest(PlaywrightTestCase):
     def test_week_view_shows_planned_meal(self):
         """Planned meals appear on their day card."""
         MealPlan.objects.create(
-            household=self.household, added_by=self.user,
-            date=date.today(), meal_type="dinner", recipe=self.recipe,
+            household=self.household,
+            added_by=self.user,
+            date=date.today(),
+            meal_type="dinner",
+            recipe=self.recipe,
         )
         self.login()
         assert self.page.locator("text=Test Pasta").is_visible()
 
-    @staticmethod
-    def _skip_htmx(test_name):
-        import unittest
-        raise unittest.SkipTest(
-            f"{test_name}: requires HTMX which is unavailable without static files"
-        )
-
     def test_assign_meal_via_picker(self):
-        """Skipped: requires HTMX to open picker overlay."""
-        import unittest
-        raise unittest.SkipTest("Requires HTMX (no static files in LiveServerTestCase)")
+        """Click empty slot, picker overlay opens, click a recipe, meal is assigned."""
+        self.login()
+        # Click an empty day slot to trigger HTMX picker overlay
+        self.page.locator(".day-card--empty .day-card__empty").first.click()
+        # Wait for the picker overlay to appear (loaded via HTMX)
+        self.page.wait_for_selector(".picker-overlay", timeout=5000)
+        # The picker should show our recipe
+        recipe_card = self.page.locator(".picker .recipe-card", has_text="Test Pasta")
+        recipe_card.wait_for(timeout=5000)
+        # Click the recipe card to assign it (hx-post)
+        recipe_card.click()
+        # Wait for HTMX swap to complete
+        self.page.wait_for_timeout(2000)
+        # Verify the meal was saved in the database
+        assert MealPlan.objects.filter(recipe=self.recipe).exists()
 
     def test_week_navigation(self):
-        """Skipped: requires HTMX for week navigation."""
-        import unittest
-        raise unittest.SkipTest("Requires HTMX (no static files in LiveServerTestCase)")
+        """Click next week arrow, verify title changes."""
+        self.login()
+        # Verify we start on "This Week"
+        assert self.page.locator(".week-header__title", has_text="This Week").is_visible()
+        # Click the next week navigation arrow (right arrow)
+        self.page.locator('.week-header__nav[aria-label="Next week"]').click()
+        # Wait for HTMX swap to complete
+        self.page.wait_for_timeout(1000)
+        # Title should now say "Next Week"
+        assert self.page.locator(".week-header__title", has_text="Next Week").is_visible()
 
     def test_day_comment_add(self):
-        """Skipped: requires Alpine.js to show comment form and HTMX to submit."""
-        import unittest
-        raise unittest.SkipTest("Requires Alpine.js + HTMX (no static files in LiveServerTestCase)")
+        """Click Note button, fill text, submit, verify comment saved."""
+        self.login()
+        # Click the Note button on the first day card to expand comment form (Alpine.js)
+        self.page.locator(".day-card__note-btn").first.click()
+        # Wait for the comment form to become visible
+        self.page.wait_for_selector('.day-card__add-comment input[name="text"]', timeout=3000)
+        # Fill in the comment text
+        self.page.fill('.day-card__add-comment input[name="text"]', "Work dinner tonight")
+        # Submit the comment form (HTMX post)
+        self.page.locator(".day-card__add-comment button[type='submit']").first.click()
+        # Wait for HTMX swap to complete
+        self.page.wait_for_timeout(1000)
+        # Verify the comment appears in the DOM
+        assert self.page.locator("text=Work dinner tonight").is_visible()
+        # Verify it was saved to the database
+        assert DayComment.objects.filter(text="Work dinner tonight").exists()
 
 
 class RecipeE2ETest(PlaywrightTestCase):
@@ -199,8 +225,11 @@ class RecipeE2ETest(PlaywrightTestCase):
     def setUp(self):
         super().setUp()
         self.recipe = Recipe.objects.create(
-            user=self.user, title="Chicken Curry", steps="Cook it",
-            cook_time=30, difficulty="easy",
+            user=self.user,
+            title="Chicken Curry",
+            steps="Cook it",
+            cook_time=30,
+            difficulty="easy",
         )
         tag = Tag.objects.create(name="Asian", tag_type="cuisine")
         self.recipe.tags.add(tag)
@@ -212,9 +241,21 @@ class RecipeE2ETest(PlaywrightTestCase):
         assert self.page.locator("text=Chicken Curry").is_visible()
 
     def test_recipe_list_search(self):
-        """Skipped: search filtering requires HTMX."""
-        import unittest
-        raise unittest.SkipTest("Requires HTMX (no static files in LiveServerTestCase)")
+        """Type in search, wait for HTMX response, verify filtered results."""
+        # Create a second recipe so we can verify filtering
+        Recipe.objects.create(user=self.user, title="Beef Stew", steps="Stew it", cook_time=60)
+        self.login()
+        self.page.goto(self.url("/recipes/"))
+        # Both recipes should be visible initially
+        assert self.page.locator("text=Chicken Curry").is_visible()
+        assert self.page.locator("text=Beef Stew").is_visible()
+        # Type in the search input to filter
+        self.page.fill('input[name="q"]', "Chicken")
+        # Wait for HTMX debounced search to complete
+        self.page.wait_for_timeout(1000)
+        # Chicken Curry should still be visible, Beef Stew should be filtered out
+        assert self.page.locator("#recipe-results").locator("text=Chicken Curry").is_visible()
+        assert self.page.locator("#recipe-results").locator("text=Beef Stew").count() == 0
 
     def test_create_recipe_manually(self):
         """Creating a recipe via the form saves it."""
@@ -237,9 +278,21 @@ class RecipeE2ETest(PlaywrightTestCase):
         assert self.page.locator(".chip--primary", has_text="30m").first.is_visible()
 
     def test_toggle_favourite(self):
-        """Skipped: favourite toggle requires HTMX."""
-        import unittest
-        raise unittest.SkipTest("Requires HTMX (no static files in LiveServerTestCase)")
+        """Click heart button, verify favourite is toggled."""
+        self.login()
+        self.page.goto(self.url(f"/recipes/{self.recipe.pk}/"))
+        # Initially not favourited - heart should be outlined (bi-heart)
+        fav_btn = self.page.locator("#fav-btn button")
+        assert fav_btn.is_visible()
+        # Click the favourite button (HTMX post)
+        fav_btn.click()
+        # Wait for HTMX swap
+        self.page.wait_for_timeout(1000)
+        # After toggling, the heart should be filled (bi-heart-fill)
+        assert self.page.locator("#fav-btn .bi-heart-fill").is_visible()
+        # Verify in database
+        self.recipe.refresh_from_db()
+        assert self.user in self.recipe.favourited_by.all()
 
     def test_delete_recipe(self):
         """Deleting a recipe removes it."""
@@ -256,17 +309,21 @@ class ShoppingListE2ETest(PlaywrightTestCase):
 
     def setUp(self):
         super().setUp()
-        self.recipe = Recipe.objects.create(
-            user=self.user, title="Soup", steps="Make soup", cook_time=30
-        )
+        self.recipe = Recipe.objects.create(user=self.user, title="Soup", steps="Make soup", cook_time=30)
         self.ingredient = Ingredient.objects.create(name="onion", category="produce")
         RecipeIngredient.objects.create(
-            recipe=self.recipe, ingredient=self.ingredient,
-            quantity=Decimal("2"), unit="piece", order=0,
+            recipe=self.recipe,
+            ingredient=self.ingredient,
+            quantity=Decimal("2"),
+            unit="piece",
+            order=0,
         )
         MealPlan.objects.create(
-            household=self.household, added_by=self.user,
-            date=date.today(), meal_type="dinner", recipe=self.recipe,
+            household=self.household,
+            added_by=self.user,
+            date=date.today(),
+            meal_type="dinner",
+            recipe=self.recipe,
         )
 
     def test_shop_view_shows_generated_items(self):
@@ -277,21 +334,44 @@ class ShoppingListE2ETest(PlaywrightTestCase):
         assert self.page.locator("text=onion").is_visible()
 
     def test_shop_toggle_item(self):
-        """Skipped: item toggle requires HTMX."""
-        import unittest
-        raise unittest.SkipTest("Requires HTMX (no static files in LiveServerTestCase)")
+        """Click item toggle, verify checked state changes."""
+        self.login()
+        self.page.goto(self.url("/shop/"))
+        self.page.wait_for_selector(".shop-item", timeout=5000)
+        # Get the first shop item
+        item = self.page.locator(".shop-item").first
+        # It should not be checked initially
+        assert "shop-item--checked" not in (item.get_attribute("class") or "")
+        # Click the toggle area (HTMX post)
+        item.locator(".shop-item__toggle").click()
+        # Wait for HTMX swap
+        self.page.wait_for_timeout(1000)
+        # After toggling, item should have the checked class
+        item = self.page.locator(".shop-item").first
+        assert "shop-item--checked" in (item.get_attribute("class") or "")
 
     def test_shop_add_manual_item(self):
-        """Skipped: adding manual item uses HTMX form."""
-        import unittest
-        raise unittest.SkipTest("Requires HTMX (no static files in LiveServerTestCase)")
+        """Fill input, submit, verify item created."""
+        self.login()
+        self.page.goto(self.url("/shop/"))
+        self.page.wait_for_selector(".shop-item", timeout=5000)
+        # Fill the manual item form
+        self.page.fill('#manual-items-list + form input[name="name"]', "milk")
+        # Submit the form (HTMX post)
+        self.page.locator('#manual-items-list + form button[type="submit"]').click()
+        # Wait for HTMX swap
+        self.page.wait_for_timeout(1000)
+        # Verify the new item appears
+        assert self.page.locator("#manual-items-list").locator("text=milk").is_visible()
+        # Verify in database
+        assert ShoppingListItem.objects.filter(name="milk").exists()
 
     def test_shop_regenerate(self):
         """Regenerating the list updates items via standard form POST."""
         self.login()
         self.page.goto(self.url("/shop/"))
         self.page.wait_for_selector(".shop-item", timeout=5000)
-        # Click regenerate — this is a standard form POST (method="post" action="/shop/generate/")
+        # Click regenerate -- this is a standard form POST (method="post" action="/shop/generate/")
         self.page.click('button[type="submit"]:has-text("Update Shopping List")')
         # shop_generate redirects back to /shop/
         self.page.wait_for_url(f"{self.live_server_url}/shop/", timeout=5000)
@@ -304,7 +384,8 @@ class CookingModeE2ETest(PlaywrightTestCase):
     def setUp(self):
         super().setUp()
         self.recipe = Recipe.objects.create(
-            user=self.user, title="Toast",
+            user=self.user,
+            title="Toast",
             steps="Get bread\nPut in toaster\nButter it",
             cook_time=5,
         )
@@ -316,14 +397,42 @@ class CookingModeE2ETest(PlaywrightTestCase):
         assert self.page.locator("text=Get bread").is_visible()
 
     def test_cooking_mode_next_step(self):
-        """Skipped: Next button uses HTMX to swap content."""
-        import unittest
-        raise unittest.SkipTest("Requires HTMX (no static files in LiveServerTestCase)")
+        """Click Next, verify step advances."""
+        self.login()
+        self.page.goto(self.url(f"/cook/{self.recipe.pk}/"))
+        # Verify we are on step 1
+        assert self.page.locator("text=Get bread").is_visible()
+        # Click Next button (HTMX get)
+        self.page.locator("button", has_text="Next").click()
+        # Wait for HTMX swap
+        self.page.wait_for_timeout(1000)
+        # Step 2 text should now be visible
+        assert self.page.locator("text=Put in toaster").is_visible()
 
     def test_cooking_mode_done_saves_note(self):
-        """Skipped: cooking done flow requires HTMX step navigation and Alpine.js star rating."""
-        import unittest
-        raise unittest.SkipTest("Requires HTMX + Alpine.js (no static files in LiveServerTestCase)")
+        """Navigate to last step, click Done, fill rating, submit."""
+        self.login()
+        self.page.goto(self.url(f"/cook/{self.recipe.pk}/"))
+        # Navigate through all steps to the end
+        # Step 1 -> Step 2
+        self.page.locator("button", has_text="Next").click()
+        self.page.wait_for_timeout(1000)
+        # Step 2 -> Step 3
+        self.page.locator("button", has_text="Next").click()
+        self.page.wait_for_timeout(1000)
+        # Step 3 is last step, click Done
+        self.page.locator("button", has_text="Done").click()
+        self.page.wait_for_timeout(1000)
+        # Should now see the "All done!" completion screen
+        assert self.page.locator("text=All done!").is_visible()
+        # Fill in the note
+        self.page.fill('textarea[name="note"]', "Perfectly toasted")
+        # Submit the form (standard POST, not HTMX)
+        self.page.click('button[type="submit"]:has-text("Save")')
+        # After POST, should redirect to recipe detail page
+        self.page.wait_for_url(f"**/recipes/{self.recipe.pk}/", timeout=5000)
+        # Verify the cooking note was saved
+        assert CookingNote.objects.filter(recipe=self.recipe, note="Perfectly toasted").exists()
 
 
 class NavigationE2ETest(PlaywrightTestCase):
@@ -370,7 +479,10 @@ class HouseholdSharingE2ETest(PlaywrightTestCase):
         self.user2 = User.objects.create_user("partner", password="testpass123")
         HouseholdMembership.objects.create(user=self.user2, household=self.household)
         self.shared_recipe = Recipe.objects.create(
-            user=self.user, title="Shared Dinner", steps="Cook it", shared=True,
+            user=self.user,
+            title="Shared Dinner",
+            steps="Cook it",
+            shared=True,
         )
 
     def _login_as(self, username, password):
@@ -384,8 +496,11 @@ class HouseholdSharingE2ETest(PlaywrightTestCase):
     def test_both_users_see_shared_meal_plan(self):
         """Both household members see the same meal plan."""
         MealPlan.objects.create(
-            household=self.household, added_by=self.user,
-            date=date.today(), meal_type="dinner", recipe=self.shared_recipe,
+            household=self.household,
+            added_by=self.user,
+            date=date.today(),
+            meal_type="dinner",
+            recipe=self.shared_recipe,
         )
         # User 1
         self._login_as("testuser", "testpass123")
@@ -405,7 +520,10 @@ class HouseholdSharingE2ETest(PlaywrightTestCase):
     def test_unshared_recipe_hidden_from_household_member(self):
         """Unshared recipes don't appear in household member's recipe list."""
         Recipe.objects.create(
-            user=self.user, title="Private Recipe", steps="Secret", shared=False,
+            user=self.user,
+            title="Private Recipe",
+            steps="Secret",
+            shared=False,
         )
         self._login_as("partner", "testpass123")
         self.page.goto(self.url("/recipes/"))
