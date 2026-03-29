@@ -22,19 +22,39 @@ CATEGORY_ICONS = {
 }
 
 
-def _generate_shopping_items(household, user):
-    """Generate ShoppingListItem records from this week's meal plan."""
+def _get_week_range():
+    """Get Monday-Sunday for the current week."""
     today = date.today()
     monday = today - timedelta(days=today.weekday())
     sunday = monday + timedelta(days=6)
+    return monday, sunday
 
-    meals = MealPlan.objects.filter(
-        household=household,
-        date__range=[monday, sunday],
-    ).select_related("recipe")
+
+def _generate_shopping_items(household, user, meal_ids=None):
+    """Generate ShoppingListItem records from selected meals.
+
+    Args:
+        household: The household to generate for
+        user: The user triggering the generation
+        meal_ids: List of MealPlan IDs to include. If None, includes today and future meals this week.
+    """
+    monday, sunday = _get_week_range()
+
+    if meal_ids is not None:
+        meals = MealPlan.objects.filter(
+            household=household,
+            pk__in=meal_ids,
+        ).select_related("recipe")
+    else:
+        # Default: today and future meals only
+        meals = MealPlan.objects.filter(
+            household=household,
+            date__range=[date.today(), sunday],
+        ).select_related("recipe")
 
     recipes = [m.recipe for m in meals]
     if not recipes:
+        ShoppingListItem.objects.filter(household=household, is_generated=True).delete()
         return
 
     generated_items = RecipeService.generate_structured_shopping_list(recipes)
@@ -68,9 +88,8 @@ def shop_view(request):
     if not household:
         return render(request, "shop/shop.html", {"categories": [], "items": []})
 
+    monday, sunday = _get_week_range()
     today = date.today()
-    monday = today - timedelta(days=today.weekday())
-    sunday = monday + timedelta(days=6)
 
     # Auto-generate if no generated items exist yet
     has_generated = ShoppingListItem.objects.filter(household=household, is_generated=True).exists()
@@ -107,8 +126,27 @@ def shop_view(request):
                 }
             )
 
-    # Counts
-    meal_count = MealPlan.objects.filter(household=household, date__range=[monday, sunday]).count()
+    # Build meal selector: all meals this week with past/future indicator
+    week_meals = (
+        MealPlan.objects.filter(household=household, date__range=[monday, sunday])
+        .select_related("recipe")
+        .order_by("date")
+    )
+    meal_selector = []
+    for meal in week_meals:
+        meal_selector.append(
+            {
+                "id": meal.pk,
+                "date": meal.date,
+                "day_name": meal.date.strftime("%a"),
+                "day_num": meal.date.day,
+                "recipe_title": meal.recipe.title,
+                "is_past": meal.date < today,
+                "is_today": meal.date == today,
+            }
+        )
+
+    meal_count = len([m for m in meal_selector if not m["is_past"]])
     total_items = all_items.count()
     checked_items = all_items.filter(checked=True).count()
 
@@ -118,6 +156,7 @@ def shop_view(request):
         {
             "categories": category_list,
             "manual_items": manual_items,
+            "meal_selector": meal_selector,
             "week_start": monday,
             "week_end": sunday,
             "meal_count": meal_count,
@@ -130,12 +169,19 @@ def shop_view(request):
 @login_required
 @require_POST
 def shop_generate(request):
-    """Regenerate the shopping list (clears all items and rebuilds from meal plan)."""
+    """Regenerate the shopping list from selected meals."""
     household = get_household(request.user)
-    if household:
-        ShoppingListItem.objects.filter(household=household).delete()
-        _generate_shopping_items(household, request.user)
-    django_messages.success(request, "Shopping list regenerated!")
+    if not household:
+        return redirect("shop")
+
+    meal_ids = request.POST.getlist("meals")
+    if meal_ids:
+        _generate_shopping_items(household, request.user, meal_ids=[int(m) for m in meal_ids])
+    else:
+        # No meals selected — clear generated items
+        ShoppingListItem.objects.filter(household=household, is_generated=True).delete()
+
+    django_messages.success(request, "Shopping list updated!")
     return redirect("shop")
 
 

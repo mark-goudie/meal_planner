@@ -13,9 +13,45 @@
     <h1 style="font-size: var(--text-xl); font-weight: 800;">Shopping List</h1>
     <p class="text-muted text-sm mt-xs">
       {{ week_start|date:"M d" }} &ndash; {{ week_end|date:"M d, Y" }}
-      &middot; {{ meal_count }} meal{{ meal_count|pluralize }}
     </p>
   </header>
+
+  <!-- Meal Selector -->
+  {% if meal_selector %}
+  <form method="post" action="{% url 'shop_generate' %}" x-data="{ expanded: false }">
+    {% csrf_token %}
+    <div style="background: var(--bg-card); border-radius: var(--radius-lg); padding: var(--space-md) var(--space-lg); margin-bottom: var(--space-xl); border: 1px solid var(--border);">
+      <div class="flex justify-between items-center" @click="expanded = !expanded" style="cursor: pointer;">
+        <div class="flex items-center gap-sm">
+          <i class="bi bi-calendar-check" style="color: var(--primary);"></i>
+          <span class="text-sm font-semibold">Shop for {{ meal_count }} meal{{ meal_count|pluralize }}</span>
+        </div>
+        <i class="bi" :class="expanded ? 'bi-chevron-up' : 'bi-chevron-down'" style="color: var(--text-dim); font-size: var(--text-sm);"></i>
+      </div>
+
+      <div x-show="expanded" x-cloak style="margin-top: var(--space-md);">
+        {% for meal in meal_selector %}
+        <label class="flex items-center gap-sm" style="padding: var(--space-sm) 0; cursor: pointer; {% if meal.is_past %}opacity: 0.5;{% endif %}">
+          <input type="checkbox" name="meals" value="{{ meal.id }}"
+                 {% if not meal.is_past %}checked{% endif %}
+                 style="width: 18px; height: 18px; accent-color: var(--primary); flex-shrink: 0;">
+          <span class="text-sm {% if meal.is_past %}text-dim{% else %}text-main{% endif %}">
+            <span style="color: {% if meal.is_today %}var(--accent){% elif meal.is_past %}var(--text-dim){% else %}var(--primary){% endif %}; font-weight: 600; min-width: 52px; display: inline-block;">{{ meal.day_name }} {{ meal.day_num }}</span>
+            {{ meal.recipe_title }}
+          </span>
+          {% if meal.is_past %}
+          <span class="text-dim" style="font-size: 9px; margin-left: auto;">past</span>
+          {% endif %}
+        </label>
+        {% endfor %}
+
+        <button type="submit" class="btn btn-primary btn-full btn-sm mt-md">
+          <i class="bi bi-arrow-repeat"></i> Update Shopping List
+        </button>
+      </div>
+    </div>
+  </form>
+  {% endif %}
 
   <!-- Progress -->
   {% if total_items > 0 %}
@@ -73,16 +109,6 @@
              style="flex: 1;"
              required>
       <button type="submit" class="btn btn-primary btn-sm">Add</button>
-    </form>
-  </div>
-
-  <!-- Regenerate -->
-  <div class="mt-xl mb-lg">
-    <form method="post" action="{% url 'shop_generate' %}">
-      {% csrf_token %}
-      <button type="submit" class="btn btn-outline btn-full">
-        <i class="bi bi-arrow-repeat"></i> Regenerate List
-      </button>
     </form>
   </div>
 </div>
