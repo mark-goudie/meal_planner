@@ -35,7 +35,7 @@
                hx-vals='{"recipe_id": "{{ recipe.pk }}"}'
                hx-target="#day-{{ date_str }}"
                hx-swap="outerHTML"
-               @click="$el.closest('.picker-overlay').remove()"
+               hx-on::after-request="this.closest('.picker-overlay')?.remove()"
                role="button"
                tabindex="0">
             <div class="recipe-card__thumb">
