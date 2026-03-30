@@ -60,12 +60,13 @@ class AIService:
             )
 
     @staticmethod
-    def validate_prompt(prompt: str) -> str:
+    def validate_prompt(prompt: str, max_length: int = None) -> str:
         """
         Validate and clean a user prompt.
 
         Args:
             prompt: The user's input prompt
+            max_length: Override max length (default: MAX_PROMPT_LENGTH)
 
         Returns:
             Cleaned prompt string
@@ -77,9 +78,10 @@ class AIService:
             raise AIValidationError("Please provide ingredients or an idea for the recipe.")
 
         cleaned_prompt = prompt.strip()
+        limit = max_length if max_length is not None else AIService.MAX_PROMPT_LENGTH
 
-        if len(cleaned_prompt) > AIService.MAX_PROMPT_LENGTH:
-            raise AIValidationError(f"Prompt is too long. Please limit to {AIService.MAX_PROMPT_LENGTH} characters.")
+        if len(cleaned_prompt) > limit:
+            raise AIValidationError(f"Prompt is too long. Please limit to {limit} characters.")
 
         return cleaned_prompt
 
@@ -192,10 +194,10 @@ class AIService:
             raise AIAPIError("An unexpected error occurred. Please try again.")
 
     @staticmethod
-    def generate_structured_recipe(prompt):
+    def generate_structured_recipe(prompt, max_prompt_length=None):
         """Generate a recipe with structured ingredients from AI."""
         AIService.validate_api_key()
-        clean_prompt = AIService.validate_prompt(prompt)
+        clean_prompt = AIService.validate_prompt(prompt, max_length=max_prompt_length)
 
         client = anthropic.Anthropic(api_key=settings.ANTHROPIC_API_KEY)
 

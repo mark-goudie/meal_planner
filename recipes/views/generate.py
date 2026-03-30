@@ -140,7 +140,7 @@ def generate_next(request):
     prompt = "\n".join(prompt_parts)
 
     try:
-        data = AIService.generate_structured_recipe(prompt)
+        data = AIService.generate_structured_recipe(prompt, max_prompt_length=2000)
 
         # Save recipe
         recipe = Recipe.objects.create(
