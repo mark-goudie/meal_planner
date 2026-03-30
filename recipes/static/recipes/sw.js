@@ -1,18 +1,57 @@
-const CACHE_NAME = 'meal-planner-v1';
+const CACHE_NAME = 'meal-planner-v2';
+const PRECACHE_URLS = [
+    '/static/recipes/css/app.css',
+    '/static/recipes/js/app.js',
+    '/static/recipes/js/push.js',
+];
 
 self.addEventListener('install', event => {
+    event.waitUntil(
+        caches.open(CACHE_NAME).then(cache => cache.addAll(PRECACHE_URLS))
+    );
     self.skipWaiting();
 });
 
 self.addEventListener('activate', event => {
-    event.waitUntil(clients.claim());
+    // Clean up old caches
+    event.waitUntil(
+        caches.keys().then(keys =>
+            Promise.all(keys.filter(k => k !== CACHE_NAME).map(k => caches.delete(k)))
+        ).then(() => clients.claim())
+    );
 });
 
 self.addEventListener('fetch', event => {
-    // Network-first strategy — fall back to cache only when offline
+    const url = new URL(event.request.url);
+
+    // Stale-while-revalidate for static assets (CSS, JS, fonts, images)
+    if (url.pathname.startsWith('/static/') || url.hostname === 'cdn.jsdelivr.net' || url.hostname === 'fonts.googleapis.com' || url.hostname === 'fonts.gstatic.com') {
+        event.respondWith(
+            caches.open(CACHE_NAME).then(cache =>
+                cache.match(event.request).then(cached => {
+                    const fetched = fetch(event.request).then(response => {
+                        if (response.ok) {
+                            cache.put(event.request, response.clone());
+                        }
+                        return response;
+                    }).catch(() => cached);
+                    return cached || fetched;
+                })
+            )
+        );
+        return;
+    }
+
+    // Network-first strategy for navigation — fall back to cache only when offline
     if (event.request.mode === 'navigate') {
         event.respondWith(
-            fetch(event.request).catch(() => caches.match(event.request))
+            fetch(event.request)
+                .then(response => {
+                    const clone = response.clone();
+                    caches.open(CACHE_NAME).then(cache => cache.put(event.request, clone));
+                    return response;
+                })
+                .catch(() => caches.match(event.request))
         );
     }
 });

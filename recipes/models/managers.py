@@ -10,6 +10,13 @@ class RecipeQuerySet(models.QuerySet):
         """Optimize queries by prefetching related objects."""
         return self.select_related("user").prefetch_related("tags", "favourited_by", "recipe_ingredients__ingredient")
 
+    def with_stats(self):
+        """Annotate recipes with avg_rating and note_count to avoid N+1 queries."""
+        return self.annotate(
+            avg_rating=models.Avg("cooking_notes__rating"),
+            note_count=models.Count("cooking_notes"),
+        )
+
     def for_user(self, user):
         """Filter recipes for a specific user."""
         return self.filter(user=user)
@@ -40,6 +47,9 @@ class RecipeManager(models.Manager):
     def with_related(self):
         return self.get_queryset().with_related()
 
+    def with_stats(self):
+        return self.get_queryset().with_stats()
+
     def for_user(self, user):
         return self.get_queryset().for_user(user)
 
@@ -58,7 +68,9 @@ class MealPlanQuerySet(models.QuerySet):
 
     def with_related(self):
         """Optimize queries by prefetching related objects."""
-        return self.select_related("recipe", "recipe__user").prefetch_related("recipe__tags")
+        return self.select_related("recipe", "recipe__user").prefetch_related(
+            "recipe__tags", "recipe__cooking_notes"
+        )
 
     def for_household(self, household):
         """Filter meal plans for a specific household."""

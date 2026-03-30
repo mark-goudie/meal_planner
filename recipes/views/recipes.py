@@ -8,7 +8,7 @@ from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.core.files.base import ContentFile
 from django.core.paginator import Paginator
-from django.db.models import Avg, Count, F, Max, Q
+from django.db.models import F, Max, Q
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 
@@ -26,13 +26,15 @@ logger = logging.getLogger(__name__)
 
 
 def _get_sorted_recipes(queryset, sort, user):
-    """Apply sort ordering to a recipe queryset."""
+    """Apply sort ordering to a recipe queryset.
+
+    Expects queryset to already have avg_rating and note_count annotations
+    from with_stats().
+    """
     if sort == "rating":
-        return queryset.annotate(avg_rating=Avg("cooking_notes__rating")).order_by(
-            F("avg_rating").desc(nulls_last=True), "-created_at"
-        )
+        return queryset.order_by(F("avg_rating").desc(nulls_last=True), "-created_at")
     elif sort == "times_cooked":
-        return queryset.annotate(cook_count_val=Count("cooking_notes")).order_by("-cook_count_val", "-created_at")
+        return queryset.order_by(F("note_count").desc(), "-created_at")
     elif sort == "recently_cooked":
         return queryset.annotate(last_cooked=Max("cooking_notes__cooked_date")).order_by(
             F("last_cooked").desc(nulls_last=True), "-created_at"
@@ -49,6 +51,7 @@ def recipe_list_view(request):
         Recipe.objects.filter(Q(user=request.user) | Q(shared=True, user__household_membership__household=household))
         .distinct()
         .with_related()
+        .with_stats()
     )
 
     query = request.GET.get("q", "").strip()
@@ -96,6 +99,7 @@ def recipe_search(request):
         Recipe.objects.filter(Q(user=request.user) | Q(shared=True, user__household_membership__household=household))
         .distinct()
         .with_related()
+        .with_stats()
     )
 
     query = request.GET.get("q", "").strip()
