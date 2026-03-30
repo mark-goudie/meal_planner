@@ -241,6 +241,58 @@
 
 {% block extra_js %}
 <script>
+function populateIngredients(ingredients) {
+  // Find the Alpine-managed ingredient component and update its data
+  var ingEl = document.querySelector('[x-data="ingredientManager()"]');
+  if (!ingEl || !ingredients || !ingredients.length) return;
+
+  var mapped = ingredients.map(function(ing) {
+    return {
+      name: ing.name || '',
+      quantity: ing.quantity ? String(ing.quantity) : '',
+      unit: ing.unit || '',
+      notes: ing.preparation_notes || ing.notes || '',
+    };
+  });
+
+  // Try Alpine.$data (Alpine v3 public API)
+  try {
+    var alpineData = Alpine.$data(ingEl);
+    if (alpineData && alpineData.ingredients !== undefined) {
+      alpineData.ingredients = mapped;
+      return;
+    }
+  } catch(e) {}
+
+  // Fallback: try _x_dataStack (Alpine v3 internal)
+  try {
+    if (ingEl._x_dataStack && ingEl._x_dataStack[0]) {
+      ingEl._x_dataStack[0].ingredients = mapped;
+      return;
+    }
+  } catch(e) {}
+
+  // Last resort: populate as hidden form fields directly
+  // Remove old dynamic ingredient fields
+  ingEl.querySelectorAll('input[name^="ing_"]').forEach(function(el) { el.remove(); });
+  var countField = ingEl.querySelector('input[name="ingredient_count"]');
+  if (countField) countField.value = mapped.length;
+  mapped.forEach(function(ing, i) {
+    var form = ingEl.closest('form');
+    ['name', 'quantity', 'unit', 'notes'].forEach(function(field) {
+      var input = document.createElement('input');
+      input.type = 'hidden';
+      input.name = 'ing_' + field.replace('notes', 'notes') + '_' + i;
+      if (field === 'name') input.name = 'ing_name_' + i;
+      if (field === 'quantity') input.name = 'ing_qty_' + i;
+      if (field === 'unit') input.name = 'ing_unit_' + i;
+      if (field === 'notes') input.name = 'ing_notes_' + i;
+      input.value = ing[field] || '';
+      form.appendChild(input);
+    });
+  });
+}
+
 function ingredientManager() {
   var existing = {{ existing_ingredients|safe|default:"[]" }};
   var ingredients = [];
@@ -307,17 +359,8 @@ function urlImporter() {
           stepsField.value = data.steps.join('\n');
         }
         // Populate ingredients
-        var ingManager = document.querySelector('[x-data="ingredientManager()"]');
-        if (ingManager && data.ingredients) {
-          var alpineData = Alpine.$data(ingManager);
-          alpineData.ingredients = data.ingredients.map(function(ing) {
-            return {
-              name: ing.name || '',
-              quantity: ing.quantity ? String(ing.quantity) : '',
-              unit: ing.unit || '',
-              notes: ing.preparation_notes || '',
-            };
-          });
+        if (data.ingredients) {
+          populateIngredients(data.ingredients);
         }
         this.success = true;
       } catch (e) {
@@ -386,17 +429,8 @@ function aiGenerator() {
         }
 
         // Populate structured ingredients via Alpine
-        var ingManager = document.querySelector('[x-data="ingredientManager()"]');
-        if (ingManager && ingManager.__x && data.ingredients) {
-          var alpineData = ingManager.__x.$data || Alpine.$data(ingManager);
-          alpineData.ingredients = data.ingredients.map(function(ing) {
-            return {
-              name: ing.name || '',
-              quantity: ing.quantity ? String(ing.quantity) : '',
-              unit: ing.unit || '',
-              notes: ing.preparation_notes || '',
-            };
-          });
+        if (data.ingredients) {
+          populateIngredients(data.ingredients);
         }
 
         this.success = true;
