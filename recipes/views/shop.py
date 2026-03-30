@@ -145,8 +145,16 @@ def shop_view(request):
         .select_related("recipe")
         .order_by("date")
     )
+    # Check if we have a stored selection from a previous generate action
+    selected_meal_ids = request.session.pop("shop_selected_meals", None)
+
     meal_selector = []
     for meal in upcoming_meals:
+        # If we have stored selection, use it. Otherwise default all to checked.
+        if selected_meal_ids is not None:
+            is_selected = meal.pk in selected_meal_ids
+        else:
+            is_selected = True
         meal_selector.append(
             {
                 "id": meal.pk,
@@ -157,12 +165,13 @@ def shop_view(request):
                 "recipe_title": meal.recipe.title,
                 "is_today": meal.date == today,
                 "is_next_week": meal.date >= next_monday,
+                "is_selected": is_selected,
             }
         )
 
     this_week_meals = [m for m in meal_selector if not m["is_next_week"]]
     next_week_meals = [m for m in meal_selector if m["is_next_week"]]
-    meal_count = len(meal_selector)
+    meal_count = len([m for m in meal_selector if m["is_selected"]])
     total_items = all_items.count()
     checked_items = all_items.filter(checked=True).count()
 
@@ -193,11 +202,15 @@ def shop_generate(request):
         return redirect("shop")
 
     meal_ids = request.POST.getlist("meals")
-    if meal_ids:
-        _generate_shopping_items(household, request.user, meal_ids=[int(m) for m in meal_ids])
+    selected_ids = [int(m) for m in meal_ids] if meal_ids else []
+    if selected_ids:
+        _generate_shopping_items(household, request.user, meal_ids=selected_ids)
     else:
         # No meals selected — clear generated items
         ShoppingListItem.objects.filter(household=household, is_generated=True).delete()
+
+    # Store selected meal IDs in session so the page remembers the selection
+    request.session["shop_selected_meals"] = selected_ids
 
     django_messages.success(request, "Shopping list updated!")
     return redirect("shop")

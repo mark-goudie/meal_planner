@@ -56,35 +56,31 @@
     </button>
   </div>
 
-  <div class="week-bottom-actions">
-    <!-- Save as Template: inline Alpine.js form -->
-    <div x-data="{ saving: false, saved: false }" style="flex: 1;">
-      <template x-if="!saving && !saved">
-        <button class="btn btn-outline btn-full" @click="saving = true" type="button">
-          <i class="bi bi-bookmark-plus"></i> Save Template
-        </button>
-      </template>
-      <template x-if="saving">
-        <form method="post" action="{% url 'save_template' %}" class="flex gap-xs">
-          {% csrf_token %}
-          <input type="hidden" name="offset" value="{{ offset }}">
-          <input type="text" name="name" class="form-input" style="flex: 1; min-height: 38px; padding: 4px 8px;"
-                 placeholder="Template name..." required autofocus>
-          <button type="submit" class="btn btn-primary btn-sm"><i class="bi bi-check-lg"></i></button>
-          <button type="button" class="btn btn-ghost btn-sm" @click="saving = false"><i class="bi bi-x-lg"></i></button>
-        </form>
-      </template>
-      <template x-if="saved">
-        <div class="text-sm text-primary"><i class="bi bi-check-circle"></i> Saved!</div>
-      </template>
-    </div>
-
-    <!-- Use Template -->
-    <button class="btn btn-outline btn-full"
+  <!-- Secondary actions -->
+  <div class="flex justify-center gap-lg mt-sm mb-lg" x-data="{ saving: false, saved: false }">
+    <template x-if="!saving && !saved">
+      <button class="btn btn-ghost btn-sm" @click="saving = true" type="button" style="color: var(--text-muted); font-size: var(--text-xs);">
+        <i class="bi bi-bookmark-plus"></i> Save Template
+      </button>
+    </template>
+    <template x-if="saving">
+      <form method="post" action="{% url 'save_template' %}" class="flex gap-xs" style="width: 100%; max-width: 300px;">
+        {% csrf_token %}
+        <input type="hidden" name="offset" value="{{ offset }}">
+        <input type="text" name="name" class="form-input" style="flex: 1; min-height: 32px; padding: 4px 8px; font-size: var(--text-sm);"
+               placeholder="Template name..." required autofocus>
+        <button type="submit" class="btn btn-primary btn-sm" style="min-height: 32px;"><i class="bi bi-check-lg"></i></button>
+        <button type="button" class="btn btn-ghost btn-sm" @click="saving = false" style="min-height: 32px;"><i class="bi bi-x-lg"></i></button>
+      </form>
+    </template>
+    <template x-if="saved">
+      <span class="text-sm" style="color: var(--primary);"><i class="bi bi-check-circle"></i> Saved!</span>
+    </template>
+    <button class="btn btn-ghost btn-sm"
             hx-get="{% url 'list_templates' %}?offset={{ offset }}"
             hx-target="body"
             hx-swap="beforeend"
-            style="flex: 1;">
+            style="color: var(--text-muted); font-size: var(--text-xs);">
       <i class="bi bi-bookmark-star"></i> Use Template
     </button>
   </div>

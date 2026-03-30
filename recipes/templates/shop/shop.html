@@ -34,7 +34,7 @@
         <div class="text-muted font-semibold mb-xs" style="font-size: 10px; text-transform: uppercase; letter-spacing: 0.08em;">This week</div>
         {% for meal in this_week_meals %}
         <label class="flex items-center gap-sm" style="padding: var(--space-sm) 0; cursor: pointer;">
-          <input type="checkbox" name="meals" value="{{ meal.id }}" checked
+          <input type="checkbox" name="meals" value="{{ meal.id }}" {% if meal.is_selected %}checked{% endif %}
                  style="width: 18px; height: 18px; accent-color: var(--primary); flex-shrink: 0;">
           <span class="text-sm text-main">
             <span style="color: {% if meal.is_today %}var(--accent){% else %}var(--primary){% endif %}; font-weight: 600; min-width: 65px; display: inline-block;">{{ meal.day_name }} {{ meal.day_num }} {{ meal.month }}</span>
@@ -47,7 +47,7 @@
         <div class="text-muted font-semibold mb-xs{% if this_week_meals %} mt-md{% endif %}" style="font-size: 10px; text-transform: uppercase; letter-spacing: 0.08em;">Next week</div>
         {% for meal in next_week_meals %}
         <label class="flex items-center gap-sm" style="padding: var(--space-sm) 0; cursor: pointer;">
-          <input type="checkbox" name="meals" value="{{ meal.id }}" checked
+          <input type="checkbox" name="meals" value="{{ meal.id }}" {% if meal.is_selected %}checked{% endif %}
                  style="width: 18px; height: 18px; accent-color: var(--primary); flex-shrink: 0;">
           <span class="text-sm text-main">
             <span style="color: var(--primary); font-weight: 600; min-width: 65px; display: inline-block;">{{ meal.day_name }} {{ meal.day_num }} {{ meal.month }}</span>

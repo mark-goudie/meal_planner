@@ -19,51 +19,53 @@
       {% for s in suggestions %}
       <div class="day-card" id="suggestion-{{ s.date_str }}"
            style="border-left-color: var(--accent);">
-        <div class="day-card__header">
-          <span class="day-card__label">{{ s.day_name }} {{ s.day_num }}</span>
-          {% if s.score %}
-          <span class="chip chip--accent" style="font-size: var(--text-xs);">
-            <i class="bi bi-heart-fill"></i> {{ s.score }}%
-          </span>
+        <div class="day-card__content">
+          <div class="day-card__header">
+            <span class="day-card__label">{{ s.day_name }} {{ s.day_num }}</span>
+            {% if s.score %}
+            <span class="chip chip--accent" style="font-size: var(--text-xs);">
+              <i class="bi bi-heart-fill"></i> {{ s.score }}%
+            </span>
+            {% endif %}
+          </div>
+
+          <div class="day-card__title" style="display: block;">{{ s.recipe.title }}</div>
+
+          <div class="day-card__meta">
+            {% if s.recipe.cook_time %}
+            <span class="day-card__time">
+              <i class="bi bi-clock"></i> {{ s.recipe.cook_time }} min
+            </span>
+            {% endif %}
+            {% if s.recipe.average_rating %}
+            <span class="day-card__time">
+              <i class="bi bi-star-fill"></i> {{ s.recipe.average_rating|floatformat:1 }}
+            </span>
+            {% endif %}
+          </div>
+
+          {% if s.recipe.tags.all %}
+          <div class="day-card__tags">
+            {% for tag in s.recipe.tags.all %}
+            <span class="chip chip--muted">{{ tag.name }}</span>
+            {% endfor %}
+          </div>
           {% endif %}
-        </div>
 
-        <div class="day-card__title" style="display: block;">{{ s.recipe.title }}</div>
-
-        <div class="day-card__meta">
-          {% if s.recipe.cook_time %}
-          <span class="day-card__time">
-            <i class="bi bi-clock"></i> {{ s.recipe.cook_time }} min
-          </span>
-          {% endif %}
-          {% if s.recipe.average_rating %}
-          <span class="day-card__time">
-            <i class="bi bi-star-fill"></i> {{ s.recipe.average_rating|floatformat:1 }}
-          </span>
-          {% endif %}
-        </div>
-
-        {% if s.recipe.tags.all %}
-        <div class="day-card__tags">
-          {% for tag in s.recipe.tags.all %}
-          <span class="chip chip--muted">{{ tag.name }}</span>
-          {% endfor %}
-        </div>
-        {% endif %}
-
-        <div class="flex gap-sm mt-md">
-          <button class="btn btn-primary btn-sm flex-1"
-                  hx-post="{% url 'week_accept_suggestion' s.date_str %}"
-                  hx-vals='{"recipe_id": "{{ s.recipe.pk }}"}'
-                  hx-target="#day-{{ s.date_str }}"
-                  hx-swap="outerHTML"
-                  onclick="var el = document.getElementById('suggestion-{{ s.date_str }}'); if(el) el.remove(); checkEmpty();">
-            <i class="bi bi-check-lg"></i> Accept
-          </button>
-          <button class="btn btn-outline btn-sm flex-1"
-                  onclick="document.getElementById('suggestion-{{ s.date_str }}').remove(); checkEmpty();">
-            <i class="bi bi-arrow-right"></i> Skip
-          </button>
+          <div class="flex gap-sm mt-md">
+            <button class="btn btn-primary btn-sm flex-1"
+                    hx-post="{% url 'week_accept_suggestion' s.date_str %}"
+                    hx-vals='{"recipe_id": "{{ s.recipe.pk }}"}'
+                    hx-target="#day-{{ s.date_str }}"
+                    hx-swap="outerHTML"
+                    onclick="var el = document.getElementById('suggestion-{{ s.date_str }}'); if(el) el.remove(); checkEmpty();">
+              <i class="bi bi-check-lg"></i> Accept
+            </button>
+            <button class="btn btn-outline btn-sm flex-1"
+                    onclick="document.getElementById('suggestion-{{ s.date_str }}').remove(); checkEmpty();">
+              <i class="bi bi-arrow-right"></i> Skip
+            </button>
+          </div>
         </div>
       </div>
       {% endfor %}
