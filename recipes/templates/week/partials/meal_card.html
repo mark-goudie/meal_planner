@@ -1,8 +1,8 @@
 {% load recipe_extras %}
 <div id="day-{{ day.date|date:'Y-m-d' }}"
      class="day-card{% if day.is_today %} day-card--today{% endif %}{% if not day.meal %} day-card--empty{% endif %}{% if day.meal %} day-card--has-meal{% endif %}"
-     {% if day.meal and day.meal.recipe.image %}
-     style="--card-bg-image: url('{{ day.meal.recipe.image.url }}');"
+     {% if day.meal and day.meal.recipe.display_image_url %}
+     style="--card-bg-image: url('{{ day.meal.recipe.display_image_url }}');"
      {% elif day.meal %}
      style="--card-bg-gradient: {{ day.meal.recipe.title|recipe_gradient }};"
      {% endif %}>

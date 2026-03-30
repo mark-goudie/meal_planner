@@ -14,8 +14,8 @@
 
   <!-- Recipe Image -->
   <div class="recipe-hero">
-    {% if recipe.image %}
-      <img src="{{ recipe.image.url }}" alt="{{ recipe.title }}">
+    {% if recipe.display_image_url %}
+      <img src="{{ recipe.display_image_url }}" alt="{{ recipe.title }}">
     {% else %}
       <div class="recipe-placeholder recipe-placeholder--lg" style="background: {{ recipe.title|recipe_gradient }};">
         <span class="recipe-placeholder__initials" style="font-size: 36px;">{{ recipe.title|recipe_initials }}</span>
@@ -26,7 +26,7 @@
             hx-get="{% url 'image_search' recipe.pk %}"
             hx-target="body"
             hx-swap="beforeend">
-      <i class="bi bi-camera"></i> {% if recipe.image %}Change{% else %}Find Image{% endif %}
+      <i class="bi bi-camera"></i> {% if recipe.has_image %}Change{% else %}Find Image{% endif %}
     </button>
   </div>
 

@@ -453,20 +453,10 @@ def image_search(request, pk):
 def image_select(request, pk):
     """Save an Unsplash image URL to the recipe."""
     recipe = get_object_or_404(Recipe, pk=pk, user=request.user)
-    image_url = request.POST.get("image_url", "")
+    image_url = request.POST.get("image_url", "").strip()
 
     if image_url:
-        try:
-            resp = http_requests.get(image_url, timeout=15)
-            resp.raise_for_status()
-
-            # Generate filename from recipe title
-            safe_name = re.sub(r"[^\w\s-]", "", recipe.title.lower())
-            safe_name = re.sub(r"[\s-]+", "_", safe_name)[:50]
-            filename = f"{safe_name}_{recipe.pk}.jpg"
-
-            recipe.image.save(filename, ContentFile(resp.content), save=True)
-        except Exception:
-            pass  # Silently fail -- placeholder will still show
+        recipe.image_url = image_url
+        recipe.save(update_fields=["image_url"])
 
     return redirect("recipe_detail", pk=recipe.pk)

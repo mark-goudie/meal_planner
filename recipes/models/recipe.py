@@ -93,6 +93,7 @@ class Recipe(models.Model):
         blank=True,
     )
     image = models.ImageField(upload_to="recipes/", null=True, blank=True)
+    image_url = models.URLField(max_length=500, blank=True, help_text="External image URL (e.g. Unsplash)")
 
     # Sharing
     shared = models.BooleanField(default=False)
@@ -113,6 +114,23 @@ class Recipe(models.Model):
 
     def __str__(self):
         return self.title
+
+    @property
+    def display_image_url(self):
+        """Return the best available image URL, or None."""
+        if self.image_url:
+            return self.image_url
+        if self.image:
+            try:
+                return self.image.url
+            except ValueError:
+                return None
+        return None
+
+    @property
+    def has_image(self):
+        """Check if recipe has any image (URL or file)."""
+        return bool(self.image_url or self.image)
 
     @property
     def total_time(self):
