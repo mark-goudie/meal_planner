@@ -123,19 +123,23 @@ def generate_next(request):
     existing_titles = list(Recipe.objects.filter(user=request.user).values_list("title", flat=True))
     all_titles = existing_titles + titles
 
-    prompt_parts = ["Generate a unique family-friendly dinner recipe."]
+    prompt_parts = [
+        "Generate a unique family-friendly dinner recipe.",
+        "IMPORTANT: Pick ONE cuisine and ONE cooking style from the options below. Do NOT combine all of them into one recipe.",
+        f"This is recipe {completed + 1} of {count} — vary the cuisine and style across the batch.",
+    ]
     if cuisines:
-        prompt_parts.append(f"Cuisines: {', '.join(cuisines)}")
+        prompt_parts.append(f"Choose ONE cuisine from: {', '.join(cuisines)}")
     if proteins:
-        prompt_parts.append(f"Proteins: {', '.join(proteins)}")
+        prompt_parts.append(f"Choose ONE protein from: {', '.join(proteins)}")
     if dietary:
-        prompt_parts.append(f"Dietary: {', '.join(dietary)}")
+        prompt_parts.append(f"Dietary requirements (must follow all): {', '.join(dietary)}")
     if styles:
-        prompt_parts.append(f"Cooking style: {', '.join(styles)}")
+        prompt_parts.append(f"Choose ONE cooking style from: {', '.join(styles)}")
     if avoid:
-        prompt_parts.append(f"Avoid these: {', '.join(avoid)}")
+        prompt_parts.append(f"Must NOT contain: {', '.join(avoid)}")
     if all_titles:
-        prompt_parts.append(f"Must be different from: {', '.join(all_titles[-30:])}")
+        prompt_parts.append(f"Must be different from: {', '.join(all_titles[-20:])}")
 
     prompt = "\n".join(prompt_parts)
 
