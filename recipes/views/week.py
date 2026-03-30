@@ -304,9 +304,7 @@ def save_template(request):
 
     dates = _get_week_dates(offset)
     start, end = dates[0], dates[-1]
-    meals = MealPlan.objects.filter(
-        household=household, date__range=[start, end]
-    ).select_related("recipe")
+    meals = MealPlan.objects.filter(household=household, date__range=[start, end]).select_related("recipe")
 
     if not meals.exists():
         django_messages.error(request, "No meals to save this week.")
@@ -335,9 +333,7 @@ def list_templates(request):
     """GET: HTMX partial showing template picker overlay."""
     household = get_household(request.user)
     offset = request.GET.get("offset", 0)
-    templates = MealPlanTemplate.objects.filter(
-        household=household
-    ).prefetch_related("entries__recipe")
+    templates = MealPlanTemplate.objects.filter(household=household).prefetch_related("entries__recipe")
 
     return render(
         request,
@@ -362,9 +358,7 @@ def apply_template(request, pk):
     added = 0
     for entry in template.entries.all():
         target_date = monday + timedelta(days=entry.day_of_week)
-        exists = MealPlan.objects.filter(
-            household=household, date=target_date, meal_type=entry.meal_type
-        ).exists()
+        exists = MealPlan.objects.filter(household=household, date=target_date, meal_type=entry.meal_type).exists()
         if not exists:
             MealPlan.objects.create(
                 household=household,

@@ -95,9 +95,7 @@ class MealPlannerPreferencesForm(forms.ModelForm):
             "avoid_repeat_days": forms.NumberInput(
                 attrs={"class": "form-control", "min": "7", "max": "90", "step": "7"}
             ),
-            "reminder_time": forms.TimeInput(
-                attrs={"class": "form-control", "type": "time"}
-            ),
+            "reminder_time": forms.TimeInput(attrs={"class": "form-control", "type": "time"}),
         }
         labels = {
             "max_weeknight_time": "Max Weeknight Cooking Time (minutes)",

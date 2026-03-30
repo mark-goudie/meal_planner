@@ -1,11 +1,11 @@
 from datetime import date
 
 from django.contrib import messages as django_messages
-from django.utils import timezone
 from django.contrib.auth.decorators import login_required
 from django.db.models import Q
 from django.http import Http404
 from django.shortcuts import get_object_or_404, redirect, render
+from django.utils import timezone
 
 from ..models import CookingNote, Recipe
 from ..models.household import get_household

@@ -45,9 +45,7 @@ def settings_view(request):
     templates = []
     if household:
         household_members = [m.user for m in household.members.select_related("user").all()]
-        templates = MealPlanTemplate.objects.filter(
-            household=household
-        ).prefetch_related("entries__recipe")
+        templates = MealPlanTemplate.objects.filter(household=household).prefetch_related("entries__recipe")
 
     return render(
         request,

@@ -20,9 +20,7 @@ DEBUG = os.getenv("DEBUG", "False") == "True"
 ALLOWED_HOSTS = os.getenv("ALLOWED_HOSTS", "localhost,127.0.0.1").split(",")
 
 # CSRF trusted origins (for Railway/production HTTPS)
-CSRF_TRUSTED_ORIGINS = [
-    origin.strip() for origin in os.getenv("CSRF_TRUSTED_ORIGINS", "").split(",") if origin.strip()
-]
+CSRF_TRUSTED_ORIGINS = [origin.strip() for origin in os.getenv("CSRF_TRUSTED_ORIGINS", "").split(",") if origin.strip()]
 
 # API Keys
 ANTHROPIC_API_KEY = os.getenv("ANTHROPIC_API_KEY")

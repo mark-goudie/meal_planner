@@ -260,9 +260,7 @@ class AIService:
         html_content = resp.text
         # Remove script, style, nav, footer, header tags and their content
         for tag in ["script", "style", "nav", "footer", "header", "aside"]:
-            html_content = re.sub(
-                f"<{tag}[^>]*>.*?</{tag}>", "", html_content, flags=re.DOTALL | re.IGNORECASE
-            )
+            html_content = re.sub(f"<{tag}[^>]*>.*?</{tag}>", "", html_content, flags=re.DOTALL | re.IGNORECASE)
         # Remove all remaining HTML tags
         text = re.sub(r"<[^>]+>", " ", html_content)
         # Collapse whitespace

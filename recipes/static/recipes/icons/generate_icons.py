@@ -1,8 +1,9 @@
 """Generate app icons from SVG using Pillow."""
 
-from PIL import Image, ImageDraw, ImageFont
 import math
 import os
+
+from PIL import Image, ImageDraw, ImageFont
 
 OUTPUT_DIR = os.path.dirname(os.path.abspath(__file__))
 

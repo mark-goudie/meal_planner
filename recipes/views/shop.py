@@ -1,10 +1,10 @@
-from django.utils import timezone
 from datetime import date, timedelta
 
 from django.contrib import messages as django_messages
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
+from django.utils import timezone
 from django.views.decorators.http import require_POST
 
 from ..models import INGREDIENT_CATEGORY_CHOICES, MealPlan, ShoppingListItem

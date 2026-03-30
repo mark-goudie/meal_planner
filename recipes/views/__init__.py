@@ -1,6 +1,6 @@
 from .auth import register_view
-from .push import push_subscribe, push_unsubscribe, vapid_public_key
 from .cook import cook_done, cook_step, cook_view
+from .generate import generate_next, generate_preferences, generate_progress
 from .legacy import (
     ai_generate_recipe,
     ai_surprise_me,
@@ -16,6 +16,7 @@ from .legacy import (
     smart_meal_planner,
     terms,
 )
+from .push import push_subscribe, push_unsubscribe, vapid_public_key
 from .recipes import (
     ai_generate_recipe_api,
     image_search,
@@ -56,6 +57,10 @@ __all__ = [
     "cook_done",
     "cook_step",
     "cook_view",
+    # Generate
+    "generate_next",
+    "generate_preferences",
+    "generate_progress",
     # Legacy
     "ai_generate_recipe",
     "ai_surprise_me",

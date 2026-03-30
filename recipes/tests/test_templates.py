@@ -23,12 +23,18 @@ class MealPlanTemplateTest(TestCase):
         today = date.today()
         monday = today - timedelta(days=today.weekday())
         MealPlan.objects.create(
-            household=self.household, added_by=self.user, date=monday,
-            meal_type="dinner", recipe=self.recipe1,
+            household=self.household,
+            added_by=self.user,
+            date=monday,
+            meal_type="dinner",
+            recipe=self.recipe1,
         )
         MealPlan.objects.create(
-            household=self.household, added_by=self.user, date=monday + timedelta(days=1),
-            meal_type="dinner", recipe=self.recipe2,
+            household=self.household,
+            added_by=self.user,
+            date=monday + timedelta(days=1),
+            meal_type="dinner",
+            recipe=self.recipe2,
         )
 
         response = self.client.post(reverse("save_template"), {"name": "Test Template", "offset": "0"})
@@ -39,7 +45,9 @@ class MealPlanTemplateTest(TestCase):
     def test_apply_template_fills_empty_slots(self):
         # Create template
         template = MealPlanTemplate.objects.create(
-            household=self.household, name="Test", created_by=self.user,
+            household=self.household,
+            name="Test",
+            created_by=self.user,
         )
         MealPlanTemplateEntry.objects.create(template=template, day_of_week=0, recipe=self.recipe1)
         MealPlanTemplateEntry.objects.create(template=template, day_of_week=1, recipe=self.recipe2)
@@ -56,13 +64,18 @@ class MealPlanTemplateTest(TestCase):
         monday = today - timedelta(days=today.weekday())
         existing = Recipe.objects.create(user=self.user, title="Existing", steps="cook")
         MealPlan.objects.create(
-            household=self.household, added_by=self.user, date=monday,
-            meal_type="dinner", recipe=existing,
+            household=self.household,
+            added_by=self.user,
+            date=monday,
+            meal_type="dinner",
+            recipe=existing,
         )
 
         # Create template with Monday meal
         template = MealPlanTemplate.objects.create(
-            household=self.household, name="Test", created_by=self.user,
+            household=self.household,
+            name="Test",
+            created_by=self.user,
         )
         MealPlanTemplateEntry.objects.create(template=template, day_of_week=0, recipe=self.recipe1)
 
@@ -73,7 +86,9 @@ class MealPlanTemplateTest(TestCase):
 
     def test_delete_template(self):
         template = MealPlanTemplate.objects.create(
-            household=self.household, name="Delete Me", created_by=self.user,
+            household=self.household,
+            name="Delete Me",
+            created_by=self.user,
         )
         response = self.client.post(reverse("delete_template", args=[template.pk]))
         self.assertEqual(response.status_code, 302)
@@ -86,7 +101,9 @@ class MealPlanTemplateTest(TestCase):
 
     def test_list_templates(self):
         MealPlanTemplate.objects.create(
-            household=self.household, name="Template 1", created_by=self.user,
+            household=self.household,
+            name="Template 1",
+            created_by=self.user,
         )
         response = self.client.get(reverse("list_templates"))
         self.assertEqual(response.status_code, 200)

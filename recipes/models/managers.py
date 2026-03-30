@@ -68,9 +68,7 @@ class MealPlanQuerySet(models.QuerySet):
 
     def with_related(self):
         """Optimize queries by prefetching related objects."""
-        return self.select_related("recipe", "recipe__user").prefetch_related(
-            "recipe__tags", "recipe__cooking_notes"
-        )
+        return self.select_related("recipe", "recipe__user").prefetch_related("recipe__tags", "recipe__cooking_notes")
 
     def for_household(self, household):
         """Filter meal plans for a specific household."""

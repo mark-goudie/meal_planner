@@ -1,9 +1,9 @@
 from datetime import date, timedelta
 
 from django.contrib.auth.decorators import login_required
-from django.utils import timezone
 from django.shortcuts import redirect, render
 from django.urls import reverse
+from django.utils import timezone
 from django.utils.dateparse import parse_date
 from django_ratelimit.decorators import ratelimit
 

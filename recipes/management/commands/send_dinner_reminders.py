@@ -4,7 +4,7 @@ from datetime import datetime, timedelta
 from django.conf import settings
 from django.core.management.base import BaseCommand
 from django.utils import timezone
-from pywebpush import webpush, WebPushException
+from pywebpush import WebPushException, webpush
 
 from recipes.models import MealPlan, MealPlannerPreferences
 from recipes.models.household import get_household
@@ -40,20 +40,24 @@ class Command(BaseCommand):
                 continue
 
             # Check for today's dinner
-            meal = MealPlan.objects.filter(
-                household=household, date=today, meal_type="dinner"
-            ).select_related("recipe").first()
+            meal = (
+                MealPlan.objects.filter(household=household, date=today, meal_type="dinner")
+                .select_related("recipe")
+                .first()
+            )
 
             if not meal:
                 continue
 
             # Build notification payload
             cook_time = f" ({meal.recipe.cook_time} min)" if meal.recipe.cook_time else ""
-            payload = json.dumps({
-                "title": "Tonight's Dinner",
-                "body": f"{meal.recipe.title}{cook_time}",
-                "url": "/week/",
-            })
+            payload = json.dumps(
+                {
+                    "title": "Tonight's Dinner",
+                    "body": f"{meal.recipe.title}{cook_time}",
+                    "url": "/week/",
+                }
+            )
 
             # Send to all of this user's subscriptions
             subscriptions = PushSubscription.objects.filter(user=user)

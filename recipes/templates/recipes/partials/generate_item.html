@@ -1,0 +1,29 @@
+{% if error %}
+<div class="day-card" style="border-left-color: var(--danger); margin-bottom: var(--space-md);">
+  <div class="day-card__content">
+    <span class="text-muted text-sm">Skipped — AI error</span>
+  </div>
+</div>
+{% else %}
+<div class="day-card" style="border-left-color: var(--primary); margin-bottom: var(--space-md);">
+  <div class="day-card__content">
+    <a href="{% url 'recipe_detail' pk=recipe.pk %}" style="text-decoration: none; color: inherit;">
+      <div style="font-weight: 700; color: var(--text-main); margin-bottom: var(--space-xs);">{{ recipe.title }}</div>
+      <div class="text-muted text-sm">
+        {% if recipe.cook_time %}<i class="bi bi-clock"></i> {{ recipe.cook_time }}m{% endif %}
+        {% if recipe.difficulty %} · {{ recipe.get_difficulty_display }}{% endif %}
+      </div>
+    </a>
+  </div>
+</div>
+{% endif %}
+
+<!-- Progress update via OOB swap -->
+<span id="gen-progress" hx-swap-oob="innerHTML">{{ completed }} of {{ total }}</span>
+<div id="gen-bar" hx-swap-oob="outerHTML">
+  <div class="cook-progress__fill" id="gen-bar" style="width: {% widthratio completed total 100 %}%;"></div>
+</div>
+
+{% if not done %}
+<div hx-get="{% url 'generate_next' %}" hx-trigger="load delay:1s" hx-target="#recipe-list" hx-swap="beforeend"></div>
+{% endif %}

@@ -119,6 +119,17 @@
     </template>
   </div>
 
+  <!-- Generate Recipes -->
+  <div style="padding: var(--space-lg); background: var(--bg-card); border-radius: var(--radius-md); margin-bottom: var(--space-xl);">
+    <div class="section-header">
+      <h2 class="section-title" style="margin-bottom: var(--space-md);">Generate Recipes</h2>
+    </div>
+    <p class="text-muted text-sm mb-md">Use AI to generate a batch of recipes based on your taste preferences.</p>
+    <a href="{% url 'generate_preferences' %}" class="btn btn-primary btn-full">
+      <i class="bi bi-stars"></i> Generate More Recipes
+    </a>
+  </div>
+
   <!-- Meal Templates -->
   <div style="padding: var(--space-lg); background: var(--bg-card); border-radius: var(--radius-md); margin-bottom: var(--space-xl);">
     <div class="section-header">

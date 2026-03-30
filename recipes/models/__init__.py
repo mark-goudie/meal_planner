@@ -17,6 +17,7 @@ from .meal_plan import (
     MealPlan,
     MealPlannerPreferences,
 )
+from .push import PushSubscription
 from .recipe import (
     INGREDIENT_CATEGORY_CHOICES,
     SOURCE_CHOICES,
@@ -27,7 +28,6 @@ from .recipe import (
     RecipeIngredient,
     Tag,
 )
-from .push import PushSubscription
 from .shopping import ShoppingListItem
 from .template import MealPlanTemplate, MealPlanTemplateEntry
 

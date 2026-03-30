@@ -64,9 +64,7 @@ class Migration(migrations.Migration):
                 ("meal_type", models.CharField(default="dinner", max_length=10)),
                 (
                     "recipe",
-                    models.ForeignKey(
-                        on_delete=django.db.models.deletion.CASCADE, to="recipes.recipe"
-                    ),
+                    models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to="recipes.recipe"),
                 ),
                 (
                     "template",

@@ -1,0 +1,138 @@
+{% extends "base.html" %}
+
+{% block title %}Generate Recipes - Meal Planner{% endblock %}
+
+{% block nav_recipes %}active{% endblock %}
+
+{% block content %}
+<div class="screen">
+  <header class="page-header">
+    <div class="page-header__text">
+      <h1 class="page-header__title">Stock Your Cookbook</h1>
+      <p class="page-header__subtitle">Choose your preferences and we'll generate recipes tailored to your taste.</p>
+    </div>
+  </header>
+
+  <form method="post" x-data="{
+    cuisines: [],
+    proteins: [],
+    dietary: [],
+    styles: [],
+    avoid: [],
+    count: 10,
+    toggle(arr, item) {
+      const idx = arr.indexOf(item);
+      if (idx > -1) { arr.splice(idx, 1); } else { arr.push(item); }
+    }
+  }">
+    {% csrf_token %}
+
+    <!-- Cuisines -->
+    <div style="margin-bottom: var(--space-xl);">
+      <h3 style="font-size: var(--text-sm); font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: var(--space-sm);">Cuisines</h3>
+      <div class="filter-row" style="flex-wrap: wrap;">
+        {% for item in cuisines %}
+        <label class="filter-chip"
+               :class="{ 'active': cuisines.includes('{{ item }}') }"
+               @click="toggle(cuisines, '{{ item }}')"
+               style="cursor: pointer;">
+          <input type="checkbox" name="cuisines" value="{{ item }}" style="display: none;"
+                 :checked="cuisines.includes('{{ item }}')">
+          {{ item }}
+        </label>
+        {% endfor %}
+      </div>
+    </div>
+
+    <!-- Proteins -->
+    <div style="margin-bottom: var(--space-xl);">
+      <h3 style="font-size: var(--text-sm); font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: var(--space-sm);">Proteins</h3>
+      <div class="filter-row" style="flex-wrap: wrap;">
+        {% for item in proteins %}
+        <label class="filter-chip"
+               :class="{ 'active': proteins.includes('{{ item }}') }"
+               @click="toggle(proteins, '{{ item }}')"
+               style="cursor: pointer;">
+          <input type="checkbox" name="proteins" value="{{ item }}" style="display: none;"
+                 :checked="proteins.includes('{{ item }}')">
+          {{ item }}
+        </label>
+        {% endfor %}
+      </div>
+    </div>
+
+    <!-- Dietary -->
+    <div style="margin-bottom: var(--space-xl);">
+      <h3 style="font-size: var(--text-sm); font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: var(--space-sm);">Dietary</h3>
+      <div class="filter-row" style="flex-wrap: wrap;">
+        {% for item in dietary %}
+        <label class="filter-chip"
+               :class="{ 'active': dietary.includes('{{ item }}') }"
+               @click="toggle(dietary, '{{ item }}')"
+               style="cursor: pointer;">
+          <input type="checkbox" name="dietary" value="{{ item }}" style="display: none;"
+                 :checked="dietary.includes('{{ item }}')">
+          {{ item }}
+        </label>
+        {% endfor %}
+      </div>
+    </div>
+
+    <!-- Cooking Style -->
+    <div style="margin-bottom: var(--space-xl);">
+      <h3 style="font-size: var(--text-sm); font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: var(--space-sm);">Cooking Style</h3>
+      <div class="filter-row" style="flex-wrap: wrap;">
+        {% for item in styles %}
+        <label class="filter-chip"
+               :class="{ 'active': styles.includes('{{ item }}') }"
+               @click="toggle(styles, '{{ item }}')"
+               style="cursor: pointer;">
+          <input type="checkbox" name="styles" value="{{ item }}" style="display: none;"
+                 :checked="styles.includes('{{ item }}')">
+          {{ item }}
+        </label>
+        {% endfor %}
+      </div>
+    </div>
+
+    <!-- Avoid -->
+    <div style="margin-bottom: var(--space-xl);">
+      <h3 style="font-size: var(--text-sm); font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: var(--space-sm);">Avoid</h3>
+      <div class="filter-row" style="flex-wrap: wrap;">
+        {% for item in avoid %}
+        <label class="filter-chip"
+               :class="{ 'active': avoid.includes('{{ item }}') }"
+               :style="avoid.includes('{{ item }}') ? 'background: rgba(255,107,107,0.1); color: #ff6b6b; border-color: rgba(255,107,107,0.3); cursor: pointer;' : 'cursor: pointer;'"
+               @click="toggle(avoid, '{{ item }}')">
+          <input type="checkbox" name="avoid" value="{{ item }}" style="display: none;"
+                 :checked="avoid.includes('{{ item }}')">
+          {{ item }}
+        </label>
+        {% endfor %}
+      </div>
+    </div>
+
+    <!-- Count -->
+    <div style="margin-bottom: var(--space-xl);">
+      <h3 style="font-size: var(--text-sm); font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: var(--space-sm);">How many recipes?</h3>
+      <div class="filter-row" style="flex-wrap: wrap;">
+        {% for c in counts %}
+        <label class="filter-chip"
+               :class="{ 'active': count == {{ c }} }"
+               @click="count = {{ c }}"
+               style="cursor: pointer;">
+          <input type="radio" name="count" value="{{ c }}" style="display: none;"
+                 :checked="count == {{ c }}">
+          {{ c }}
+        </label>
+        {% endfor %}
+      </div>
+    </div>
+
+    <!-- Submit -->
+    <button type="submit" class="btn btn-primary btn-full btn-lg">
+      <i class="bi bi-stars"></i> Generate <span x-text="count"></span> Recipes
+    </button>
+  </form>
+</div>
+{% endblock %}

@@ -177,6 +177,7 @@ class SendDinnerRemindersTest(TestCase):
     @patch("recipes.management.commands.send_dinner_reminders.webpush")
     def test_sends_reminder_for_matching_user(self, mock_webpush, mock_tz):
         from datetime import datetime
+
         from django.utils import timezone as real_tz
 
         now = real_tz.make_aware(datetime(2026, 3, 29, 16, 0, 0))
@@ -200,8 +201,9 @@ class SendDinnerRemindersTest(TestCase):
             auth="auth",
         )
 
-        from django.core.management import call_command
         from io import StringIO
+
+        from django.core.management import call_command
 
         out = StringIO()
         call_command("send_dinner_reminders", stdout=out)
@@ -218,6 +220,7 @@ class SendDinnerRemindersTest(TestCase):
     @patch("recipes.management.commands.send_dinner_reminders.webpush")
     def test_skips_user_without_dinner(self, mock_webpush, mock_tz):
         from datetime import datetime
+
         from django.utils import timezone as real_tz
 
         now = real_tz.make_aware(datetime(2026, 3, 29, 16, 0, 0))
@@ -234,8 +237,9 @@ class SendDinnerRemindersTest(TestCase):
             auth="auth",
         )
 
-        from django.core.management import call_command
         from io import StringIO
+
+        from django.core.management import call_command
 
         out = StringIO()
         call_command("send_dinner_reminders", stdout=out)
@@ -246,6 +250,7 @@ class SendDinnerRemindersTest(TestCase):
     @patch("recipes.management.commands.send_dinner_reminders.webpush")
     def test_removes_expired_subscription(self, mock_webpush, mock_tz):
         from datetime import datetime
+
         from django.utils import timezone as real_tz
         from pywebpush import WebPushException
 
@@ -275,8 +280,9 @@ class SendDinnerRemindersTest(TestCase):
         mock_response.status_code = 410
         mock_webpush.side_effect = WebPushException("Gone", response=mock_response)
 
-        from django.core.management import call_command
         from io import StringIO
+
+        from django.core.management import call_command
 
         out = StringIO()
         call_command("send_dinner_reminders", stdout=out)
@@ -286,8 +292,9 @@ class SendDinnerRemindersTest(TestCase):
 
     @override_settings(VAPID_PRIVATE_KEY="", VAPID_PUBLIC_KEY="")
     def test_skips_when_no_vapid_keys(self):
-        from django.core.management import call_command
         from io import StringIO
+
+        from django.core.management import call_command
 
         out = StringIO()
         call_command("send_dinner_reminders", stdout=out)

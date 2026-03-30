@@ -1,0 +1,10 @@
+<span id="gen-progress" hx-swap-oob="innerHTML">Done!</span>
+<div id="gen-bar" hx-swap-oob="outerHTML">
+  <div class="cook-progress__fill" id="gen-bar" style="width: 100%;"></div>
+</div>
+<div style="text-align: center; padding: var(--space-xl) 0;">
+  <div style="font-size: 36px; margin-bottom: var(--space-md);">&#127881;</div>
+  <h3 style="color: var(--text-main);">{{ total }} recipes added!</h3>
+  <p class="text-muted text-sm mb-lg">Your cookbook is stocked and ready to go.</p>
+  <a href="{% url 'recipe_list' %}" class="btn btn-primary btn-lg">View Your Recipes</a>
+</div>

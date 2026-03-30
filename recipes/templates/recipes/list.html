@@ -5,6 +5,20 @@
 {% block nav_recipes %}active{% endblock %}
 
 {% block content %}
+{% if page_obj.paginator.count == 0 and not query and not selected_tag and not favourites_only %}
+<div x-data="{ show: true }" x-show="show" x-transition
+     style="position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 200; display: flex; align-items: center; justify-content: center; padding: var(--space-lg);">
+  <div style="background: var(--bg-card); border-radius: var(--radius-lg); padding: var(--space-2xl); max-width: 340px; text-align: center;">
+    <div style="font-size: 48px; margin-bottom: var(--space-lg);">&#128214;</div>
+    <h2 style="color: var(--text-main); margin-bottom: var(--space-sm);">Your cookbook is empty!</h2>
+    <p class="text-muted mb-xl">Let's stock it with recipes tailored to your taste.</p>
+    <a href="{% url 'generate_preferences' %}" class="btn btn-primary btn-full btn-lg mb-md">
+      <i class="bi bi-stars"></i> Get Started
+    </a>
+    <button class="btn btn-ghost btn-full" @click="show = false">I'll add my own</button>
+  </div>
+</div>
+{% endif %}
 <div class="screen" x-data="{
   activeTag: '{{ selected_tag|default:"" }}',
   favs: {{ favourites_only|yesno:"true,false" }},

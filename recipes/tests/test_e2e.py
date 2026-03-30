@@ -567,9 +567,7 @@ class MealPlanTemplateE2ETest(PlaywrightTestCase):
 
     def setUp(self):
         super().setUp()
-        self.recipe = Recipe.objects.create(
-            user=self.user, title="Template Pasta", steps="Cook pasta", cook_time=20
-        )
+        self.recipe = Recipe.objects.create(user=self.user, title="Template Pasta", steps="Cook pasta", cook_time=20)
 
     def test_save_template_button_visible(self):
         """Log in, go to /week/, verify 'Save Template' button exists."""
