@@ -7,18 +7,20 @@
     "background_color": "#1a1a2e",
     "theme_color": "#1a1a2e",
     "orientation": "portrait",
+    "scope": "/",
+    "categories": ["food", "lifestyle"],
     "icons": [
         {
             "src": "/static/recipes/icons/icon-192.png",
             "sizes": "192x192",
             "type": "image/png",
-            "purpose": "any"
+            "purpose": "any maskable"
         },
         {
             "src": "/static/recipes/icons/icon-512.png",
             "sizes": "512x512",
             "type": "image/png",
-            "purpose": "any"
+            "purpose": "any maskable"
         }
     ]
 }

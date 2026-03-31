@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% block title %}Offline — Meal Planner{% endblock %}
+{% block content %}
+<div class="screen screen--no-nav" style="display: flex; align-items: center; justify-content: center; text-align: center;">
+  <div>
+    <div style="font-size: 48px; margin-bottom: var(--space-lg);"><i class="bi bi-wifi-off"></i></div>
+    <h1 style="margin-bottom: var(--space-sm);">You're Offline</h1>
+    <p class="text-muted mb-xl">Recipes you've viewed recently are available offline. Check your connection and try again.</p>
+    <button onclick="location.reload()" class="btn btn-primary">Try Again</button>
+  </div>
+</div>
+{% endblock %}

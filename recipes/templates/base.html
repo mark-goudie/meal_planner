@@ -18,6 +18,29 @@
     <link rel="icon" type="image/x-icon" href="{% static 'recipes/icons/favicon.ico' %}">
     <link rel="icon" type="image/png" sizes="32x32" href="{% static 'recipes/icons/icon-32.png' %}">
     <link rel="apple-touch-icon" href="{% static 'recipes/icons/icon-180.png' %}">
+    <!-- Apple splash screens -->
+    <link rel="apple-touch-startup-image"
+          media="screen and (device-width: 430px) and (device-height: 932px) and (-webkit-device-pixel-ratio: 3)"
+          href="{% static 'recipes/icons/splash-1290x2796.png' %}">
+    <link rel="apple-touch-startup-image"
+          media="screen and (device-width: 393px) and (device-height: 852px) and (-webkit-device-pixel-ratio: 3)"
+          href="{% static 'recipes/icons/splash-1179x2556.png' %}">
+    <link rel="apple-touch-startup-image"
+          media="screen and (device-width: 390px) and (device-height: 844px) and (-webkit-device-pixel-ratio: 3)"
+          href="{% static 'recipes/icons/splash-1170x2532.png' %}">
+    <link rel="apple-touch-startup-image"
+          media="screen and (device-width: 375px) and (device-height: 812px) and (-webkit-device-pixel-ratio: 3)"
+          href="{% static 'recipes/icons/splash-1125x2436.png' %}">
+    <link rel="apple-touch-startup-image"
+          media="screen and (device-width: 414px) and (device-height: 896px) and (-webkit-device-pixel-ratio: 3)"
+          href="{% static 'recipes/icons/splash-1242x2688.png' %}">
+    <link rel="apple-touch-startup-image"
+          media="screen and (device-width: 414px) and (device-height: 736px) and (-webkit-device-pixel-ratio: 3)"
+          href="{% static 'recipes/icons/splash-1242x2208.png' %}">
+    <!-- Prevent phone number detection -->
+    <meta name="format-detection" content="telephone=no">
+    <!-- Smooth overscroll -->
+    <style>html { overscroll-behavior: none; }</style>
     {% block extra_css %}{% endblock %}
 </head>
 <body>

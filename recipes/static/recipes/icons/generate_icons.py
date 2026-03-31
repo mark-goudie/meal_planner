@@ -116,6 +116,64 @@ def create_icon(size):
     return img
 
 
+def create_splash(width, height):
+    """Create a splash screen image with centered icon on dark background."""
+    bg_color = (26, 26, 46)  # #1a1a2e
+    img = Image.new("RGBA", (width, height), bg_color)
+
+    # Create icon at ~20% of screen width
+    icon_size = int(width * 0.20)
+    icon = create_icon(icon_size)
+
+    # Center the icon (slightly above vertical center)
+    x = (width - icon_size) // 2
+    y = (height - icon_size) // 2 - int(height * 0.05)
+
+    img.paste(icon, (x, y), icon)
+
+    # Try to add text below the icon
+    text_color = (230, 230, 230)  # --text-main
+    muted_color = (136, 136, 136)  # --text-muted
+    title_size = int(width * 0.06)
+    subtitle_size = int(width * 0.035)
+
+    try:
+        title_font = ImageFont.truetype("Inter", title_size)
+    except (OSError, IOError):
+        try:
+            title_font = ImageFont.truetype("/System/Library/Fonts/Helvetica.ttc", title_size)
+        except (OSError, IOError):
+            title_font = ImageFont.load_default()
+
+    try:
+        subtitle_font = ImageFont.truetype("Inter", subtitle_size)
+    except (OSError, IOError):
+        try:
+            subtitle_font = ImageFont.truetype("/System/Library/Fonts/Helvetica.ttc", subtitle_size)
+        except (OSError, IOError):
+            subtitle_font = ImageFont.load_default()
+
+    draw = ImageDraw.Draw(img)
+
+    # Title: "Meal Planner"
+    title = "Meal Planner"
+    title_bbox = draw.textbbox((0, 0), title, font=title_font)
+    title_w = title_bbox[2] - title_bbox[0]
+    title_x = (width - title_w) // 2
+    title_y = y + icon_size + int(height * 0.04)
+    draw.text((title_x, title_y), title, fill=text_color, font=title_font)
+
+    # Subtitle: "Your living cookbook"
+    subtitle = "Your living cookbook"
+    subtitle_bbox = draw.textbbox((0, 0), subtitle, font=subtitle_font)
+    subtitle_w = subtitle_bbox[2] - subtitle_bbox[0]
+    subtitle_x = (width - subtitle_w) // 2
+    subtitle_y = title_y + int(title_size * 1.6)
+    draw.text((subtitle_x, subtitle_y), subtitle, fill=muted_color, font=subtitle_font)
+
+    return img
+
+
 def main():
     sizes = {
         "icon-16.png": 16,
@@ -134,6 +192,22 @@ def main():
         else:
             icon.save(filepath, format="PNG")
         print(f"  Created {filename} ({size}x{size})")
+
+    # Generate splash screen images for Apple devices
+    splash_sizes = {
+        "splash-1290x2796.png": (1290, 2796),  # iPhone 15 Pro Max, 14 Pro Max
+        "splash-1179x2556.png": (1179, 2556),  # iPhone 15 Pro, 14 Pro
+        "splash-1170x2532.png": (1170, 2532),  # iPhone 14, 13, 12
+        "splash-1125x2436.png": (1125, 2436),  # iPhone X, XS, 11 Pro
+        "splash-1242x2688.png": (1242, 2688),  # iPhone XS Max, 11 Pro Max
+        "splash-1242x2208.png": (1242, 2208),  # iPhone 8 Plus, 7 Plus
+    }
+
+    for filename, (w, h) in splash_sizes.items():
+        splash = create_splash(w, h)
+        filepath = os.path.join(OUTPUT_DIR, filename)
+        splash.save(filepath, format="PNG")
+        print(f"  Created {filename} ({w}x{h})")
 
     print("Done!")
 

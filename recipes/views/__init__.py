@@ -1,4 +1,4 @@
-from .auth import register_view
+from .auth import offline_view, register_view
 from .cook import cook_done, cook_step, cook_view
 from .generate import generate_next, generate_preferences, generate_progress
 from .legacy import (
@@ -49,6 +49,7 @@ from .week import (
 
 __all__ = [
     # Auth
+    "offline_view",
     "register_view",
     # Push notifications
     "push_subscribe",

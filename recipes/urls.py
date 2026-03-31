@@ -5,6 +5,7 @@ from .views import (
     ai_generate_recipe,
     ai_generate_recipe_api,
     apply_template,
+    offline_view,
     cook_done,
     cook_step,
     cook_view,
@@ -48,6 +49,8 @@ from .views import (
 )
 
 urlpatterns = [
+    # --- Offline fallback ---
+    path("offline/", offline_view, name="offline"),
     # --- Redesign: This Week (home) ---
     path("", week_view, name="home"),
     path("week/", week_view, name="week"),

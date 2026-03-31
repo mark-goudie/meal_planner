@@ -5,6 +5,11 @@ from ..forms import CustomUserCreationForm
 from ..models.household import Household, HouseholdMembership
 
 
+def offline_view(request):
+    """Offline fallback page — no login required so it works when cached."""
+    return render(request, "offline.html")
+
+
 def register_view(request):
     """New-style registration view that redirects to week view."""
     if request.method == "POST":

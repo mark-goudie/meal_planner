@@ -69,6 +69,22 @@
   padding: 0;
 }
 
+/* Remove tap highlight on iOS */
+* {
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Prevent text selection on interactive elements (feels more native) */
+.btn, .nav-tab, .filter-chip, .day-card, .recipe-card, .shop-item {
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+/* Smooth momentum scrolling */
+.screen {
+  -webkit-overflow-scrolling: touch;
+}
+
 html {
   scroll-behavior: smooth;
   -webkit-text-size-adjust: 100%;
