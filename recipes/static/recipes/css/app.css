@@ -17,8 +17,8 @@
   --bg-surface: #1e1e36;
   --text-main: #e6e6e6;
   --text-muted: #888;
-  --text-dim: #666;
-  --border: #2a2a4a;
+  --text-dim: #808080;
+  --border: #3a3a5e;
   --danger: #ff6b6b;
   --success: #7cb9a8;
 
@@ -312,7 +312,7 @@ small {
 }
 
 .day-card--empty {
-  border-left-color: #555;
+  border-left-color: var(--text-dim);
   border-left-style: dashed;
   opacity: 0.75;
 }
@@ -460,7 +460,7 @@ small {
   width: 60px;
   height: 60px;
   border-radius: var(--radius-md);
-  background: var(--border);
+  background: var(--bg-card-hover);
   flex-shrink: 0;
   display: flex;
   align-items: center;
@@ -868,7 +868,7 @@ select.form-input {
   content: '';
   flex: 1;
   height: 1px;
-  background: var(--border);
+  background: var(--text-dim);
 }
 
 .auth-divider span {
@@ -978,7 +978,7 @@ select.form-input {
   align-items: center;
   gap: var(--space-md);
   padding: var(--space-md) 0;
-  border-bottom: 1px solid rgba(42, 42, 74, 0.5);
+  border-bottom: 1px solid var(--border);
   transition: opacity var(--transition);
   cursor: pointer;
   min-height: 48px;
@@ -1402,35 +1402,7 @@ select.form-input {
 }
 
 /* ============================================================
-   18b. PAGE HEADERS
-   ============================================================ */
-.page-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: var(--space-xl);
-}
-
-.page-header__text {
-  flex: 1;
-}
-
-.page-header__title {
-  font-size: var(--text-2xl);
-  font-weight: 800;
-  color: var(--text-main);
-  line-height: 1.2;
-  margin: 0;
-}
-
-.page-header__subtitle {
-  font-size: var(--text-sm);
-  color: var(--text-muted);
-  margin-top: var(--space-xs);
-}
-
-/* ============================================================
-   18c. DAY LIST & WEEK ACTIONS
+   18b. DAY LIST & WEEK ACTIONS
    ============================================================ */
 .day-list {
   display: flex;
@@ -1786,7 +1758,7 @@ body.light-mode {
   --bg-card-hover: #f5f5ff;
   --text-main: #1a1a2e;
   --text-muted: #555570;
-  --text-dim: #888;
+  --text-dim: #999;
   --border: #e0e0f0;
   --primary: #5a9e8e;
   --primary-hover: #4a8a7a;
@@ -1931,6 +1903,10 @@ body.light-mode .cook-step-number {
   .week-header__nav {
     min-height: 48px;
     min-width: 48px;
+  }
+
+  .btn-sm {
+    min-height: 40px;
   }
 
   /* Remove tap highlight */
