@@ -40,6 +40,7 @@ from .week import (
     save_template,
     week_accept_suggestion,
     week_assign,
+    week_remove,
     week_skip_suggestion,
     week_slot,
     week_suggest,

@@ -263,6 +263,29 @@ def week_skip_suggestion(request, date_str):
 
 
 @login_required
+def week_remove(request, date_str, meal_type):
+    """HTMX POST: remove a meal from the planner (does not delete the recipe)."""
+    household = get_household(request.user)
+    slot_date = date.fromisoformat(date_str)
+    MealPlan.objects.filter(household=household, date=slot_date, meal_type=meal_type).delete()
+
+    # Load comments for this day
+    comments = DayComment.objects.filter(household=household, date=slot_date).select_related("user")
+    my_comment = next((c.text for c in comments if c.user == request.user), "")
+
+    day = {
+        "date": slot_date,
+        "day_name": slot_date.strftime("%a"),
+        "day_num": slot_date.day,
+        "is_today": slot_date == timezone.localdate(),
+        "meal": None,
+        "comments": list(comments),
+        "my_comment": my_comment,
+    }
+    return render(request, "week/partials/meal_card.html", {"day": day})
+
+
+@login_required
 def day_comment(request, date_str):
     """HTMX: add or update a day comment."""
     household = get_household(request.user)

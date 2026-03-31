@@ -58,11 +58,29 @@
         </div>
       {% endif %}
 
-      {% if day.is_today %}
-        <div class="day-card__actions">
-          <a href="{% url 'cook' day.meal.recipe.pk %}" class="btn btn-accent btn-sm">Start Cooking &rarr;</a>
+      <div class="day-card__actions">
+        {% if day.is_today %}
+          <a href="{% url 'cook' day.meal.recipe.pk %}" class="btn btn-accent btn-sm flex-1">Start Cooking &rarr;</a>
+        {% endif %}
+        <div class="flex gap-xs" style="{% if day.is_today %}margin-left: auto;{% endif %}">
+          <button class="btn btn-ghost btn-sm"
+                  hx-get="{% url 'week_assign' day.date|date:'Y-m-d' 'dinner' %}"
+                  hx-target="#day-{{ day.date|date:'Y-m-d' }}"
+                  hx-swap="afterend"
+                  title="Swap meal"
+                  style="color: var(--text-muted); padding: 4px 8px;">
+            <i class="bi bi-arrow-left-right"></i>
+          </button>
+          <button class="btn btn-ghost btn-sm"
+                  hx-post="{% url 'week_remove' day.date|date:'Y-m-d' 'dinner' %}"
+                  hx-target="#day-{{ day.date|date:'Y-m-d' }}"
+                  hx-swap="outerHTML"
+                  title="Remove meal"
+                  style="color: var(--text-muted); padding: 4px 8px;">
+            <i class="bi bi-x-circle"></i>
+          </button>
         </div>
-      {% endif %}
+      </div>
 
     {% else %}
       <div class="day-card__empty"
