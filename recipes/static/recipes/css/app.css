@@ -398,8 +398,11 @@ small {
 
 .day-card__actions {
   display: flex;
+  align-items: center;
   gap: var(--space-sm);
   margin-top: var(--space-md);
+  padding-top: var(--space-sm);
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 /* Brighten sub-text on cards with background images/gradients */
@@ -2063,13 +2066,13 @@ body.light-mode .cook-step-number {
 .day-card__comments {
   margin-bottom: var(--space-sm);
   padding-bottom: var(--space-sm);
-  border-bottom: 1px solid var(--border);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .day-card__add-comment {
   margin-top: var(--space-sm);
   padding-top: var(--space-sm);
-  border-top: 1px solid var(--border);
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 [x-cloak] {
