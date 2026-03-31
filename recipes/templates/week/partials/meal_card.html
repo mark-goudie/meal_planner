@@ -68,15 +68,16 @@
                   hx-target="#day-{{ day.date|date:'Y-m-d' }}"
                   hx-swap="afterend"
                   title="Swap meal"
-                  style="color: var(--text-muted); padding: 4px 8px;">
+                  style="color: var(--primary); padding: 4px 8px; font-size: var(--text-base);">
             <i class="bi bi-arrow-left-right"></i>
           </button>
           <button class="btn btn-ghost btn-sm"
                   hx-post="{% url 'week_remove' day.date|date:'Y-m-d' 'dinner' %}"
                   hx-target="#day-{{ day.date|date:'Y-m-d' }}"
                   hx-swap="outerHTML"
+                  hx-confirm="Remove this meal from the planner?"
                   title="Remove meal"
-                  style="color: var(--text-muted); padding: 4px 8px;">
+                  style="color: var(--danger); padding: 4px 8px; font-size: var(--text-base);">
             <i class="bi bi-x-circle"></i>
           </button>
         </div>
