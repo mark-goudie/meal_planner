@@ -30,7 +30,7 @@
 
     <!-- Cuisines -->
     <div style="margin-bottom: var(--space-xl);">
-      <h3 style="font-size: var(--text-sm); font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: var(--space-sm);">Cuisines</h3>
+      <div class="section-header"><h2 class="section-title">Cuisines</h2></div>
       <div style="display: flex; flex-wrap: wrap; gap: 6px;">
         {% for item in cuisines %}
         <div class="filter-chip"
@@ -48,7 +48,7 @@
 
     <!-- Proteins -->
     <div style="margin-bottom: var(--space-xl);">
-      <h3 style="font-size: var(--text-sm); font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: var(--space-sm);">Proteins</h3>
+      <div class="section-header"><h2 class="section-title">Proteins</h2></div>
       <div style="display: flex; flex-wrap: wrap; gap: 6px;">
         {% for item in proteins %}
         <div class="filter-chip"
@@ -66,7 +66,7 @@
 
     <!-- Dietary -->
     <div style="margin-bottom: var(--space-xl);">
-      <h3 style="font-size: var(--text-sm); font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: var(--space-sm);">Dietary</h3>
+      <div class="section-header"><h2 class="section-title">Dietary</h2></div>
       <div style="display: flex; flex-wrap: wrap; gap: 6px;">
         {% for item in dietary %}
         <div class="filter-chip"
@@ -84,7 +84,7 @@
 
     <!-- Cooking Style -->
     <div style="margin-bottom: var(--space-xl);">
-      <h3 style="font-size: var(--text-sm); font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: var(--space-sm);">Cooking Style</h3>
+      <div class="section-header"><h2 class="section-title">Cooking Style</h2></div>
       <div style="display: flex; flex-wrap: wrap; gap: 6px;">
         {% for item in styles %}
         <div class="filter-chip"
@@ -102,7 +102,7 @@
 
     <!-- Avoid -->
     <div style="margin-bottom: var(--space-xl);">
-      <h3 style="font-size: var(--text-sm); font-weight: 700; color: var(--danger); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: var(--space-sm);">Avoid</h3>
+      <div class="section-header"><h2 class="section-title" style="color: var(--danger);">Avoid</h2></div>
       <div style="display: flex; flex-wrap: wrap; gap: 6px;">
         {% for item in avoid %}
         <div class="filter-chip"
@@ -121,7 +121,7 @@
 
     <!-- Count -->
     <div style="margin-bottom: var(--space-xl);">
-      <h3 style="font-size: var(--text-sm); font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: var(--space-sm);">How many recipes?</h3>
+      <div class="section-header"><h2 class="section-title">How many recipes?</h2></div>
       <div style="display: flex; gap: 8px;">
         {% for c in counts %}
         <div class="filter-chip"

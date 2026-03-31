@@ -165,7 +165,7 @@ class UrlsTest(TestCase):
 
     def test_url_accessibility_without_login(self):
         """Test which URLs are accessible without login"""
-        public_urls = ["register", "privacy", "terms", "disclaimer", "getting_started"]
+        public_urls = ["register", "privacy", "terms", "disclaimer"]
 
         for url_name in public_urls:
             url = reverse(url_name)

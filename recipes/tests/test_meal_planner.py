@@ -182,12 +182,13 @@ class MealPlannerViewsTest(TestCase):
         )
 
     def test_meal_planner_preferences_view_get(self):
-        """Test GET request to preferences view"""
+        """Test GET request to preferences view redirects to /settings/"""
         response = self.client.get(reverse("meal_planner_preferences"))
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.url, "/settings/")
 
     def test_meal_planner_preferences_view_post(self):
-        """Test POST request to update preferences"""
+        """Test POST request to preferences view redirects to /settings/"""
         data = {
             "max_weeknight_time": 30,
             "max_weekend_time": 60,
@@ -195,29 +196,22 @@ class MealPlannerViewsTest(TestCase):
             "reminder_time": "16:00",
         }
         response = self.client.post(reverse("meal_planner_preferences"), data)
-        self.assertEqual(response.status_code, 302)  # Redirect after success
-
-        # Check preferences were saved
-        prefs = MealPlannerPreferences.objects.get(user=self.user)
-        self.assertEqual(prefs.max_weeknight_time, 30)
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.url, "/settings/")
 
     def test_smart_meal_planner_view_get(self):
-        """Test GET request to smart planner view"""
+        """Test GET request to smart planner view redirects to /week/"""
         response = self.client.get(reverse("smart_meal_planner"))
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.url, "/week/")
 
     def test_smart_meal_planner_view_post(self):
-        """Test POST request to generate plan"""
+        """Test POST request to smart planner redirects to /week/"""
         tomorrow = date.today() + timedelta(days=1)
         data = {"week_start": tomorrow.strftime("%Y-%m-%d"), "meals_to_plan": ["dinner"]}
         response = self.client.post(reverse("smart_meal_planner"), data)
-
-        # Should redirect to meal_plan_week
         self.assertEqual(response.status_code, 302)
-
-        # Should have created meal plans
-        plans = MealPlan.objects.filter(household=self.household)
-        self.assertGreater(plans.count(), 0)
+        self.assertEqual(response.url, "/week/")
 
     def test_unauthenticated_access(self):
         """Test that unauthenticated users are redirected"""

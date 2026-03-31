@@ -1,5 +1,5 @@
 from datetime import date
-from unittest.mock import Mock, patch
+from unittest.mock import patch
 
 from django.contrib.auth.models import User
 from django.test import Client, TestCase
@@ -75,9 +75,10 @@ class PublicViewTests(BaseViewTest):
         self.assertEqual(response.status_code, 200)
 
     def test_getting_started_view(self):
-        """Test getting started view"""
+        """Test getting started view redirects to /week/"""
         response = self.client.get(reverse("getting_started"))
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.url, "/week/")
 
 
 class RecipeViewTests(BaseViewTest):
@@ -213,44 +214,18 @@ class AIViewTests(BaseViewTest):
     """Test AI-related views"""
 
     def test_ai_generate_recipe_get(self):
-        """Test GET request to AI generate recipe view"""
+        """Test GET request to AI generate recipe view redirects to /recipes/new/"""
         self.client.login(username="testuser", password="testpass123")
         response = self.client.get(reverse("ai_generate_recipe"))
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.url, "/recipes/new/")
 
-    @patch("recipes.services.ai_service.anthropic.Anthropic")
-    @patch("recipes.services.ai_service.settings")
-    def test_ai_generate_recipe_post_with_prompt(self, mock_settings, mock_anthropic):
-        """Test POST request to AI generate recipe with prompt"""
-        # Mock settings to provide API key
-        mock_settings.ANTHROPIC_API_KEY = "test-key"
-        # Mock Anthropic response
-        mock_client = Mock()
-        mock_anthropic.return_value = mock_client
-        mock_text_block = Mock()
-        mock_text_block.type = "text"
-        mock_text_block.text = "Title: AI Recipe\nIngredients: AI ingredients\nSteps: AI steps"
-        mock_response = Mock()
-        mock_response.content = [mock_text_block]
-        mock_client.messages.create.return_value = mock_response
-
+    def test_ai_generate_recipe_post_redirects(self):
+        """Test POST request to AI generate recipe redirects to /recipes/new/"""
         self.client.login(username="testuser", password="testpass123")
         response = self.client.post(reverse("ai_generate_recipe"), {"prompt": "chicken and rice"})
-        self.assertEqual(response.status_code, 200)
-        self.assertContains(response, "AI Recipe")
-
-    def test_ai_generate_recipe_use_recipe(self):
-        """Test using generated AI recipe"""
-        self.client.login(username="testuser", password="testpass123")
-        response = self.client.post(
-            reverse("ai_generate_recipe"),
-            {
-                "use_recipe": True,
-                "generated_recipe": "Title: Test AI Recipe\nIngredients: Test ingredients\nSteps: Test steps",
-            },
-        )
         self.assertEqual(response.status_code, 302)
-        self.assertRedirects(response, reverse("recipe_create_from_ai"))
+        self.assertEqual(response.url, "/recipes/new/")
 
     def test_recipe_create_from_ai_get(self):
         """Test GET request to create recipe from AI data"""
@@ -282,75 +257,59 @@ class MealPlanViewTests(BaseViewTest):
     """Test meal plan related views"""
 
     def test_meal_plan_list_view(self):
-        """Test meal plan list view"""
-        MealPlan.objects.create(
-            household=self.household,
-            added_by=self.user,
-            date=date.today(),
-            meal_type="breakfast",
-            recipe=self.recipe,
-        )
+        """Test meal plan list view redirects to /week/"""
         self.client.login(username="testuser", password="testpass123")
         response = self.client.get(reverse("meal_plan_list"))
-        self.assertEqual(response.status_code, 200)
-        self.assertContains(response, "Test Recipe")
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.url, "/week/")
 
     def test_meal_plan_create_get(self):
-        """Test GET request to meal plan create view"""
+        """Test GET request to meal plan create view redirects to /week/"""
         self.client.login(username="testuser", password="testpass123")
         response = self.client.get(reverse("meal_plan_create"))
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.url, "/week/")
 
     def test_meal_plan_create_post(self):
-        """Test POST request to meal plan create view"""
+        """Test POST request to meal plan create view redirects to /week/"""
         self.client.login(username="testuser", password="testpass123")
         response = self.client.post(
             reverse("meal_plan_create"), {"date": date.today(), "meal_type": "breakfast", "recipe": self.recipe.id}
         )
         self.assertEqual(response.status_code, 302)
-        self.assertTrue(MealPlan.objects.filter(recipe=self.recipe).exists())
+        self.assertEqual(response.url, "/week/")
 
     def test_meal_plan_week_view(self):
-        """Test weekly meal plan view"""
-        MealPlan.objects.create(
-            household=self.household,
-            added_by=self.user,
-            date=date.today(),
-            meal_type="breakfast",
-            recipe=self.recipe,
-        )
+        """Test weekly meal plan view redirects to /week/"""
         self.client.login(username="testuser", password="testpass123")
         response = self.client.get(reverse("meal_plan_week"))
-        self.assertEqual(response.status_code, 200)
-        self.assertContains(response, "Test Recipe")
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.url, "/week/")
 
     def test_meal_plan_week_with_offset(self):
-        """Test weekly meal plan view with week offset"""
+        """Test weekly meal plan view with week offset redirects to /week/"""
         self.client.login(username="testuser", password="testpass123")
         response = self.client.get(reverse("meal_plan_week"), {"week": 1})
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.url, "/week/")
 
 
 class ShoppingListViewTests(BaseViewTest):
     """Test shopping list related views"""
 
     def test_generate_shopping_list_get(self):
-        """Test GET request to generate shopping list"""
+        """Test GET request to generate shopping list redirects to /shop/"""
         self.client.login(username="testuser", password="testpass123")
         response = self.client.get(reverse("generate_shopping_list"))
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.url, "/shop/")
 
     def test_generate_shopping_list_post(self):
-        """Test POST request to generate shopping list"""
-        recipe2 = Recipe.objects.create(
-            user=self.user, title="Recipe 2", ingredients_text="Ingredient A\nIngredient B", steps="Steps"
-        )
-
+        """Test POST request to generate shopping list redirects to /shop/"""
         self.client.login(username="testuser", password="testpass123")
-        response = self.client.post(reverse("generate_shopping_list"), {"recipe_ids": [self.recipe.id, recipe2.id]})
-        self.assertEqual(response.status_code, 200)
-        self.assertContains(response, "Ingredient A")
-        self.assertContains(response, "Ingredient B")
+        response = self.client.post(reverse("generate_shopping_list"), {"recipe_ids": [self.recipe.id]})
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.url, "/shop/")
 
 
 class AuthenticationTests(BaseViewTest):

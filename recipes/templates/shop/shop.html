@@ -9,11 +9,11 @@
   {% csrf_token %}
 
   <!-- Header -->
-  <header class="mb-xl">
-    <h1 style="font-size: var(--text-xl); font-weight: 800;">Shopping List</h1>
-    <p class="text-muted text-sm mt-xs">
-      {{ meal_count }} upcoming meal{{ meal_count|pluralize }}
-    </p>
+  <header class="page-header">
+    <div class="page-header__text">
+      <h1 class="page-header__title">Shopping List</h1>
+      <p class="page-header__subtitle">{{ meal_count }} upcoming meal{{ meal_count|pluralize }}</p>
+    </div>
   </header>
 
   <!-- Meal Selector + Regenerate -->

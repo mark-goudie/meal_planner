@@ -1,85 +1,12 @@
 {% extends "base.html" %}
-
-{% block title %}Rate Limit Exceeded{% endblock %}
-
+{% block title %}Too Many Requests{% endblock %}
 {% block content %}
-<div class="container mt-5">
-    <div class="row justify-content-center">
-        <div class="col-md-8">
-            <div class="card border-warning">
-                <div class="card-header bg-warning text-dark">
-                    <h4 class="mb-0">
-                        <i class="bi bi-clock-history"></i>
-                        Rate Limit Exceeded
-                    </h4>
-                </div>
-                <div class="card-body">
-                    <div class="alert alert-warning" role="alert">
-                        <h5>Too Many Requests</h5>
-                        <p>
-                            You have exceeded the allowed number of requests. This security measure helps protect our service from abuse.
-                        </p>
-                    </div>
-                    
-                    <div class="alert alert-info" role="alert">
-                        <h6>Please wait before trying again:</h6>
-                        <div class="d-flex align-items-center">
-                            <div class="spinner-border text-primary me-3" role="status" aria-hidden="true"></div>
-                            <div>
-                                <strong>Retry after: {{ retry_after|default:30 }} seconds</strong>
-                                <br>
-                                <small class="text-muted">The page will automatically refresh when you can try again.</small>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="alert alert-light" role="alert">
-                        <h6>Why does this happen?</h6>
-                        <ul class="mb-0">
-                            <li>Too many login attempts in a short period</li>
-                            <li>Rapid form submissions</li>
-                            <li>Automated requests or bot activity</li>
-                        </ul>
-                    </div>
-                    
-                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
-                        <button type="button" class="btn btn-secondary" onclick="history.back()">
-                            <i class="bi bi-arrow-left"></i> Go Back
-                        </button>
-                        <a href="{% url 'recipe_list' %}" class="btn btn-primary">
-                            <i class="bi bi-house"></i> Home
-                        </a>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
+<div class="screen screen--no-nav" style="display: flex; align-items: center; justify-content: center; text-align: center;">
+  <div>
+    <div style="font-size: 48px; margin-bottom: var(--space-lg);"><i class="bi bi-hourglass-split"></i></div>
+    <h1 style="margin-bottom: var(--space-sm);">Slow Down</h1>
+    <p class="text-muted mb-xl">You've made too many requests. Please wait a moment and try again.</p>
+    <a href="/" class="btn btn-primary">Go Home</a>
+  </div>
 </div>
-
-<script>
-// Auto-refresh after retry period
-setTimeout(function() {
-    window.location.reload();
-}, {{ retry_after|default:30000 }});
-
-// Countdown timer
-let timeLeft = {{ retry_after|default:30 }};
-const timerElement = document.querySelector('strong');
-const countdown = setInterval(function() {
-    timeLeft--;
-    if (timeLeft <= 0) {
-        clearInterval(countdown);
-        timerElement.textContent = 'You can try again now';
-        document.querySelector('.spinner-border').style.display = 'none';
-    } else {
-        timerElement.textContent = `Retry after: ${timeLeft} seconds`;
-    }
-}, 1000);
-</script>
-
-<style>
-.bi {
-    margin-right: 0.5rem;
-}
-</style>
 {% endblock %}

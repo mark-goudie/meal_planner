@@ -8,14 +8,16 @@
 <div class="screen">
   {% csrf_token %}
 
-  <header class="mb-xl">
-    <h1 style="font-size: var(--text-xl); font-weight: 800;">Settings</h1>
+  <header class="page-header">
+    <div class="page-header__text">
+      <h1 class="page-header__title">Settings</h1>
+    </div>
   </header>
 
   <!-- Account info -->
-  <div style="padding: var(--space-lg); background: var(--bg-card); border-radius: var(--radius-md); margin-bottom: var(--space-xl);">
+  <div class="card" style="margin-bottom: var(--space-xl);">
     <div class="section-header">
-      <h2 class="section-title" style="margin-bottom: var(--space-sm);">Account</h2>
+      <h2 class="section-title">Account</h2>
     </div>
     <div class="flex justify-between items-center" style="padding: var(--space-sm) 0; border-bottom: 1px solid var(--border);">
       <span class="text-muted text-sm">Username</span>
@@ -29,19 +31,18 @@
 
   {% if household %}
   <!-- Household info -->
-  <div style="padding: var(--space-lg); background: var(--bg-card); border-radius: var(--radius-md); margin-bottom: var(--space-xl);">
+  <div class="card" style="margin-bottom: var(--space-xl);">
     <div class="section-header">
-      <h2 class="section-title" style="margin-bottom: var(--space-md);">Household</h2>
+      <h2 class="section-title">Household</h2>
     </div>
 
     <form method="post" action="{% url 'settings' %}" style="margin-bottom: var(--space-md);">
       {% csrf_token %}
       <input type="hidden" name="action" value="update_household">
       <div style="margin-bottom: var(--space-sm);">
-        <label style="display: block; font-size: var(--text-sm); font-weight: 700; color: var(--text-muted); margin-bottom: var(--space-xs);">Household Name</label>
+        <label class="form-label">Household Name</label>
         <div style="display: flex; gap: var(--space-sm);">
-          <input type="text" name="household_name" value="{{ household.name }}"
-                 style="flex: 1; background: var(--bg-surface); border: 1px solid var(--border); border-radius: var(--radius-md); padding: var(--space-sm) var(--space-md); color: var(--text-main); font-size: var(--text-base);">
+          <input type="text" name="household_name" value="{{ household.name }}" class="form-input" style="flex: 1;">
           <button type="submit" class="btn btn-primary" style="white-space: nowrap;">Save</button>
         </div>
       </div>
@@ -72,7 +73,7 @@
   {% endif %}
 
   <!-- Notifications -->
-  <div style="padding: var(--space-lg); background: var(--bg-card); border-radius: var(--radius-md); margin-bottom: var(--space-xl);"
+  <div class="card" style="margin-bottom: var(--space-xl);"
        x-data="{ subscribed: false, loading: false, supported: true, error: '' }"
        x-init="
          if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
@@ -82,7 +83,7 @@
          }
        ">
     <div class="section-header">
-      <h2 class="section-title" style="margin-bottom: var(--space-md);">Notifications</h2>
+      <h2 class="section-title">Notifications</h2>
     </div>
 
     <div class="flex justify-between items-center" style="padding: var(--space-sm) 0;">
@@ -120,9 +121,9 @@
   </div>
 
   <!-- Generate Recipes -->
-  <div style="padding: var(--space-lg); background: var(--bg-card); border-radius: var(--radius-md); margin-bottom: var(--space-xl);">
+  <div class="card" style="margin-bottom: var(--space-xl);">
     <div class="section-header">
-      <h2 class="section-title" style="margin-bottom: var(--space-md);">Generate Recipes</h2>
+      <h2 class="section-title">Generate Recipes</h2>
     </div>
     <p class="text-muted text-sm mb-md">Use AI to generate a batch of recipes based on your taste preferences.</p>
     <a href="{% url 'generate_preferences' %}" class="btn btn-primary btn-full">
@@ -131,9 +132,9 @@
   </div>
 
   <!-- Meal Templates -->
-  <div style="padding: var(--space-lg); background: var(--bg-card); border-radius: var(--radius-md); margin-bottom: var(--space-xl);">
+  <div class="card" style="margin-bottom: var(--space-xl);">
     <div class="section-header">
-      <h2 class="section-title" style="margin-bottom: var(--space-md);">Meal Templates</h2>
+      <h2 class="section-title">Meal Templates</h2>
     </div>
     {% if templates %}
       {% for template in templates %}
@@ -161,15 +162,14 @@
   <form method="post" action="{% url 'settings' %}">
     {% csrf_token %}
 
-    <div style="padding: var(--space-lg); background: var(--bg-card); border-radius: var(--radius-md); margin-bottom: var(--space-xl);">
+    <div class="card" style="margin-bottom: var(--space-xl);">
       <div class="section-header">
-        <h2 class="section-title" style="margin-bottom: var(--space-md);">Meal Planner Preferences</h2>
+        <h2 class="section-title">Meal Planner Preferences</h2>
       </div>
 
       {% for field in form %}
       <div style="margin-bottom: var(--space-lg);">
-        <label for="{{ field.id_for_label }}"
-               style="display: block; font-size: var(--text-sm); font-weight: 700; color: var(--text-muted); margin-bottom: var(--space-xs);">
+        <label for="{{ field.id_for_label }}" class="form-label">
           {{ field.label }}
         </label>
         {% if field.name == "reminder_time" %}
@@ -177,7 +177,7 @@
                id="{{ field.id_for_label }}"
                name="{{ field.html_name }}"
                value="{{ field.value|default:'16:00' }}"
-               style="width: 100%; background: var(--bg-surface); border: 1px solid var(--border); border-radius: var(--radius-md); padding: var(--space-sm) var(--space-md); color: var(--text-main); font-size: var(--text-base);">
+               class="form-input">
         {% else %}
         <input type="number"
                id="{{ field.id_for_label }}"
@@ -186,7 +186,7 @@
                min="{{ field.field.widget.attrs.min }}"
                max="{{ field.field.widget.attrs.max }}"
                step="{{ field.field.widget.attrs.step }}"
-               style="width: 100%; background: var(--bg-surface); border: 1px solid var(--border); border-radius: var(--radius-md); padding: var(--space-sm) var(--space-md); color: var(--text-main); font-size: var(--text-base);">
+               class="form-input">
         {% endif %}
         {% if field.help_text %}
         <p style="font-size: var(--text-xs); color: var(--text-dim); margin-top: var(--space-xs);">{{ field.help_text }}</p>

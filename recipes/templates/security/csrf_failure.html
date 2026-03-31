@@ -1,59 +1,12 @@
 {% extends "base.html" %}
-
-{% block title %}Security Error - CSRF Verification Failed{% endblock %}
-
+{% block title %}Session Expired{% endblock %}
 {% block content %}
-<div class="container mt-5">
-    <div class="row justify-content-center">
-        <div class="col-md-8">
-            <div class="card border-danger">
-                <div class="card-header bg-danger text-white">
-                    <h4 class="mb-0">
-                        <i class="bi bi-shield-exclamation"></i>
-                        Security Verification Failed
-                    </h4>
-                </div>
-                <div class="card-body">
-                    <div class="alert alert-danger" role="alert">
-                        <h5>CSRF Verification Failed</h5>
-                        <p>
-                            Your request was blocked for security reasons. This typically happens when:
-                        </p>
-                        <ul>
-                            <li>Your session has expired</li>
-                            <li>You've been inactive for too long</li>
-                            <li>Your browser has cookies disabled</li>
-                            <li>You're accessing the site through an untrusted connection</li>
-                        </ul>
-                    </div>
-                    
-                    <div class="alert alert-info" role="alert">
-                        <h6>What you can do:</h6>
-                        <ol>
-                            <li>Go back to the previous page and try again</li>
-                            <li>Clear your browser cookies and cache</li>
-                            <li>Make sure you're using a secure HTTPS connection</li>
-                            <li>If the problem persists, contact support</li>
-                        </ol>
-                    </div>
-                    
-                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
-                        <button type="button" class="btn btn-secondary" onclick="history.back()">
-                            <i class="bi bi-arrow-left"></i> Go Back
-                        </button>
-                        <a href="{% url 'recipe_list' %}" class="btn btn-primary">
-                            <i class="bi bi-house"></i> Home
-                        </a>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
+<div class="screen screen--no-nav" style="display: flex; align-items: center; justify-content: center; text-align: center;">
+  <div>
+    <div style="font-size: 48px; margin-bottom: var(--space-lg);"><i class="bi bi-shield-exclamation"></i></div>
+    <h1 style="margin-bottom: var(--space-sm);">Session Expired</h1>
+    <p class="text-muted mb-xl">Your session has expired for security. Please go back and try again.</p>
+    <a href="/" class="btn btn-primary">Go Home</a>
+  </div>
 </div>
-
-<style>
-.bi {
-    margin-right: 0.5rem;
-}
-</style>
 {% endblock %}

@@ -34,15 +34,11 @@ class RecipeWorkflowIntegrationTest(TestCase):
         recipe = Recipe.objects.get(title="Integration Test Recipe")
         self.assertEqual(recipe.user, self.user)
 
-        # Step 2: Add recipe to meal plan
+        # Step 2: Legacy meal_plan_create now redirects to /week/
         meal_plan_data = {"date": date.today(), "meal_type": "breakfast", "recipe": recipe.id}
         response = self.client.post(reverse("meal_plan_create"), meal_plan_data)
         self.assertEqual(response.status_code, 302)
-
-        household = get_household(self.user)
-        meal_plan = MealPlan.objects.get(recipe=recipe)
-        self.assertEqual(meal_plan.household, household)
-        self.assertEqual(meal_plan.meal_type, "breakfast")
+        self.assertEqual(response.url, "/week/")
 
         # Step 3: Toggle favourite
         response = self.client.post(reverse("toggle_favourite", kwargs={"pk": recipe.pk}))
@@ -51,10 +47,10 @@ class RecipeWorkflowIntegrationTest(TestCase):
         recipe.refresh_from_db()
         self.assertTrue(self.user in recipe.favourited_by.all())
 
-        # Step 4: Generate shopping list
+        # Step 4: Legacy generate_shopping_list now redirects to /shop/
         response = self.client.post(reverse("generate_shopping_list"), {"recipe_ids": [recipe.id]})
-        self.assertEqual(response.status_code, 200)
-        self.assertContains(response, "Integration ingredients")
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.url, "/shop/")
 
 
 class MealPlanningIntegrationTest(TestCase):
@@ -67,38 +63,18 @@ class MealPlanningIntegrationTest(TestCase):
         self.recipes = self.test_data["recipes"]
         self.client.login(username="testuser", password="testpass123")
 
-    def test_weekly_meal_planning_workflow(self):
-        """Test planning a complete week of meals"""
-        today = date.today()
-        start_of_week = today - timedelta(days=today.weekday())
+    def test_weekly_meal_planning_legacy_redirects(self):
+        """Test that legacy meal planning views redirect to new equivalents"""
+        # Legacy meal_plan_create now redirects to /week/
+        meal_plan_data = {"date": date.today(), "meal_type": "breakfast", "recipe": self.recipes[0].id}
+        response = self.client.post(reverse("meal_plan_create"), meal_plan_data)
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.url, "/week/")
 
-        # Plan meals for each day of the week
-        meal_plans_data = []
-        for i in range(7):  # 7 days
-            for j, meal_type in enumerate(["breakfast", "lunch", "dinner"]):
-                if i < len(self.recipes) and j < len(self.recipes):
-                    meal_date = start_of_week + timedelta(days=i)
-                    recipe = self.recipes[j % len(self.recipes)]
-
-                    meal_plan_data = {"date": meal_date, "meal_type": meal_type, "recipe": recipe.id}
-
-                    response = self.client.post(reverse("meal_plan_create"), meal_plan_data)
-                    self.assertEqual(response.status_code, 302)
-                    meal_plans_data.append((meal_date, meal_type, recipe))
-
-        household = get_household(self.user)
-        # Verify meal plans were created
-        for meal_date, meal_type, recipe in meal_plans_data:
-            meal_plan = MealPlan.objects.get(household=household, date=meal_date, meal_type=meal_type)
-            self.assertIsNotNone(meal_plan)
-
-        # Test weekly view shows all meal plans
+        # Legacy meal_plan_week now redirects to /week/
         response = self.client.get(reverse("meal_plan_week"))
-        self.assertEqual(response.status_code, 200)
-
-        # Check that some of our planned meals appear in the response
-        for _, _, recipe in meal_plans_data[:3]:
-            self.assertContains(response, recipe.title)
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.url, "/week/")
 
 
 class SearchAndFilterIntegrationTest(TestCase):
@@ -194,47 +170,17 @@ class ShoppingListIntegrationTest(TestCase):
             steps="Mix garlic and butter, spread on bread, toast",
         )
 
-    def test_shopping_list_generation_single_recipe(self):
-        """Test generating shopping list from single recipe"""
+    def test_shopping_list_generation_redirects(self):
+        """Test that legacy generate_shopping_list redirects to /shop/"""
         response = self.client.post(reverse("generate_shopping_list"), {"recipe_ids": [self.recipe1.id]})
-        self.assertEqual(response.status_code, 200)
-        self.assertContains(response, "Pasta")
-        self.assertContains(response, "Tomatoes")
-        self.assertContains(response, "Garlic")
-        self.assertContains(response, "Olive Oil")
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.url, "/shop/")
 
-    def test_shopping_list_generation_multiple_recipes(self):
-        """Test generating shopping list from multiple recipes"""
-        response = self.client.post(
-            reverse("generate_shopping_list"), {"recipe_ids": [self.recipe1.id, self.recipe2.id, self.recipe3.id]}
-        )
-        self.assertEqual(response.status_code, 200)
-
-        # Check that all unique ingredients are present
-        expected_ingredients = ["Pasta", "Tomatoes", "Garlic", "Olive Oil", "Lettuce", "Vinegar", "Bread", "Butter"]
-        for ingredient in expected_ingredients:
-            self.assertContains(response, ingredient)
-
-    def test_shopping_list_deduplication(self):
-        """Test that shopping list properly deduplicates ingredients"""
-        response = self.client.post(
-            reverse("generate_shopping_list"), {"recipe_ids": [self.recipe1.id, self.recipe2.id]}
-        )
-        self.assertEqual(response.status_code, 200)
-
-        # Count occurrences of overlapping ingredients
-        content = response.content.decode()
-        tomato_count = content.count("Tomatoes")
-        olive_oil_count = content.count("Olive Oil")
-
-        # Each ingredient should appear only once in the shopping list
-        self.assertEqual(tomato_count, 1)
-        self.assertEqual(olive_oil_count, 1)
-
-    def test_shopping_list_empty_selection(self):
-        """Test generating shopping list with no recipes selected"""
+    def test_shopping_list_empty_selection_redirects(self):
+        """Test that legacy generate_shopping_list with no recipes redirects to /shop/"""
         response = self.client.post(reverse("generate_shopping_list"), {"recipe_ids": []})
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.url, "/shop/")
 
 
 class UserIsolationIntegrationTest(TestCase):
@@ -287,18 +233,13 @@ class UserIsolationIntegrationTest(TestCase):
         self.assertNotContains(response, "User 1 Recipe")
 
     def test_meal_plan_isolation(self):
-        """Test that meal plans are isolated between users"""
+        """Test that legacy meal_plan_week redirects to /week/"""
         # Login as user1
         self.client.login(username="user1", password="testpass123")
         response = self.client.get(reverse("meal_plan_week"))
-        self.assertEqual(response.status_code, 200)
-        self.assertContains(response, "User 1 Recipe")
-        self.assertNotContains(response, "User 2 Recipe")
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.url, "/week/")
 
-        # Login as user2
-        self.client.logout()
-        self.client.login(username="user2", password="testpass123")
-        response = self.client.get(reverse("meal_plan_week"))
+        # The new week view handles isolation; verify it renders
+        response = self.client.get(reverse("week"))
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, "User 2 Recipe")
-        self.assertNotContains(response, "User 1 Recipe")

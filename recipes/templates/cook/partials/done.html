@@ -10,7 +10,7 @@
 
     <!-- Star rating -->
     <div style="margin-bottom: var(--space-lg);">
-      <label style="display: block; font-size: var(--text-sm); font-weight: 700; color: var(--text-muted); margin-bottom: var(--space-sm);">Rating</label>
+      <label class="form-label">Rating</label>
       <div style="display: flex; gap: var(--space-sm); justify-content: center; font-size: 32px;"
            x-data="{ rating: 0 }">
         {% for i in "12345" %}
@@ -26,10 +26,9 @@
 
     <!-- Note -->
     <div style="margin-bottom: var(--space-lg);">
-      <label for="note" style="display: block; font-size: var(--text-sm); font-weight: 700; color: var(--text-muted); margin-bottom: var(--space-sm);">Notes</label>
+      <label for="note" class="form-label">Notes</label>
       <textarea id="note" name="note" rows="3" class="form-input"
-                placeholder="Any thoughts on this cook?"
-                style="width: 100%; background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-md); padding: var(--space-md); color: var(--text-main); font-size: var(--text-base); font-family: var(--font); resize: vertical;"></textarea>
+                placeholder="Any thoughts on this cook?"></textarea>
     </div>
 
     <!-- Would make again -->
