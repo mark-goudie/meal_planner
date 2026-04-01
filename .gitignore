@@ -62,3 +62,9 @@ frontend/dist/
 
 # Elastic Beanstalk logs
 .elasticbeanstalk/logs/
+
+# Native app
+native/node_modules/
+native/ios/App/Pods/
+native/.build/
+
