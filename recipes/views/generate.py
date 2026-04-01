@@ -4,8 +4,9 @@ from decimal import Decimal
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import redirect, render
 
-from ..models import Ingredient, Recipe, RecipeIngredient, Tag
+from ..models import UNIT_CHOICES, Ingredient, Recipe, RecipeIngredient, Tag
 from ..services.ai_service import AIService, AIServiceException
+from ..utils.units import normalize_unit
 
 logger = logging.getLogger(__name__)
 
@@ -162,8 +163,11 @@ def generate_next(request):
 
         # Save structured ingredients
         for i, ing_data in enumerate(data.get("ingredients", [])):
+            name = ing_data.get("name", "").lower().strip()
+            if not name:
+                continue  # Skip empty ingredient names
             ingredient, _ = Ingredient.objects.get_or_create(
-                name=ing_data.get("name", "").lower().strip(),
+                name=name,
                 defaults={"category": ing_data.get("category", "other")},
             )
             qty = ing_data.get("quantity")
@@ -171,7 +175,7 @@ def generate_next(request):
                 recipe=recipe,
                 ingredient=ingredient,
                 quantity=Decimal(str(qty)) if qty else None,
-                unit=ing_data.get("unit", ""),
+                unit=normalize_unit(ing_data.get("unit", "")),
                 preparation_notes=ing_data.get("preparation_notes", ""),
                 order=i,
             )

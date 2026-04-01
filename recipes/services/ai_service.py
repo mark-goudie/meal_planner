@@ -210,8 +210,12 @@ class AIService:
                 '"servings": 4, "difficulty": "easy|medium|hard", '
                 '"ingredients": [{"name": "chicken breast", "quantity": 500, "unit": "g", '
                 '"category": "meat", "preparation_notes": "diced"}], '
-                '"steps": ["Step 1 text", "Step 2 text"]}'
-                " Return ONLY valid JSON, no markdown or extra text."
+                '"steps": ["Step 1 text", "Step 2 text"]} '
+                '"unit" must be one of: "tsp", "tbsp", "cup", "ml", "l", "g", "kg", '
+                '"oz", "lb", "piece", "slice", "pinch", "handful", "bunch", "can", '
+                '"clove", or "" for items without a specific unit. '
+                '"name" must never be empty. '
+                "Return ONLY valid JSON, no markdown or extra text."
             ),
             messages=[
                 {"role": "user", "content": f"Create a family-friendly recipe using: {clean_prompt}"},
@@ -286,6 +290,10 @@ class AIService:
                     '"ingredients": [{"name": "chicken breast", "quantity": 500, "unit": "g", '
                     '"category": "meat", "preparation_notes": "diced"}], '
                     '"steps": ["Step 1 text", "Step 2 text"]} '
+                    '"unit" must be one of: "tsp", "tbsp", "cup", "ml", "l", "g", "kg", '
+                    '"oz", "lb", "piece", "slice", "pinch", "handful", "bunch", "can", '
+                    '"clove", or "" for items without a specific unit. '
+                    '"name" must never be empty. '
                     "Return ONLY valid JSON. If no recipe is found, return "
                     '{"error": "No recipe found on this page."}'
                 ),

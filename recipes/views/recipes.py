@@ -21,6 +21,7 @@ from ..models import (
 )
 from ..models.household import get_household
 from ..services.ai_service import AIService, AIServiceException
+from ..utils.units import normalize_unit
 
 logger = logging.getLogger(__name__)
 
@@ -201,7 +202,7 @@ def _process_structured_ingredients(request, recipe):
             recipe=recipe,
             ingredient=ingredient,
             quantity=quantity,
-            unit=request.POST.get(f"ing_unit_{i}", ""),
+            unit=normalize_unit(request.POST.get(f"ing_unit_{i}", "")),
             preparation_notes=request.POST.get(f"ing_notes_{i}", "").strip(),
             order=i,
         )
