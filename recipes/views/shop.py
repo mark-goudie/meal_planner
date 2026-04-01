@@ -32,11 +32,15 @@ def _get_week_range():
 
 
 def _get_shop_date_range():
-    """Get the date range for the meal selector: today through end of next week."""
+    """Get the date range for the meal selector: this Monday through end of next week.
+
+    Includes the full current week (not just today forward) so users can
+    shop for meals earlier in the week they haven't cooked yet.
+    """
     today = timezone.localdate()
     monday = today - timedelta(days=today.weekday())
     next_sunday = monday + timedelta(days=13)  # end of next week
-    return today, next_sunday
+    return monday, next_sunday
 
 
 def _generate_shopping_items(household, user, meal_ids=None):
@@ -101,9 +105,14 @@ def shop_view(request):
     monday, sunday = _get_week_range()
     today = timezone.localdate()
 
-    # Auto-generate if no generated items exist yet
+    # Auto-generate if no generated items exist, or regenerate if stale
     has_generated = ShoppingListItem.objects.filter(household=household, is_generated=True).exists()
-    if not has_generated:
+    shop_start, shop_end = _get_shop_date_range()
+    has_upcoming_meals = MealPlan.objects.filter(
+        household=household, date__range=[today, shop_end]
+    ).exists()
+
+    if not has_generated and has_upcoming_meals:
         _generate_shopping_items(household, request.user)
 
     # Get all items
@@ -150,11 +159,12 @@ def shop_view(request):
 
     meal_selector = []
     for meal in upcoming_meals:
-        # If we have stored selection, use it. Otherwise default all to checked.
+        is_past = meal.date < today
+        # If we have stored selection, use it. Otherwise default: today+future checked, past unchecked.
         if selected_meal_ids is not None:
             is_selected = meal.pk in selected_meal_ids
         else:
-            is_selected = True
+            is_selected = not is_past
         meal_selector.append(
             {
                 "id": meal.pk,
@@ -164,6 +174,7 @@ def shop_view(request):
                 "month": meal.date.strftime("%b"),
                 "recipe_title": meal.recipe.title,
                 "is_today": meal.date == today,
+                "is_past": is_past,
                 "is_next_week": meal.date >= next_monday,
                 "is_selected": is_selected,
             }
