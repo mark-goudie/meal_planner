@@ -16,7 +16,15 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name="DietaryRestriction",
             fields=[
-                ("id", models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name="ID")),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
                 ("name", models.CharField(max_length=50, unique=True)),
                 ("description", models.TextField(blank=True)),
             ],
@@ -24,7 +32,15 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name="GeneratedMealPlan",
             fields=[
-                ("id", models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name="ID")),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
                 ("week_start", models.DateField()),
                 ("week_end", models.DateField()),
                 ("generated_at", models.DateTimeField(auto_now_add=True)),
@@ -33,13 +49,19 @@ class Migration(migrations.Migration):
                 (
                     "overall_happiness_score",
                     models.DecimalField(
-                        decimal_places=1, help_text="Predicted family satisfaction (0-100)", max_digits=4, null=True
+                        decimal_places=1,
+                        help_text="Predicted family satisfaction (0-100)",
+                        max_digits=4,
+                        null=True,
                     ),
                 ),
                 (
                     "variety_score",
                     models.DecimalField(
-                        decimal_places=1, help_text="Recipe variety score (0-100)", max_digits=4, null=True
+                        decimal_places=1,
+                        help_text="Recipe variety score (0-100)",
+                        max_digits=4,
+                        null=True,
                     ),
                 ),
                 (
@@ -58,12 +80,25 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name="GeneratedMealPlanEntry",
             fields=[
-                ("id", models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name="ID")),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
                 ("date", models.DateField()),
                 (
                     "meal_type",
                     models.CharField(
-                        choices=[("breakfast", "Breakfast"), ("lunch", "Lunch"), ("dinner", "Dinner")], max_length=10
+                        choices=[
+                            ("breakfast", "Breakfast"),
+                            ("lunch", "Lunch"),
+                            ("dinner", "Dinner"),
+                        ],
+                        max_length=10,
                     ),
                 ),
                 (
@@ -94,7 +129,12 @@ class Migration(migrations.Migration):
                         to="recipes.generatedmealplan",
                     ),
                 ),
-                ("recipe", models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to="recipes.recipe")),
+                (
+                    "recipe",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE, to="recipes.recipe"
+                    ),
+                ),
             ],
             options={
                 "ordering": ["date", "meal_type"],
@@ -103,32 +143,67 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name="MealPlannerPreferences",
             fields=[
-                ("id", models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name="ID")),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
                 (
                     "max_weeknight_time",
-                    models.IntegerField(default=45, help_text="Maximum cooking time for weeknights (minutes)"),
+                    models.IntegerField(
+                        default=45,
+                        help_text="Maximum cooking time for weeknights (minutes)",
+                    ),
                 ),
                 (
                     "max_weekend_time",
-                    models.IntegerField(default=90, help_text="Maximum cooking time for weekends (minutes)"),
+                    models.IntegerField(
+                        default=90,
+                        help_text="Maximum cooking time for weekends (minutes)",
+                    ),
                 ),
                 (
                     "avoid_repeat_days",
-                    models.IntegerField(default=14, help_text="Don't repeat recipes within this many days"),
+                    models.IntegerField(
+                        default=14,
+                        help_text="Don't repeat recipes within this many days",
+                    ),
                 ),
-                ("variety_score", models.IntegerField(default=7, help_text="Higher = more variety (1-10)")),
+                (
+                    "variety_score",
+                    models.IntegerField(
+                        default=7, help_text="Higher = more variety (1-10)"
+                    ),
+                ),
                 (
                     "vegetarian_meals_per_week",
-                    models.IntegerField(default=0, help_text="Minimum vegetarian meals per week"),
+                    models.IntegerField(
+                        default=0, help_text="Minimum vegetarian meals per week"
+                    ),
                 ),
-                ("use_leftovers", models.BooleanField(default=True, help_text="Plan for using leftovers")),
+                (
+                    "use_leftovers",
+                    models.BooleanField(
+                        default=True, help_text="Plan for using leftovers"
+                    ),
+                ),
                 (
                     "batch_cooking_friendly",
-                    models.BooleanField(default=False, help_text="Prefer recipes that work well for meal prep"),
+                    models.BooleanField(
+                        default=False,
+                        help_text="Prefer recipes that work well for meal prep",
+                    ),
                 ),
                 ("created_at", models.DateTimeField(auto_now_add=True)),
                 ("updated_at", models.DateTimeField(auto_now=True)),
-                ("dietary_restrictions", models.ManyToManyField(blank=True, to="recipes.dietaryrestriction")),
+                (
+                    "dietary_restrictions",
+                    models.ManyToManyField(blank=True, to="recipes.dietaryrestriction"),
+                ),
                 (
                     "user",
                     models.OneToOneField(
@@ -145,19 +220,38 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name="RecipeCookingHistory",
             fields=[
-                ("id", models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name="ID")),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
                 ("cooked_date", models.DateField()),
                 (
                     "meal_type",
                     models.CharField(
-                        choices=[("breakfast", "Breakfast"), ("lunch", "Lunch"), ("dinner", "Dinner")], max_length=10
+                        choices=[
+                            ("breakfast", "Breakfast"),
+                            ("lunch", "Lunch"),
+                            ("dinner", "Dinner"),
+                        ],
+                        max_length=10,
                     ),
                 ),
                 (
                     "rating",
                     models.IntegerField(
                         blank=True,
-                        choices=[(1, "⭐"), (2, "⭐⭐"), (3, "⭐⭐⭐"), (4, "⭐⭐⭐⭐"), (5, "⭐⭐⭐⭐⭐")],
+                        choices=[
+                            (1, "⭐"),
+                            (2, "⭐⭐"),
+                            (3, "⭐⭐⭐"),
+                            (4, "⭐⭐⭐⭐"),
+                            (5, "⭐⭐⭐⭐⭐"),
+                        ],
                         null=True,
                     ),
                 ),
@@ -166,7 +260,9 @@ class Migration(migrations.Migration):
                 (
                     "recipe",
                     models.ForeignKey(
-                        on_delete=django.db.models.deletion.CASCADE, related_name="cooking_history", to="recipes.recipe"
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="cooking_history",
+                        to="recipes.recipe",
                     ),
                 ),
                 (
@@ -185,7 +281,9 @@ class Migration(migrations.Migration):
         ),
         migrations.AddIndex(
             model_name="generatedmealplan",
-            index=models.Index(fields=["user", "-generated_at"], name="recipes_gen_user_id_db0c1c_idx"),
+            index=models.Index(
+                fields=["user", "-generated_at"], name="recipes_gen_user_id_db0c1c_idx"
+            ),
         ),
         migrations.AlterUniqueTogether(
             name="generatedmealplanentry",
@@ -193,6 +291,8 @@ class Migration(migrations.Migration):
         ),
         migrations.AddIndex(
             model_name="recipecookinghistory",
-            index=models.Index(fields=["user", "-cooked_date"], name="recipes_rec_user_id_a84965_idx"),
+            index=models.Index(
+                fields=["user", "-cooked_date"], name="recipes_rec_user_id_a84965_idx"
+            ),
         ),
     ]

@@ -44,7 +44,9 @@ class RecipeService:
 
         # Apply search filter
         if query:
-            recipes = recipes.filter(Q(title__icontains=query) | Q(ingredients_text__icontains=query))
+            recipes = recipes.filter(
+                Q(title__icontains=query) | Q(ingredients_text__icontains=query)
+            )
 
         # Apply tag filter
         if tag_id:
@@ -56,7 +58,10 @@ class RecipeService:
 
         # Optimize queries
         recipes = (
-            recipes.distinct().select_related("user").prefetch_related("tags", "favourited_by").order_by("-created_at")
+            recipes.distinct()
+            .select_related("user")
+            .prefetch_related("tags", "favourited_by")
+            .order_by("-created_at")
         )
 
         return recipes
@@ -178,4 +183,6 @@ class RecipeService:
                 entry["unit"] = ri.unit
                 entry["recipes"].add(recipe.title)
 
-        return sorted(aggregated.values(), key=lambda x: (x["category"], x["ingredient"].name))
+        return sorted(
+            aggregated.values(), key=lambda x: (x["category"], x["ingredient"].name)
+        )

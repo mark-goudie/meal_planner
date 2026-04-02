@@ -25,7 +25,10 @@ class MealPlanService:
 
     @staticmethod
     def get_meal_plans_for_user(
-        user: User, start_date: Optional[date] = None, end_date: Optional[date] = None, upcoming_only: bool = False
+        user: User,
+        start_date: Optional[date] = None,
+        end_date: Optional[date] = None,
+        upcoming_only: bool = False,
     ) -> QuerySet:
         """
         Get meal plans for a user's household with optional date filtering.
@@ -104,11 +107,15 @@ class MealPlanService:
             - next_week: Next week offset
         """
         today = timezone.localdate()
-        start_of_week = today - timedelta(days=today.weekday()) + timedelta(weeks=week_offset)
+        start_of_week = (
+            today - timedelta(days=today.weekday()) + timedelta(weeks=week_offset)
+        )
         end_of_week = start_of_week + timedelta(days=6)
 
         # Fetch meal plans for the week
-        plans = MealPlanService.get_meal_plans_for_user(user=user, start_date=start_of_week, end_date=end_of_week)
+        plans = MealPlanService.get_meal_plans_for_user(
+            user=user, start_date=start_of_week, end_date=end_of_week
+        )
 
         # Build efficient lookup structure
         plans_by_date: Dict[date, Dict[str, Recipe]] = {}
@@ -163,5 +170,7 @@ class MealPlanService:
         Returns:
             List of Recipe objects
         """
-        plans = MealPlanService.get_meal_plans_for_user(user=user, start_date=start_date, end_date=end_date)
+        plans = MealPlanService.get_meal_plans_for_user(
+            user=user, start_date=start_date, end_date=end_date
+        )
         return [plan.recipe for plan in plans if plan.recipe]

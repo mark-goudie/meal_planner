@@ -15,8 +15,16 @@ class Command(BaseCommand):
         if not User.objects.filter(username=username).exists():
             if password:
                 User.objects.create_superuser(username, email, password)
-                self.stdout.write(self.style.SUCCESS(f"Successfully created superuser: {username}"))
+                self.stdout.write(
+                    self.style.SUCCESS(f"Successfully created superuser: {username}")
+                )
             else:
-                self.stdout.write(self.style.WARNING("DJANGO_SUPERUSER_PASSWORD not set, skipping superuser creation"))
+                self.stdout.write(
+                    self.style.WARNING(
+                        "DJANGO_SUPERUSER_PASSWORD not set, skipping superuser creation"
+                    )
+                )
         else:
-            self.stdout.write(self.style.WARNING(f"Superuser {username} already exists"))
+            self.stdout.write(
+                self.style.WARNING(f"Superuser {username} already exists")
+            )

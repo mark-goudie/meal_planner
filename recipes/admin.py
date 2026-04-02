@@ -59,7 +59,12 @@ class MealPlanAdmin(admin.ModelAdmin):
 
 @admin.register(MealPlannerPreferences)
 class MealPlannerPreferencesAdmin(admin.ModelAdmin):
-    list_display = ("user", "max_weeknight_time", "max_weekend_time", "avoid_repeat_days")
+    list_display = (
+        "user",
+        "max_weeknight_time",
+        "max_weekend_time",
+        "avoid_repeat_days",
+    )
 
 
 @admin.register(CookingNote)

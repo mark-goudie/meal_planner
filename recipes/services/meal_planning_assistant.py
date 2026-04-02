@@ -152,14 +152,20 @@ class MealPlanningAssistantService:
         prefs = MealPlanningAssistantService.get_or_create_preferences(user)
         household = get_household(user)
 
-        available_recipes = list(Recipe.objects.filter(user=user).prefetch_related("tags"))
+        available_recipes = list(
+            Recipe.objects.filter(user=user).prefetch_related("tags")
+        )
 
         if not available_recipes:
             raise ValueError("No recipes available. Please add some recipes first.")
 
-        recently_cooked_ids = MealPlanningAssistantService.get_recently_cooked_recipes(user, prefs.avoid_repeat_days)
+        recently_cooked_ids = MealPlanningAssistantService.get_recently_cooked_recipes(
+            user, prefs.avoid_repeat_days
+        )
 
-        candidate_recipes = [r for r in available_recipes if r.id not in recently_cooked_ids]
+        candidate_recipes = [
+            r for r in available_recipes if r.id not in recently_cooked_ids
+        ]
 
         if not candidate_recipes:
             candidate_recipes = available_recipes
@@ -167,10 +173,14 @@ class MealPlanningAssistantService:
         for day_offset in range(7):
             current_date = week_start + timedelta(days=day_offset)
             is_weekend = current_date.weekday() in MealPlanningAssistantService.WEEKENDS
-            max_time = prefs.max_weekend_time if is_weekend else prefs.max_weeknight_time
+            max_time = (
+                prefs.max_weekend_time if is_weekend else prefs.max_weeknight_time
+            )
 
-            time_appropriate = MealPlanningAssistantService.filter_recipes_by_time_constraint(
-                candidate_recipes, max_time
+            time_appropriate = (
+                MealPlanningAssistantService.filter_recipes_by_time_constraint(
+                    candidate_recipes, max_time
+                )
             )
             if not time_appropriate:
                 time_appropriate = candidate_recipes

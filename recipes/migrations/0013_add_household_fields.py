@@ -17,7 +17,10 @@ class Migration(migrations.Migration):
             model_name="mealplan",
             name="added_by",
             field=models.ForeignKey(
-                null=True, on_delete=django.db.models.deletion.SET_NULL, related_name="+", to=settings.AUTH_USER_MODEL
+                null=True,
+                on_delete=django.db.models.deletion.SET_NULL,
+                related_name="+",
+                to=settings.AUTH_USER_MODEL,
             ),
         ),
         migrations.AddField(
@@ -40,7 +43,10 @@ class Migration(migrations.Migration):
             model_name="shoppinglistitem",
             name="added_by",
             field=models.ForeignKey(
-                null=True, on_delete=django.db.models.deletion.SET_NULL, related_name="+", to=settings.AUTH_USER_MODEL
+                null=True,
+                on_delete=django.db.models.deletion.SET_NULL,
+                related_name="+",
+                to=settings.AUTH_USER_MODEL,
             ),
         ),
         migrations.AddField(

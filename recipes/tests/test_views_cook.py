@@ -15,8 +15,12 @@ class CookViewTest(TestCase):
 
     def setUp(self):
         self.client = Client()
-        self.user = User.objects.create_user(username="testuser", password="testpass123")
-        self.other_user = User.objects.create_user(username="otheruser", password="testpass123")
+        self.user = User.objects.create_user(
+            username="testuser", password="testpass123"
+        )
+        self.other_user = User.objects.create_user(
+            username="otheruser", password="testpass123"
+        )
         self.recipe = Recipe.objects.create(
             user=self.user,
             title="Pasta Carbonara",
@@ -142,7 +146,9 @@ class CookViewWithStructuredStepsTest(TestCase):
 
     def setUp(self):
         self.client = Client()
-        self.user = User.objects.create_user(username="testuser", password="testpass123")
+        self.user = User.objects.create_user(
+            username="testuser", password="testpass123"
+        )
         self.ingredient1 = Ingredient.objects.create(name="pasta", category="pantry")
         self.ingredient2 = Ingredient.objects.create(name="eggs", category="dairy")
 

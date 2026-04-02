@@ -4,7 +4,7 @@ from decimal import Decimal
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import redirect, render
 
-from ..models import UNIT_CHOICES, Ingredient, Recipe, RecipeIngredient, Tag
+from ..models import Ingredient, Recipe, RecipeIngredient, Tag
 from ..services.ai_service import AIService, AIServiceException
 from ..utils.units import normalize_unit
 
@@ -35,7 +35,15 @@ STYLE_OPTIONS = [
     "Comfort food",
     "Healthy / Light",
 ]
-AVOID_OPTIONS = ["Spicy", "Mushrooms", "Olives", "Shellfish", "Offal", "Raw fish", "Nuts"]
+AVOID_OPTIONS = [
+    "Spicy",
+    "Mushrooms",
+    "Olives",
+    "Shellfish",
+    "Offal",
+    "Raw fish",
+    "Nuts",
+]
 COUNT_OPTIONS = [5, 10, 15, 20]
 
 
@@ -121,12 +129,15 @@ def generate_next(request):
     avoid = request.session.get("gen_avoid", [])
 
     # Also get existing recipe titles to avoid duplicates
-    existing_titles = list(Recipe.objects.filter(user=request.user).values_list("title", flat=True))
+    existing_titles = list(
+        Recipe.objects.filter(user=request.user).values_list("title", flat=True)
+    )
     all_titles = existing_titles + titles
 
     prompt_parts = [
         "Generate a unique family-friendly dinner recipe.",
-        "IMPORTANT: Pick ONE cuisine and ONE cooking style from the options below. Do NOT combine all of them into one recipe.",
+        "IMPORTANT: Pick ONE cuisine and ONE cooking style from the options below. "
+        "Do NOT combine all of them into one recipe.",
         f"This is recipe {completed + 1} of {count} — vary the cuisine and style across the batch.",
     ]
     if cuisines:
@@ -134,7 +145,9 @@ def generate_next(request):
     if proteins:
         prompt_parts.append(f"Choose ONE protein from: {', '.join(proteins)}")
     if dietary:
-        prompt_parts.append(f"Dietary requirements (must follow all): {', '.join(dietary)}")
+        prompt_parts.append(
+            f"Dietary requirements (must follow all): {', '.join(dietary)}"
+        )
     if styles:
         prompt_parts.append(f"Choose ONE cooking style from: {', '.join(styles)}")
     if avoid:
@@ -182,7 +195,9 @@ def generate_next(request):
 
         # Auto-tag based on cuisine preferences
         for cuisine in cuisines:
-            tag, _ = Tag.objects.get_or_create(name=cuisine, defaults={"tag_type": "cuisine"})
+            tag, _ = Tag.objects.get_or_create(
+                name=cuisine, defaults={"tag_type": "cuisine"}
+            )
             recipe.tags.add(tag)
 
         # Update session progress

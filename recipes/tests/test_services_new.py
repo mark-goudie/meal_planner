@@ -93,7 +93,9 @@ class GenerateStructuredShoppingListTests(TestCase):
         shopping_list = RecipeService.generate_structured_shopping_list(recipes)
 
         categories = [e["category"] for e in shopping_list]
-        self.assertEqual(categories, sorted(categories), "Items should be sorted by category")
+        self.assertEqual(
+            categories, sorted(categories), "Items should be sorted by category"
+        )
 
     def test_dairy_items_appear_before_pantry(self):
         """Dairy category ('dairy') sorts before 'pantry' alphabetically."""
@@ -102,8 +104,12 @@ class GenerateStructuredShoppingListTests(TestCase):
 
         category_order = [e["category"] for e in shopping_list]
         # dairy < pantry alphabetically
-        first_pantry = next((i for i, c in enumerate(category_order) if c == "pantry"), None)
-        first_dairy = next((i for i, c in enumerate(category_order) if c == "dairy"), None)
+        first_pantry = next(
+            (i for i, c in enumerate(category_order) if c == "pantry"), None
+        )
+        first_dairy = next(
+            (i for i, c in enumerate(category_order) if c == "dairy"), None
+        )
         if first_dairy is not None and first_pantry is not None:
             self.assertLess(first_dairy, first_pantry)
 
@@ -120,7 +126,9 @@ class GenerateStructuredShoppingListTests(TestCase):
         shopping_list = RecipeService.generate_structured_shopping_list(recipes)
 
         egg_entries = [e for e in shopping_list if e["ingredient"].name == "Eggs"]
-        self.assertEqual(len(egg_entries), 2, "Different units should be separate entries")
+        self.assertEqual(
+            len(egg_entries), 2, "Different units should be separate entries"
+        )
 
     def test_empty_recipe_list_returns_empty(self):
         """An empty queryset produces an empty shopping list."""
@@ -141,7 +149,9 @@ class CalculateRecipeHappinessScoreTests(TestCase):
 
     def test_no_notes_returns_neutral_50(self):
         """A recipe with no cooking notes returns a score of 50."""
-        score = MealPlanningAssistantService.calculate_recipe_happiness_score(self.recipe, self.user)
+        score = MealPlanningAssistantService.calculate_recipe_happiness_score(
+            self.recipe, self.user
+        )
         self.assertEqual(score, Decimal("50.0"))
 
     def test_perfect_rating_returns_100(self):
@@ -153,7 +163,9 @@ class CalculateRecipeHappinessScoreTests(TestCase):
             rating=5,
             would_make_again=True,
         )
-        score = MealPlanningAssistantService.calculate_recipe_happiness_score(self.recipe, self.user)
+        score = MealPlanningAssistantService.calculate_recipe_happiness_score(
+            self.recipe, self.user
+        )
         self.assertEqual(score, Decimal("100.0"))
 
     def test_average_rating_converted_correctly(self):
@@ -165,7 +177,9 @@ class CalculateRecipeHappinessScoreTests(TestCase):
             rating=3,
             would_make_again=True,
         )
-        score = MealPlanningAssistantService.calculate_recipe_happiness_score(self.recipe, self.user)
+        score = MealPlanningAssistantService.calculate_recipe_happiness_score(
+            self.recipe, self.user
+        )
         self.assertEqual(score, Decimal("50.0"))
 
     def test_would_make_again_false_penalises_score(self):
@@ -177,7 +191,9 @@ class CalculateRecipeHappinessScoreTests(TestCase):
             rating=5,
             would_make_again=False,
         )
-        score = MealPlanningAssistantService.calculate_recipe_happiness_score(self.recipe, self.user)
+        score = MealPlanningAssistantService.calculate_recipe_happiness_score(
+            self.recipe, self.user
+        )
         # 5-star = 100, minus 20 penalty = 80
         self.assertEqual(score, Decimal("80.0"))
 
@@ -190,7 +206,9 @@ class CalculateRecipeHappinessScoreTests(TestCase):
             rating=1,
             would_make_again=False,
         )
-        score = MealPlanningAssistantService.calculate_recipe_happiness_score(self.recipe, self.user)
+        score = MealPlanningAssistantService.calculate_recipe_happiness_score(
+            self.recipe, self.user
+        )
         self.assertGreaterEqual(score, Decimal("0"))
 
     def test_multiple_notes_average_is_used(self):
@@ -210,7 +228,9 @@ class CalculateRecipeHappinessScoreTests(TestCase):
             would_make_again=True,
         )
         # Average = 4, score = ((4-1)/4)*100 = 75
-        score = MealPlanningAssistantService.calculate_recipe_happiness_score(self.recipe, self.user)
+        score = MealPlanningAssistantService.calculate_recipe_happiness_score(
+            self.recipe, self.user
+        )
         self.assertEqual(score, Decimal("75.0"))
 
     def test_notes_without_rating_excluded_from_average(self):
@@ -222,7 +242,9 @@ class CalculateRecipeHappinessScoreTests(TestCase):
             rating=None,
             would_make_again=True,
         )
-        score = MealPlanningAssistantService.calculate_recipe_happiness_score(self.recipe, self.user)
+        score = MealPlanningAssistantService.calculate_recipe_happiness_score(
+            self.recipe, self.user
+        )
         # No rated notes — should return neutral 50
         self.assertEqual(score, Decimal("50.0"))
 
@@ -232,7 +254,9 @@ class GetRecentlyCookedRecipesTests(TestCase):
 
     def setUp(self):
         self.user = User.objects.create_user(username="recentuser", password="password")
-        self.other_user = User.objects.create_user(username="otheruser", password="password")
+        self.other_user = User.objects.create_user(
+            username="otheruser", password="password"
+        )
         self.recipe1 = Recipe.objects.create(
             user=self.user,
             title="Recent Recipe",
@@ -256,7 +280,9 @@ class GetRecentlyCookedRecipesTests(TestCase):
             user=self.user,
             cooked_date=date.today() - timedelta(days=7),
         )
-        result = MealPlanningAssistantService.get_recently_cooked_recipes(self.user, days=14)
+        result = MealPlanningAssistantService.get_recently_cooked_recipes(
+            self.user, days=14
+        )
         self.assertIn(self.recipe1.id, result)
 
     def test_excludes_recipes_outside_date_range(self):
@@ -266,7 +292,9 @@ class GetRecentlyCookedRecipesTests(TestCase):
             user=self.user,
             cooked_date=date.today() - timedelta(days=20),
         )
-        result = MealPlanningAssistantService.get_recently_cooked_recipes(self.user, days=14)
+        result = MealPlanningAssistantService.get_recently_cooked_recipes(
+            self.user, days=14
+        )
         self.assertNotIn(self.recipe2.id, result)
 
     def test_excludes_other_users_recipes(self):
@@ -276,7 +304,9 @@ class GetRecentlyCookedRecipesTests(TestCase):
             user=self.other_user,
             cooked_date=date.today(),
         )
-        result = MealPlanningAssistantService.get_recently_cooked_recipes(self.user, days=14)
+        result = MealPlanningAssistantService.get_recently_cooked_recipes(
+            self.user, days=14
+        )
         self.assertNotIn(self.recipe3.id, result)
 
     def test_returns_distinct_ids(self):
@@ -291,12 +321,16 @@ class GetRecentlyCookedRecipesTests(TestCase):
             user=self.user,
             cooked_date=date.today() - timedelta(days=7),
         )
-        result = MealPlanningAssistantService.get_recently_cooked_recipes(self.user, days=14)
+        result = MealPlanningAssistantService.get_recently_cooked_recipes(
+            self.user, days=14
+        )
         self.assertEqual(result.count(self.recipe1.id), 1)
 
     def test_empty_when_no_cooking_notes(self):
         """Returns empty list when user has no cooking notes."""
-        result = MealPlanningAssistantService.get_recently_cooked_recipes(self.user, days=14)
+        result = MealPlanningAssistantService.get_recently_cooked_recipes(
+            self.user, days=14
+        )
         self.assertEqual(result, [])
 
     def test_custom_days_parameter(self):
@@ -307,9 +341,13 @@ class GetRecentlyCookedRecipesTests(TestCase):
             cooked_date=date.today() - timedelta(days=5),
         )
         # Within 7 days — should be included
-        result_7 = MealPlanningAssistantService.get_recently_cooked_recipes(self.user, days=7)
+        result_7 = MealPlanningAssistantService.get_recently_cooked_recipes(
+            self.user, days=7
+        )
         self.assertIn(self.recipe1.id, result_7)
 
         # Outside 3 days — should be excluded
-        result_3 = MealPlanningAssistantService.get_recently_cooked_recipes(self.user, days=3)
+        result_3 = MealPlanningAssistantService.get_recently_cooked_recipes(
+            self.user, days=3
+        )
         self.assertNotIn(self.recipe1.id, result_3)

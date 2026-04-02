@@ -116,7 +116,9 @@ class ImportRecipeURLViewTest(TestCase):
 
     def test_import_url_requires_login(self):
         self.client.logout()
-        response = self.client.post(reverse("import_recipe_url"), {"url": "https://example.com"})
+        response = self.client.post(
+            reverse("import_recipe_url"), {"url": "https://example.com"}
+        )
         self.assertEqual(response.status_code, 302)
 
     def test_import_url_requires_post(self):
@@ -137,12 +139,20 @@ class ImportRecipeURLViewTest(TestCase):
             "servings": 2,
             "difficulty": "easy",
             "ingredients": [
-                {"name": "pasta", "quantity": 200, "unit": "g", "category": "pantry", "preparation_notes": ""}
+                {
+                    "name": "pasta",
+                    "quantity": 200,
+                    "unit": "g",
+                    "category": "pantry",
+                    "preparation_notes": "",
+                }
             ],
             "steps": ["Boil water", "Cook pasta"],
         }
 
-        response = self.client.post(reverse("import_recipe_url"), {"url": "https://example.com/recipe"})
+        response = self.client.post(
+            reverse("import_recipe_url"), {"url": "https://example.com/recipe"}
+        )
         self.assertEqual(response.status_code, 200)
         data = response.json()
         self.assertEqual(data["title"], "Pasta")
@@ -154,7 +164,9 @@ class ImportRecipeURLViewTest(TestCase):
         from recipes.services.ai_service import AIServiceException
 
         mock_import.side_effect = AIServiceException("Couldn't access that URL.")
-        response = self.client.post(reverse("import_recipe_url"), {"url": "https://example.com/bad"})
+        response = self.client.post(
+            reverse("import_recipe_url"), {"url": "https://example.com/bad"}
+        )
         self.assertEqual(response.status_code, 400)
         data = response.json()
         self.assertEqual(data["error"], "Couldn't access that URL.")

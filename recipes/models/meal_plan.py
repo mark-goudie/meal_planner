@@ -36,7 +36,10 @@ class MealPlan(models.Model):
     class Meta:
         ordering = ["date", "meal_type"]
         constraints = [
-            UniqueConstraint(fields=["household", "date", "meal_type"], name="unique_household_date_meal"),
+            UniqueConstraint(
+                fields=["household", "date", "meal_type"],
+                name="unique_household_date_meal",
+            ),
         ]
         indexes = [
             models.Index(fields=["household", "date"]),
@@ -51,7 +54,9 @@ class MealPlan(models.Model):
 class MealPlannerPreferences(models.Model):
     """User preferences for the smart meal planner."""
 
-    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="planner_preferences")
+    user = models.OneToOneField(
+        User, on_delete=models.CASCADE, related_name="planner_preferences"
+    )
 
     # Time constraints
     max_weeknight_time = models.IntegerField(
@@ -64,7 +69,9 @@ class MealPlannerPreferences(models.Model):
     )
 
     # Reminder time for push notifications
-    reminder_time = models.TimeField(default=time(16, 0), help_text="Daily dinner reminder time")
+    reminder_time = models.TimeField(
+        default=time(16, 0), help_text="Daily dinner reminder time"
+    )
 
     # Variety preferences
     avoid_repeat_days = models.IntegerField(

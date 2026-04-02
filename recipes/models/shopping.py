@@ -17,7 +17,9 @@ class ShoppingListItem(models.Model):
     name = models.CharField(max_length=200)
     quantity = models.CharField(max_length=50, blank=True)
     category = models.CharField(max_length=20, blank=True)
-    recipe_sources = models.CharField(max_length=500, blank=True, help_text="Comma-separated recipe names")
+    recipe_sources = models.CharField(
+        max_length=500, blank=True, help_text="Comma-separated recipe names"
+    )
     is_generated = models.BooleanField(default=False)
     checked = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)

@@ -16,7 +16,9 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         if not settings.VAPID_PRIVATE_KEY or not settings.VAPID_PUBLIC_KEY:
-            self.stdout.write(self.style.WARNING("VAPID keys not configured. Skipping."))
+            self.stdout.write(
+                self.style.WARNING("VAPID keys not configured. Skipping.")
+            )
             return
 
         now = timezone.localtime()
@@ -24,8 +26,12 @@ class Command(BaseCommand):
         current_time = now.time()
 
         # Find users whose reminder_time is within 5 minutes of now
-        window_start = (datetime.combine(today, current_time) - timedelta(minutes=2)).time()
-        window_end = (datetime.combine(today, current_time) + timedelta(minutes=3)).time()
+        window_start = (
+            datetime.combine(today, current_time) - timedelta(minutes=2)
+        ).time()
+        window_end = (
+            datetime.combine(today, current_time) + timedelta(minutes=3)
+        ).time()
 
         prefs = MealPlannerPreferences.objects.filter(
             reminder_time__gte=window_start,
@@ -41,7 +47,9 @@ class Command(BaseCommand):
 
             # Check for today's dinner
             meal = (
-                MealPlan.objects.filter(household=household, date=today, meal_type="dinner")
+                MealPlan.objects.filter(
+                    household=household, date=today, meal_type="dinner"
+                )
                 .select_related("recipe")
                 .first()
             )
@@ -50,7 +58,9 @@ class Command(BaseCommand):
                 continue
 
             # Build notification payload
-            cook_time = f" ({meal.recipe.cook_time} min)" if meal.recipe.cook_time else ""
+            cook_time = (
+                f" ({meal.recipe.cook_time} min)" if meal.recipe.cook_time else ""
+            )
             payload = json.dumps(
                 {
                     "title": "Tonight's Dinner",
@@ -77,8 +87,12 @@ class Command(BaseCommand):
                     if e.response and e.response.status_code in (404, 410):
                         # Subscription expired, remove it
                         sub.delete()
-                        self.stdout.write(f"Removed expired subscription for {user.username}")
+                        self.stdout.write(
+                            f"Removed expired subscription for {user.username}"
+                        )
                     else:
-                        self.stdout.write(self.style.ERROR(f"Push failed for {user.username}: {e}"))
+                        self.stdout.write(
+                            self.style.ERROR(f"Push failed for {user.username}: {e}")
+                        )
 
         self.stdout.write(self.style.SUCCESS(f"Sent {sent_count} dinner reminders"))

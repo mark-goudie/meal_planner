@@ -8,7 +8,9 @@ from recipes.models.household import Household, HouseholdMembership
 
 class RecipeFormTest(TestCase):
     def setUp(self):
-        self.user = User.objects.create_user(username="testuser", email="test@example.com", password="testpass123")
+        self.user = User.objects.create_user(
+            username="testuser", email="test@example.com", password="testpass123"
+        )
         self.tag1, _ = Tag.objects.get_or_create(name="Breakfast")
         self.tag2, _ = Tag.objects.get_or_create(name="Quick")
 
@@ -29,7 +31,11 @@ class RecipeFormTest(TestCase):
 
     def test_recipe_form_minimal_required_data(self):
         """Test RecipeForm with minimal required data"""
-        form_data = {"title": "Minimal Recipe", "ingredients_text": "Basic ingredients", "steps": "Basic steps"}
+        form_data = {
+            "title": "Minimal Recipe",
+            "ingredients_text": "Basic ingredients",
+            "steps": "Basic steps",
+        }
         form = RecipeForm(data=form_data)
         self.assertTrue(form.is_valid())
 
@@ -42,7 +48,11 @@ class RecipeFormTest(TestCase):
 
     def test_recipe_form_empty_title(self):
         """Test RecipeForm with empty title"""
-        form_data = {"title": "", "ingredients_text": "Test ingredients", "steps": "Test steps"}
+        form_data = {
+            "title": "",
+            "ingredients_text": "Test ingredients",
+            "steps": "Test steps",
+        }
         form = RecipeForm(data=form_data)
         self.assertFalse(form.is_valid())
         self.assertIn("title", form.errors)
@@ -89,28 +99,45 @@ class RecipeFormTest(TestCase):
     def test_recipe_form_help_texts(self):
         """Test form field help texts"""
         form = RecipeForm()
-        self.assertEqual(form.fields["title"].help_text, "Enter the title of the recipe.")
-        self.assertEqual(form.fields["ingredients_text"].help_text, "List all ingredients required for the recipe.")
+        self.assertEqual(
+            form.fields["title"].help_text, "Enter the title of the recipe."
+        )
+        self.assertEqual(
+            form.fields["ingredients_text"].help_text,
+            "List all ingredients required for the recipe.",
+        )
 
 
 class MealPlanFormTest(TestCase):
     def setUp(self):
-        self.user = User.objects.create_user(username="testuser", email="test@example.com", password="testpass123")
+        self.user = User.objects.create_user(
+            username="testuser", email="test@example.com", password="testpass123"
+        )
         self.other_user = User.objects.create_user(
             username="otheruser", email="other@example.com", password="otherpass123"
         )
         self.household = Household.objects.create(name="Test")
         HouseholdMembership.objects.create(user=self.user, household=self.household)
         self.recipe = Recipe.objects.create(
-            user=self.user, title="Test Recipe", ingredients_text="Test ingredients", steps="Test steps"
+            user=self.user,
+            title="Test Recipe",
+            ingredients_text="Test ingredients",
+            steps="Test steps",
         )
         self.other_recipe = Recipe.objects.create(
-            user=self.other_user, title="Other Recipe", ingredients_text="Other ingredients", steps="Other steps"
+            user=self.other_user,
+            title="Other Recipe",
+            ingredients_text="Other ingredients",
+            steps="Other steps",
         )
 
     def test_meal_plan_form_valid_data(self):
         """Test MealPlanForm with valid data"""
-        form_data = {"date": "2023-12-25", "meal_type": "breakfast", "recipe": self.recipe.id}
+        form_data = {
+            "date": "2023-12-25",
+            "meal_type": "breakfast",
+            "recipe": self.recipe.id,
+        }
         form = MealPlanForm(data=form_data, user=self.user)
         self.assertTrue(form.is_valid())
 
@@ -123,7 +150,11 @@ class MealPlanFormTest(TestCase):
 
     def test_meal_plan_form_invalid_meal_type(self):
         """Test MealPlanForm with invalid meal type"""
-        form_data = {"date": "2023-12-25", "meal_type": "invalid_meal", "recipe": self.recipe.id}
+        form_data = {
+            "date": "2023-12-25",
+            "meal_type": "invalid_meal",
+            "recipe": self.recipe.id,
+        }
         form = MealPlanForm(data=form_data, user=self.user)
         self.assertFalse(form.is_valid())
         self.assertIn("meal_type", form.errors)
@@ -138,7 +169,11 @@ class MealPlanFormTest(TestCase):
 
     def test_meal_plan_form_save(self):
         """Test saving a valid MealPlanForm"""
-        form_data = {"date": "2023-12-25", "meal_type": "dinner", "recipe": self.recipe.id}
+        form_data = {
+            "date": "2023-12-25",
+            "meal_type": "dinner",
+            "recipe": self.recipe.id,
+        }
         form = MealPlanForm(data=form_data, user=self.user)
         self.assertTrue(form.is_valid())
 
@@ -165,7 +200,11 @@ class CustomUserCreationFormTest(TestCase):
 
     def test_custom_user_creation_form_missing_email(self):
         """Test CustomUserCreationForm without email"""
-        form_data = {"username": "newuser", "password1": "complexpass123", "password2": "complexpass123"}
+        form_data = {
+            "username": "newuser",
+            "password1": "complexpass123",
+            "password2": "complexpass123",
+        }
         form = CustomUserCreationForm(data=form_data)
         self.assertFalse(form.is_valid())
         self.assertIn("email", form.errors)
@@ -196,14 +235,23 @@ class CustomUserCreationFormTest(TestCase):
 
     def test_custom_user_creation_form_weak_password(self):
         """Test CustomUserCreationForm with weak password"""
-        form_data = {"username": "newuser", "email": "new@example.com", "password1": "123", "password2": "123"}
+        form_data = {
+            "username": "newuser",
+            "email": "new@example.com",
+            "password1": "123",
+            "password2": "123",
+        }
         form = CustomUserCreationForm(data=form_data)
         self.assertFalse(form.is_valid())
         self.assertIn("password2", form.errors)
 
     def test_custom_user_creation_form_duplicate_username(self):
         """Test CustomUserCreationForm with duplicate username"""
-        User.objects.create_user(username="existinguser", email="existing@example.com", password="existingpass123")
+        User.objects.create_user(
+            username="existinguser",
+            email="existing@example.com",
+            password="existingpass123",
+        )
 
         form_data = {
             "username": "existinguser",
@@ -242,7 +290,9 @@ class FormIntegrationTest(TestCase):
     """Test forms working together in realistic scenarios"""
 
     def setUp(self):
-        self.user = User.objects.create_user(username="testuser", email="test@example.com", password="testpass123")
+        self.user = User.objects.create_user(
+            username="testuser", email="test@example.com", password="testpass123"
+        )
         self.household = Household.objects.create(name="Test")
         HouseholdMembership.objects.create(user=self.user, household=self.household)
         self.tag = Tag.objects.create(name="Test Tag")
@@ -265,7 +315,11 @@ class FormIntegrationTest(TestCase):
         recipe_form.save_m2m()
 
         # Create meal plan with the recipe
-        meal_plan_form_data = {"date": "2023-12-25", "meal_type": "breakfast", "recipe": recipe.id}
+        meal_plan_form_data = {
+            "date": "2023-12-25",
+            "meal_type": "breakfast",
+            "recipe": recipe.id,
+        }
         meal_plan_form = MealPlanForm(data=meal_plan_form_data, user=self.user)
         self.assertTrue(meal_plan_form.is_valid())
 

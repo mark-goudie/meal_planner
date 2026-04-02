@@ -1,6 +1,5 @@
 """Generate app icons from SVG using Pillow."""
 
-import math
 import os
 
 from PIL import Image, ImageDraw, ImageFont
@@ -41,7 +40,6 @@ def create_icon(size):
 
     # Inner plate circle (subtle)
     inner_r = int(size * 0.22)
-    inner_color = (primary[0], primary[1], primary[2], 40)
     draw.ellipse(
         [
             (center_x - inner_r, center_y - inner_r),
@@ -95,7 +93,10 @@ def create_icon(size):
     )
     # Knife edge (thicker on one side)
     draw.line(
-        [(knife_x + line_w, knife_top), (knife_x + line_w, knife_top + int(size * 0.18))],
+        [
+            (knife_x + line_w, knife_top),
+            (knife_x + line_w, knife_top + int(size * 0.18)),
+        ],
         fill=accent,
         width=max(line_w // 2, 1),
     )
@@ -141,7 +142,9 @@ def create_splash(width, height):
         title_font = ImageFont.truetype("Inter", title_size)
     except (OSError, IOError):
         try:
-            title_font = ImageFont.truetype("/System/Library/Fonts/Helvetica.ttc", title_size)
+            title_font = ImageFont.truetype(
+                "/System/Library/Fonts/Helvetica.ttc", title_size
+            )
         except (OSError, IOError):
             title_font = ImageFont.load_default()
 
@@ -149,7 +152,9 @@ def create_splash(width, height):
         subtitle_font = ImageFont.truetype("Inter", subtitle_size)
     except (OSError, IOError):
         try:
-            subtitle_font = ImageFont.truetype("/System/Library/Fonts/Helvetica.ttc", subtitle_size)
+            subtitle_font = ImageFont.truetype(
+                "/System/Library/Fonts/Helvetica.ttc", subtitle_size
+            )
         except (OSError, IOError):
             subtitle_font = ImageFont.load_default()
 

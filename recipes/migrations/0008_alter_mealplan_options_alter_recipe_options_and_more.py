@@ -23,7 +23,9 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name="recipe",
             name="cook_time",
-            field=models.PositiveIntegerField(blank=True, help_text="Cooking time in minutes", null=True),
+            field=models.PositiveIntegerField(
+                blank=True, help_text="Cooking time in minutes", null=True
+            ),
         ),
         migrations.AddField(
             model_name="recipe",
@@ -43,12 +45,16 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name="recipe",
             name="prep_time",
-            field=models.PositiveIntegerField(blank=True, help_text="Preparation time in minutes", null=True),
+            field=models.PositiveIntegerField(
+                blank=True, help_text="Preparation time in minutes", null=True
+            ),
         ),
         migrations.AddField(
             model_name="recipe",
             name="servings",
-            field=models.PositiveIntegerField(default=1, help_text="Number of servings"),
+            field=models.PositiveIntegerField(
+                default=1, help_text="Number of servings"
+            ),
         ),
         migrations.AddField(
             model_name="recipe",
@@ -61,24 +67,34 @@ class Migration(migrations.Migration):
         ),
         migrations.AddIndex(
             model_name="mealplan",
-            index=models.Index(fields=["user", "date"], name="recipes_mea_user_id_1c29da_idx"),
+            index=models.Index(
+                fields=["user", "date"], name="recipes_mea_user_id_1c29da_idx"
+            ),
         ),
         migrations.AddIndex(
             model_name="mealplan",
-            index=models.Index(fields=["user", "date", "meal_type"], name="recipes_mea_user_id_71aaf5_idx"),
+            index=models.Index(
+                fields=["user", "date", "meal_type"],
+                name="recipes_mea_user_id_71aaf5_idx",
+            ),
         ),
         migrations.AddIndex(
             model_name="recipe",
-            index=models.Index(fields=["-created_at"], name="recipes_rec_created_57db65_idx"),
+            index=models.Index(
+                fields=["-created_at"], name="recipes_rec_created_57db65_idx"
+            ),
         ),
         migrations.AddIndex(
             model_name="recipe",
-            index=models.Index(fields=["user", "-created_at"], name="recipes_rec_user_id_142c3e_idx"),
+            index=models.Index(
+                fields=["user", "-created_at"], name="recipes_rec_user_id_142c3e_idx"
+            ),
         ),
         migrations.AddConstraint(
             model_name="familypreference",
             constraint=models.CheckConstraint(
-                check=models.Q(("preference__in", [1, 2, 3])), name="preference_valid_value"
+                check=models.Q(("preference__in", [1, 2, 3])),
+                name="preference_valid_value",
             ),
         ),
     ]

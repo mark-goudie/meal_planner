@@ -56,7 +56,8 @@ class AIService:
         """
         if not settings.ANTHROPIC_API_KEY or not settings.ANTHROPIC_API_KEY.strip():
             raise AIConfigurationError(
-                "AI recipe generation is not currently available. " "Please configure the Anthropic API key."
+                "AI recipe generation is not currently available. "
+                "Please configure the Anthropic API key."
             )
 
     @staticmethod
@@ -75,13 +76,17 @@ class AIService:
             AIValidationError: If prompt is invalid
         """
         if not prompt or not prompt.strip():
-            raise AIValidationError("Please provide ingredients or an idea for the recipe.")
+            raise AIValidationError(
+                "Please provide ingredients or an idea for the recipe."
+            )
 
         cleaned_prompt = prompt.strip()
         limit = max_length if max_length is not None else AIService.MAX_PROMPT_LENGTH
 
         if len(cleaned_prompt) > limit:
-            raise AIValidationError(f"Prompt is too long. Please limit to {limit} characters.")
+            raise AIValidationError(
+                f"Prompt is too long. Please limit to {limit} characters."
+            )
 
         return cleaned_prompt
 
@@ -132,11 +137,17 @@ class AIService:
             return content.strip()
 
         except anthropic.AuthenticationError:
-            raise AIAPIError("AI service authentication failed. Please check the API configuration.")
+            raise AIAPIError(
+                "AI service authentication failed. Please check the API configuration."
+            )
         except anthropic.RateLimitError:
-            raise AIAPIError("AI service is currently busy. Please try again in a few minutes.")
+            raise AIAPIError(
+                "AI service is currently busy. Please try again in a few minutes."
+            )
         except anthropic.APIError:
-            raise AIAPIError("AI service is temporarily unavailable. Please try again later.")
+            raise AIAPIError(
+                "AI service is temporarily unavailable. Please try again later."
+            )
         except AIServiceException:
             # Re-raise our own exceptions
             raise
@@ -182,11 +193,17 @@ class AIService:
             return content.strip()
 
         except anthropic.AuthenticationError:
-            raise AIAPIError("AI service authentication failed. Please check the API configuration.")
+            raise AIAPIError(
+                "AI service authentication failed. Please check the API configuration."
+            )
         except anthropic.RateLimitError:
-            raise AIAPIError("AI service is currently busy. Please try again in a few minutes.")
+            raise AIAPIError(
+                "AI service is currently busy. Please try again in a few minutes."
+            )
         except anthropic.APIError:
-            raise AIAPIError("AI service is temporarily unavailable. Please try again later.")
+            raise AIAPIError(
+                "AI service is temporarily unavailable. Please try again later."
+            )
         except AIServiceException:
             # Re-raise our own exceptions
             raise
@@ -218,7 +235,10 @@ class AIService:
                 "Return ONLY valid JSON, no markdown or extra text."
             ),
             messages=[
-                {"role": "user", "content": f"Create a family-friendly recipe using: {clean_prompt}"},
+                {
+                    "role": "user",
+                    "content": f"Create a family-friendly recipe using: {clean_prompt}",
+                },
             ],
         )
 
@@ -266,7 +286,12 @@ class AIService:
         html_content = resp.text
         # Remove script, style, nav, footer, header tags and their content
         for tag in ["script", "style", "nav", "footer", "header", "aside"]:
-            html_content = re.sub(f"<{tag}[^>]*>.*?</{tag}>", "", html_content, flags=re.DOTALL | re.IGNORECASE)
+            html_content = re.sub(
+                f"<{tag}[^>]*>.*?</{tag}>",
+                "",
+                html_content,
+                flags=re.DOTALL | re.IGNORECASE,
+            )
         # Remove all remaining HTML tags
         text = re.sub(r"<[^>]+>", " ", html_content)
         # Collapse whitespace
@@ -297,7 +322,12 @@ class AIService:
                     "Return ONLY valid JSON. If no recipe is found, return "
                     '{"error": "No recipe found on this page."}'
                 ),
-                messages=[{"role": "user", "content": f"Extract the recipe from this webpage:\n\n{text}"}],
+                messages=[
+                    {
+                        "role": "user",
+                        "content": f"Extract the recipe from this webpage:\n\n{text}",
+                    }
+                ],
             )
             content = next((b.text for b in response.content if b.type == "text"), "")
             # Strip markdown fences
@@ -312,7 +342,9 @@ class AIService:
                 raise AIValidationError(result["error"])
             return result
         except json.JSONDecodeError:
-            raise AIAPIError("Couldn't parse the recipe from that page. Try a different URL.")
+            raise AIAPIError(
+                "Couldn't parse the recipe from that page. Try a different URL."
+            )
         except anthropic.AuthenticationError:
             raise AIAPIError("AI service authentication failed.")
         except anthropic.RateLimitError:
@@ -345,12 +377,18 @@ class AIService:
             title = title_match.group(1).strip()
 
         # Match everything between "Ingredients:" and "Steps:" or "Directions:"
-        ingredients_match = re.search(r"Ingredients:\s*([\s\S]*?)(?:\n(?:Steps:|Directions:))", text, re.IGNORECASE)
+        ingredients_match = re.search(
+            r"Ingredients:\s*([\s\S]*?)(?:\n(?:Steps:|Directions:))",
+            text,
+            re.IGNORECASE,
+        )
         if ingredients_match:
             ingredients = ingredients_match.group(1).strip()
 
         # Match everything after "Steps:" or "Directions:"
-        steps_match = re.search(r"(?:Steps:|Directions:)\s*([\s\S]*)", text, re.IGNORECASE)
+        steps_match = re.search(
+            r"(?:Steps:|Directions:)\s*([\s\S]*)", text, re.IGNORECASE
+        )
         if steps_match:
             steps = steps_match.group(1).strip()
 

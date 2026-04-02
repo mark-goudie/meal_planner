@@ -12,9 +12,13 @@ class TestUtilities:
     """Utility class for common test operations"""
 
     @staticmethod
-    def create_test_user(username="testuser", email="test@example.com", password="testpass123"):
+    def create_test_user(
+        username="testuser", email="test@example.com", password="testpass123"
+    ):
         """Create a test user with default or custom credentials"""
-        user = User.objects.create_user(username=username, email=email, password=password)
+        user = User.objects.create_user(
+            username=username, email=email, password=password
+        )
         # Auto-create household and membership for test users
         household = Household.objects.create(name=f"{username}'s household")
         HouseholdMembership.objects.create(user=user, household=household)
@@ -22,10 +26,19 @@ class TestUtilities:
 
     @staticmethod
     def create_test_recipe(
-        user, title="Test Recipe", ingredients_text="Test ingredients", steps="Test steps", **kwargs
+        user,
+        title="Test Recipe",
+        ingredients_text="Test ingredients",
+        steps="Test steps",
+        **kwargs,
     ):
         """Create a test recipe with default or custom data"""
-        defaults = {"user": user, "title": title, "ingredients_text": ingredients_text, "steps": steps}
+        defaults = {
+            "user": user,
+            "title": title,
+            "ingredients_text": ingredients_text,
+            "steps": steps,
+        }
         defaults.update(kwargs)
         return Recipe.objects.create(**defaults)
 
@@ -65,7 +78,10 @@ class TestUtilities:
 
         # Create recipes
         recipe1 = TestUtilities.create_test_recipe(
-            user=user, title="Pancakes", ingredients_text="Flour\nEggs\nMilk", steps="Mix ingredients\nCook on griddle"
+            user=user,
+            title="Pancakes",
+            ingredients_text="Flour\nEggs\nMilk",
+            steps="Mix ingredients\nCook on griddle",
         )
         recipe1.tags.add(tag1, tag2)
 
@@ -245,7 +261,9 @@ class TestUtilitiesTest(TestCase):
 
     def test_create_test_user_custom(self):
         """Test creating a test user with custom values"""
-        user = TestUtilities.create_test_user(username="customuser", email="custom@example.com", password="custompass")
+        user = TestUtilities.create_test_user(
+            username="customuser", email="custom@example.com", password="custompass"
+        )
         self.assertEqual(user.username, "customuser")
         self.assertEqual(user.email, "custom@example.com")
         self.assertTrue(user.check_password("custompass"))
@@ -299,7 +317,9 @@ class TestUtilitiesTest(TestCase):
         user = TestUtilities.create_test_user()
         recipe = TestUtilities.create_test_recipe(user)
         custom_date = date.today() + timedelta(days=7)
-        meal_plan = TestUtilities.create_test_meal_plan(user, recipe, "dinner", custom_date)
+        meal_plan = TestUtilities.create_test_meal_plan(
+            user, recipe, "dinner", custom_date
+        )
 
         self.assertEqual(meal_plan.date, custom_date)
         self.assertEqual(meal_plan.meal_type, "dinner")
@@ -321,7 +341,10 @@ class DatabaseTestCase(TestCase):
 
     def assertRecipeExists(self, title):
         """Assert that a recipe with the given title exists"""
-        self.assertTrue(Recipe.objects.filter(title=title).exists(), f"Recipe '{title}' does not exist")
+        self.assertTrue(
+            Recipe.objects.filter(title=title).exists(),
+            f"Recipe '{title}' does not exist",
+        )
 
     def assertUserHasRecipe(self, user, recipe_title):
         """Assert that a user has a recipe with the given title"""
@@ -334,6 +357,8 @@ class DatabaseTestCase(TestCase):
         """Assert that a meal plan exists for the given user, date, and meal type"""
         household = get_household(user)
         self.assertTrue(
-            MealPlan.objects.filter(household=household, date=date, meal_type=meal_type).exists(),
+            MealPlan.objects.filter(
+                household=household, date=date, meal_type=meal_type
+            ).exists(),
             f"Meal plan for {meal_type} on {date} does not exist for user {user.username}",
         )

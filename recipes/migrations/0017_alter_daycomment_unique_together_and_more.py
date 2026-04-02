@@ -22,7 +22,9 @@ class Migration(migrations.Migration):
         ),
         migrations.AddConstraint(
             model_name="daycomment",
-            constraint=models.UniqueConstraint(fields=("household", "user", "date"), name="unique_household_user_date"),
+            constraint=models.UniqueConstraint(
+                fields=("household", "user", "date"), name="unique_household_user_date"
+            ),
         ),
         migrations.AddConstraint(
             model_name="mealplan",

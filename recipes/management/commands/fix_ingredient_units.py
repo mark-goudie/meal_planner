@@ -16,7 +16,9 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         # Fix 4: Normalize bad units
         fixed = 0
-        for ri in RecipeIngredient.objects.exclude(unit__in=VALID_UNITS).exclude(unit=""):
+        for ri in RecipeIngredient.objects.exclude(unit__in=VALID_UNITS).exclude(
+            unit=""
+        ):
             old = ri.unit
             new = normalize_unit(old)
             if new != old:
@@ -25,7 +27,9 @@ class Command(BaseCommand):
                 fixed += 1
                 self.stdout.write(f"  {ri.ingredient.name}: '{old}' -> '{new}'")
 
-        self.stdout.write(self.style.SUCCESS(f"Fixed {fixed} RecipeIngredient unit(s)."))
+        self.stdout.write(
+            self.style.SUCCESS(f"Fixed {fixed} RecipeIngredient unit(s).")
+        )
 
         # Fix 5: Remove blank-name Ingredient records
         blank = Ingredient.objects.filter(name="")

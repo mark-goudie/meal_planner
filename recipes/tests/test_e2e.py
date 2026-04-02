@@ -31,7 +31,11 @@ from recipes.models import (  # noqa: E402
     ShoppingListItem,
     Tag,
 )
-from recipes.models.household import DayComment, Household, HouseholdMembership  # noqa: E402
+from recipes.models.household import (  # noqa: E402
+    DayComment,
+    Household,
+    HouseholdMembership,
+)
 
 
 class PlaywrightTestCase(StaticLiveServerTestCase):
@@ -53,7 +57,9 @@ class PlaywrightTestCase(StaticLiveServerTestCase):
         self.page = self.browser.new_page()
         # Create test user with household
         self.user = User.objects.create_user("testuser", password="testpass123")
-        self.household = Household.objects.create(name="Test Family", created_by=self.user)
+        self.household = Household.objects.create(
+            name="Test Family", created_by=self.user
+        )
         HouseholdMembership.objects.create(user=self.user, household=self.household)
 
     def tearDown(self):
@@ -137,7 +143,10 @@ class AuthenticationE2ETest(PlaywrightTestCase):
         # This renders in ul.form-error-list > li
         self.page.wait_for_selector(".form-error-list", timeout=5000)
         assert self.page.locator(".form-error-list").is_visible()
-        assert self.page.locator(".form-error-list li").text_content().strip() == "Invalid household code."
+        assert (
+            self.page.locator(".form-error-list li").text_content().strip()
+            == "Invalid household code."
+        )
         assert not User.objects.filter(username="badcode").exists()
 
 
@@ -146,7 +155,9 @@ class WeekViewE2ETest(PlaywrightTestCase):
 
     def setUp(self):
         super().setUp()
-        self.recipe = Recipe.objects.create(user=self.user, title="Test Pasta", steps="Cook pasta", cook_time=20)
+        self.recipe = Recipe.objects.create(
+            user=self.user, title="Test Pasta", steps="Cook pasta", cook_time=20
+        )
         tag = Tag.objects.create(name="Italian", tag_type="cuisine")
         self.recipe.tags.add(tag)
 
@@ -194,13 +205,17 @@ class WeekViewE2ETest(PlaywrightTestCase):
         """Click next week arrow, verify title changes."""
         self.login()
         # Verify we start on "This Week"
-        assert self.page.locator(".week-header__title", has_text="This Week").is_visible()
+        assert self.page.locator(
+            ".week-header__title", has_text="This Week"
+        ).is_visible()
         # Click the next week navigation arrow (right arrow)
         self.page.locator('.week-header__nav[aria-label="Next week"]').click()
         # Wait for HTMX swap to complete
         self.page.wait_for_timeout(1000)
         # Title should now say "Next Week"
-        assert self.page.locator(".week-header__title", has_text="Next Week").is_visible()
+        assert self.page.locator(
+            ".week-header__title", has_text="Next Week"
+        ).is_visible()
 
     def test_day_comment_add(self):
         """Click Note button, fill text, submit, verify comment saved."""
@@ -208,9 +223,13 @@ class WeekViewE2ETest(PlaywrightTestCase):
         # Click the Note button on the first day card to expand comment form (Alpine.js)
         self.page.locator(".day-card__note-btn").first.click()
         # Wait for the comment form to become visible
-        self.page.wait_for_selector('.day-card__add-comment input[name="text"]', timeout=3000)
+        self.page.wait_for_selector(
+            '.day-card__add-comment input[name="text"]', timeout=3000
+        )
         # Fill in the comment text
-        self.page.fill('.day-card__add-comment input[name="text"]', "Work dinner tonight")
+        self.page.fill(
+            '.day-card__add-comment input[name="text"]', "Work dinner tonight"
+        )
         # Submit the comment form (HTMX post)
         self.page.locator(".day-card__add-comment button[type='submit']").first.click()
         # Wait for HTMX swap to complete
@@ -245,7 +264,9 @@ class RecipeE2ETest(PlaywrightTestCase):
     def test_recipe_list_search(self):
         """Type in search, wait for HTMX response, verify filtered results."""
         # Create a second recipe so we can verify filtering
-        Recipe.objects.create(user=self.user, title="Beef Stew", steps="Stew it", cook_time=60)
+        Recipe.objects.create(
+            user=self.user, title="Beef Stew", steps="Stew it", cook_time=60
+        )
         self.login()
         self.page.goto(self.url("/recipes/"))
         # Both recipes should be visible initially
@@ -256,8 +277,14 @@ class RecipeE2ETest(PlaywrightTestCase):
         # Wait for HTMX debounced search to complete
         self.page.wait_for_timeout(1000)
         # Chicken Curry should still be visible, Beef Stew should be filtered out
-        assert self.page.locator("#recipe-results").locator("text=Chicken Curry").is_visible()
-        assert self.page.locator("#recipe-results").locator("text=Beef Stew").count() == 0
+        assert (
+            self.page.locator("#recipe-results")
+            .locator("text=Chicken Curry")
+            .is_visible()
+        )
+        assert (
+            self.page.locator("#recipe-results").locator("text=Beef Stew").count() == 0
+        )
 
     def test_create_recipe_manually(self):
         """Creating a recipe via the form saves it."""
@@ -311,7 +338,9 @@ class ShoppingListE2ETest(PlaywrightTestCase):
 
     def setUp(self):
         super().setUp()
-        self.recipe = Recipe.objects.create(user=self.user, title="Soup", steps="Make soup", cook_time=30)
+        self.recipe = Recipe.objects.create(
+            user=self.user, title="Soup", steps="Make soup", cook_time=30
+        )
         self.ingredient = Ingredient.objects.create(name="onion", category="produce")
         RecipeIngredient.objects.create(
             recipe=self.recipe,
@@ -434,7 +463,9 @@ class CookingModeE2ETest(PlaywrightTestCase):
         # After POST, should redirect to recipe detail page
         self.page.wait_for_url(f"**/recipes/{self.recipe.pk}/", timeout=5000)
         # Verify the cooking note was saved
-        assert CookingNote.objects.filter(recipe=self.recipe, note="Perfectly toasted").exists()
+        assert CookingNote.objects.filter(
+            recipe=self.recipe, note="Perfectly toasted"
+        ).exists()
 
 
 class NavigationE2ETest(PlaywrightTestCase):
@@ -567,7 +598,9 @@ class MealPlanTemplateE2ETest(PlaywrightTestCase):
 
     def setUp(self):
         super().setUp()
-        self.recipe = Recipe.objects.create(user=self.user, title="Template Pasta", steps="Cook pasta", cook_time=20)
+        self.recipe = Recipe.objects.create(
+            user=self.user, title="Template Pasta", steps="Cook pasta", cook_time=20
+        )
 
     def test_save_template_button_visible(self):
         """Log in, go to /week/, verify 'Save Template' button exists."""
@@ -649,9 +682,9 @@ class MealPlanTemplateE2ETest(PlaywrightTestCase):
         # Verify template is visible
         assert self.page.locator("text=Delete Me Template").is_visible()
         # Click the delete button (trash icon) for this template
-        self.page.locator("text=Delete Me Template").locator("..").locator("..").locator(
-            'button[type="submit"]'
-        ).click()
+        self.page.locator("text=Delete Me Template").locator("..").locator(
+            ".."
+        ).locator('button[type="submit"]').click()
         # Wait for page reload after deletion
         self.page.wait_for_timeout(2000)
         # Verify the template is gone from the database

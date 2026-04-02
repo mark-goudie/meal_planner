@@ -13,8 +13,12 @@ class MealPlanTemplateTest(TestCase):
         self.user = User.objects.create_user("testuser", password="testpass123")
         self.household = Household.objects.create(name="Test")
         HouseholdMembership.objects.create(user=self.user, household=self.household)
-        self.recipe1 = Recipe.objects.create(user=self.user, title="Monday Meal", steps="cook")
-        self.recipe2 = Recipe.objects.create(user=self.user, title="Tuesday Meal", steps="cook")
+        self.recipe1 = Recipe.objects.create(
+            user=self.user, title="Monday Meal", steps="cook"
+        )
+        self.recipe2 = Recipe.objects.create(
+            user=self.user, title="Tuesday Meal", steps="cook"
+        )
         self.client = Client()
         self.client.login(username="testuser", password="testpass123")
 
@@ -37,7 +41,9 @@ class MealPlanTemplateTest(TestCase):
             recipe=self.recipe2,
         )
 
-        response = self.client.post(reverse("save_template"), {"name": "Test Template", "offset": "0"})
+        response = self.client.post(
+            reverse("save_template"), {"name": "Test Template", "offset": "0"}
+        )
         self.assertEqual(response.status_code, 302)
         template = MealPlanTemplate.objects.get(name="Test Template")
         self.assertEqual(template.entries.count(), 2)
@@ -49,14 +55,22 @@ class MealPlanTemplateTest(TestCase):
             name="Test",
             created_by=self.user,
         )
-        MealPlanTemplateEntry.objects.create(template=template, day_of_week=0, recipe=self.recipe1)
-        MealPlanTemplateEntry.objects.create(template=template, day_of_week=1, recipe=self.recipe2)
+        MealPlanTemplateEntry.objects.create(
+            template=template, day_of_week=0, recipe=self.recipe1
+        )
+        MealPlanTemplateEntry.objects.create(
+            template=template, day_of_week=1, recipe=self.recipe2
+        )
 
-        response = self.client.post(reverse("apply_template", args=[template.pk]), {"offset": "0"})
+        response = self.client.post(
+            reverse("apply_template", args=[template.pk]), {"offset": "0"}
+        )
         self.assertEqual(response.status_code, 302)
         today = date.today()
         monday = today - timedelta(days=today.weekday())
-        self.assertTrue(MealPlan.objects.filter(household=self.household, date=monday).exists())
+        self.assertTrue(
+            MealPlan.objects.filter(household=self.household, date=monday).exists()
+        )
 
     def test_apply_template_does_not_overwrite(self):
         # Create existing meal on Monday
@@ -77,11 +91,15 @@ class MealPlanTemplateTest(TestCase):
             name="Test",
             created_by=self.user,
         )
-        MealPlanTemplateEntry.objects.create(template=template, day_of_week=0, recipe=self.recipe1)
+        MealPlanTemplateEntry.objects.create(
+            template=template, day_of_week=0, recipe=self.recipe1
+        )
 
         self.client.post(reverse("apply_template", args=[template.pk]), {"offset": "0"})
         # Monday should still have the existing meal, not the template's
-        meal = MealPlan.objects.get(household=self.household, date=monday, meal_type="dinner")
+        meal = MealPlan.objects.get(
+            household=self.household, date=monday, meal_type="dinner"
+        )
         self.assertEqual(meal.recipe.title, "Existing")
 
     def test_delete_template(self):
@@ -95,7 +113,9 @@ class MealPlanTemplateTest(TestCase):
         self.assertFalse(MealPlanTemplate.objects.filter(pk=template.pk).exists())
 
     def test_save_template_requires_name(self):
-        response = self.client.post(reverse("save_template"), {"name": "", "offset": "0"})
+        response = self.client.post(
+            reverse("save_template"), {"name": "", "offset": "0"}
+        )
         self.assertEqual(response.status_code, 302)  # redirects with error message
         self.assertEqual(MealPlanTemplate.objects.count(), 0)
 

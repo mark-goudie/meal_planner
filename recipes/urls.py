@@ -5,7 +5,6 @@ from .views import (
     ai_generate_recipe,
     ai_generate_recipe_api,
     apply_template,
-    offline_view,
     cook_done,
     cook_step,
     cook_view,
@@ -20,6 +19,7 @@ from .views import (
     list_templates,
     meal_plan_create,
     meal_plan_list,
+    offline_view,
     push_subscribe,
     push_unsubscribe,
     recipe_create_from_ai,
@@ -55,11 +55,21 @@ urlpatterns = [
     path("", week_view, name="home"),
     path("week/", week_view, name="week"),
     path("week/slot/<str:date_str>/<str:meal_type>/", week_slot, name="week_slot"),
-    path("week/assign/<str:date_str>/<str:meal_type>/", week_assign, name="week_assign"),
-    path("week/remove/<str:date_str>/<str:meal_type>/", week_remove, name="week_remove"),
+    path(
+        "week/assign/<str:date_str>/<str:meal_type>/", week_assign, name="week_assign"
+    ),
+    path(
+        "week/remove/<str:date_str>/<str:meal_type>/", week_remove, name="week_remove"
+    ),
     path("week/suggest/", week_suggest, name="week_suggest"),
-    path("week/accept/<str:date_str>/", week_accept_suggestion, name="week_accept_suggestion"),
-    path("week/skip/<str:date_str>/", week_skip_suggestion, name="week_skip_suggestion"),
+    path(
+        "week/accept/<str:date_str>/",
+        week_accept_suggestion,
+        name="week_accept_suggestion",
+    ),
+    path(
+        "week/skip/<str:date_str>/", week_skip_suggestion, name="week_skip_suggestion"
+    ),
     path("week/comment/<str:date_str>/", day_comment, name="day_comment"),
     # --- Templates ---
     path("week/save-template/", save_template, name="save_template"),
@@ -82,7 +92,9 @@ urlpatterns = [
     path("settings/", settings_view, name="settings"),
     # --- Recipe generation ---
     path("recipes/generate-batch/", generate_preferences, name="generate_preferences"),
-    path("recipes/generate-batch/progress/", generate_progress, name="generate_progress"),
+    path(
+        "recipes/generate-batch/progress/", generate_progress, name="generate_progress"
+    ),
     path("recipes/generate-batch/next/", generate_next, name="generate_next"),
     # --- Redesign: Recipe views ---
     path("recipes/", recipe_list_view, name="recipe_list"),
@@ -116,5 +128,9 @@ urlpatterns = [
     path("api/push/unsubscribe/", push_unsubscribe, name="push_unsubscribe"),
     # --- Smart Meal Planner ---
     path("smart-planner/", views.smart_meal_planner, name="smart_meal_planner"),
-    path("smart-planner/preferences/", views.meal_planner_preferences, name="meal_planner_preferences"),
+    path(
+        "smart-planner/preferences/",
+        views.meal_planner_preferences,
+        name="meal_planner_preferences",
+    ),
 ]

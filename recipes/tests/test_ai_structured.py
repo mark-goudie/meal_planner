@@ -19,7 +19,9 @@ class AIStructuredRecipeTest(TestCase):
         )
         mock_response = MagicMock()
         mock_response.content = [mock_text_block]
-        mock_anthropic.Anthropic.return_value.messages.create.return_value = mock_response
+        mock_anthropic.Anthropic.return_value.messages.create.return_value = (
+            mock_response
+        )
 
         with patch.dict("os.environ", {"ANTHROPIC_API_KEY": "test-key"}):
             from django.conf import settings
@@ -39,10 +41,14 @@ class AIStructuredRecipeTest(TestCase):
     def test_strips_markdown_fences(self, mock_anthropic):
         mock_text_block = MagicMock()
         mock_text_block.type = "text"
-        mock_text_block.text = '```json\n{"title": "Test", "ingredients": [], "steps": []}\n```'
+        mock_text_block.text = (
+            '```json\n{"title": "Test", "ingredients": [], "steps": []}\n```'
+        )
         mock_response = MagicMock()
         mock_response.content = [mock_text_block]
-        mock_anthropic.Anthropic.return_value.messages.create.return_value = mock_response
+        mock_anthropic.Anthropic.return_value.messages.create.return_value = (
+            mock_response
+        )
 
         from django.conf import settings
 

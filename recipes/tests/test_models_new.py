@@ -102,7 +102,9 @@ class RecipeIngredientModelTests(TestCase):
     def test_ordering(self):
         salt = Ingredient.objects.create(name="Salt", category="spices")
         RecipeIngredient.objects.create(recipe=self.recipe, ingredient=salt, order=2)
-        RecipeIngredient.objects.create(recipe=self.recipe, ingredient=self.ingredient, order=1)
+        RecipeIngredient.objects.create(
+            recipe=self.recipe, ingredient=self.ingredient, order=1
+        )
         ris = list(self.recipe.recipe_ingredients.all())
         self.assertEqual(ris[0].ingredient.name, "Flour")
         self.assertEqual(ris[1].ingredient.name, "Salt")
@@ -223,12 +225,16 @@ class ShoppingListItemModelTests(TestCase):
         HouseholdMembership.objects.create(user=self.user, household=self.household)
 
     def test_create_item(self):
-        item = ShoppingListItem.objects.create(household=self.household, added_by=self.user, name="Milk")
+        item = ShoppingListItem.objects.create(
+            household=self.household, added_by=self.user, name="Milk"
+        )
         self.assertEqual(item.name, "Milk")
         self.assertFalse(item.checked)
 
     def test_toggle_checked(self):
-        item = ShoppingListItem.objects.create(household=self.household, added_by=self.user, name="Eggs")
+        item = ShoppingListItem.objects.create(
+            household=self.household, added_by=self.user, name="Eggs"
+        )
         self.assertFalse(item.checked)
 
         item.checked = True
@@ -237,9 +243,15 @@ class ShoppingListItemModelTests(TestCase):
         self.assertTrue(item.checked)
 
     def test_ordering_checked_last(self):
-        ShoppingListItem.objects.create(household=self.household, added_by=self.user, name="Bread")
-        ShoppingListItem.objects.create(household=self.household, added_by=self.user, name="Butter", checked=True)
-        ShoppingListItem.objects.create(household=self.household, added_by=self.user, name="Cheese")
+        ShoppingListItem.objects.create(
+            household=self.household, added_by=self.user, name="Bread"
+        )
+        ShoppingListItem.objects.create(
+            household=self.household, added_by=self.user, name="Butter", checked=True
+        )
+        ShoppingListItem.objects.create(
+            household=self.household, added_by=self.user, name="Cheese"
+        )
 
         items = list(ShoppingListItem.objects.filter(household=self.household))
         # Checked items should come last (ordering by checked, created_at)
@@ -247,7 +259,9 @@ class ShoppingListItemModelTests(TestCase):
         self.assertTrue(items[-1].checked)
 
     def test_str(self):
-        item = ShoppingListItem.objects.create(household=self.household, added_by=self.user, name="Apple")
+        item = ShoppingListItem.objects.create(
+            household=self.household, added_by=self.user, name="Apple"
+        )
         self.assertIn("Apple", str(item))
 
         item.checked = True

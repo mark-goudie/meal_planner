@@ -8,8 +8,12 @@ from recipes.models import Recipe
 
 class UrlsTest(TestCase):
     def setUp(self):
-        self.user = User.objects.create_user(username="testuser", email="test@example.com", password="testpass123")
-        self.recipe = Recipe.objects.create(user=self.user, title="Test Recipe", steps="Test steps")
+        self.user = User.objects.create_user(
+            username="testuser", email="test@example.com", password="testpass123"
+        )
+        self.recipe = Recipe.objects.create(
+            user=self.user, title="Test Recipe", steps="Test steps"
+        )
 
     # --- Redesign URLs ---
 
@@ -170,7 +174,11 @@ class UrlsTest(TestCase):
         for url_name in public_urls:
             url = reverse(url_name)
             response = self.client.get(url)
-            self.assertNotEqual(response.status_code, 302, f"URL {url_name} should be accessible without login")
+            self.assertNotEqual(
+                response.status_code,
+                302,
+                f"URL {url_name} should be accessible without login",
+            )
 
     def test_protected_urls_require_login(self):
         """Test that protected URLs redirect to login"""
@@ -192,8 +200,14 @@ class UrlsTest(TestCase):
         for url_name in protected_urls:
             url = reverse(url_name)
             response = self.client.get(url)
-            self.assertEqual(response.status_code, 302, f"URL {url_name} should require login")
-            self.assertIn("/accounts/login/", response.url, f"URL {url_name} should redirect to login")
+            self.assertEqual(
+                response.status_code, 302, f"URL {url_name} should require login"
+            )
+            self.assertIn(
+                "/accounts/login/",
+                response.url,
+                f"URL {url_name} should redirect to login",
+            )
 
     def test_object_specific_urls_require_login(self):
         """Test that object-specific URLs redirect to login for unauthenticated users"""
@@ -208,5 +222,11 @@ class UrlsTest(TestCase):
         for url_name, kwargs in object_specific_urls:
             url = reverse(url_name, kwargs=kwargs)
             response = self.client.get(url)
-            self.assertEqual(response.status_code, 302, f"URL {url_name} should require login")
-            self.assertIn("/accounts/login/", response.url, f"URL {url_name} should redirect to login")
+            self.assertEqual(
+                response.status_code, 302, f"URL {url_name} should require login"
+            )
+            self.assertIn(
+                "/accounts/login/",
+                response.url,
+                f"URL {url_name} should redirect to login",
+            )

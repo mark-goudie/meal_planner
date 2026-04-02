@@ -16,15 +16,33 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name="MealPlan",
             fields=[
-                ("id", models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name="ID")),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
                 ("date", models.DateField(default=datetime.date.today)),
                 (
                     "meal_type",
                     models.CharField(
-                        choices=[("breakfast", "Breakfast"), ("lunch", "Lunch"), ("dinner", "Dinner")], max_length=10
+                        choices=[
+                            ("breakfast", "Breakfast"),
+                            ("lunch", "Lunch"),
+                            ("dinner", "Dinner"),
+                        ],
+                        max_length=10,
                     ),
                 ),
-                ("recipe", models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to="recipes.recipe")),
+                (
+                    "recipe",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE, to="recipes.recipe"
+                    ),
+                ),
             ],
         ),
     ]

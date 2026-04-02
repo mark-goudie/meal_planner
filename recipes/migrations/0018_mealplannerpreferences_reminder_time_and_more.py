@@ -18,7 +18,9 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name="mealplannerpreferences",
             name="reminder_time",
-            field=models.TimeField(default=datetime.time(16, 0), help_text="Daily dinner reminder time"),
+            field=models.TimeField(
+                default=datetime.time(16, 0), help_text="Daily dinner reminder time"
+            ),
         ),
         migrations.CreateModel(
             name="PushSubscription",
@@ -46,7 +48,11 @@ class Migration(migrations.Migration):
                 ),
             ],
             options={
-                "constraints": [models.UniqueConstraint(fields=("user", "endpoint"), name="unique_user_endpoint")],
+                "constraints": [
+                    models.UniqueConstraint(
+                        fields=("user", "endpoint"), name="unique_user_endpoint"
+                    )
+                ],
             },
         ),
     ]

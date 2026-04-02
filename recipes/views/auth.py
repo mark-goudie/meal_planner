@@ -22,7 +22,11 @@ def register_view(request):
                     household = Household.objects.get(code=household_code)
                 except Household.DoesNotExist:
                     form.add_error(None, "Invalid household code.")
-                    return render(request, "auth/register.html", {"form": form, "household_code": household_code})
+                    return render(
+                        request,
+                        "auth/register.html",
+                        {"form": form, "household_code": household_code},
+                    )
             else:
                 household = None
 
@@ -30,7 +34,9 @@ def register_view(request):
             if household:
                 HouseholdMembership.objects.create(user=user, household=household)
             else:
-                new_household = Household.objects.create(name=f"{user.username}'s Kitchen", created_by=user)
+                new_household = Household.objects.create(
+                    name=f"{user.username}'s Kitchen", created_by=user
+                )
                 HouseholdMembership.objects.create(user=user, household=new_household)
 
             login(request, user)
@@ -38,4 +44,6 @@ def register_view(request):
     else:
         form = CustomUserCreationForm()
         household_code = ""
-    return render(request, "auth/register.html", {"form": form, "household_code": household_code})
+    return render(
+        request, "auth/register.html", {"form": form, "household_code": household_code}
+    )

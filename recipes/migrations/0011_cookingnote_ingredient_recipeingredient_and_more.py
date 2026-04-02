@@ -20,12 +20,22 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name="CookingNote",
             fields=[
-                ("id", models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name="ID")),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
                 ("cooked_date", models.DateField()),
                 (
                     "rating",
                     models.IntegerField(
-                        blank=True, choices=[(1, "1"), (2, "2"), (3, "3"), (4, "4"), (5, "5")], null=True
+                        blank=True,
+                        choices=[(1, "1"), (2, "2"), (3, "3"), (4, "4"), (5, "5")],
+                        null=True,
                     ),
                 ),
                 ("note", models.TextField(blank=True)),
@@ -39,7 +49,15 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name="Ingredient",
             fields=[
-                ("id", models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name="ID")),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
                 ("name", models.CharField(max_length=100, unique=True)),
                 (
                     "category",
@@ -66,8 +84,21 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name="RecipeIngredient",
             fields=[
-                ("id", models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name="ID")),
-                ("quantity", models.DecimalField(blank=True, decimal_places=2, max_digits=8, null=True)),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                (
+                    "quantity",
+                    models.DecimalField(
+                        blank=True, decimal_places=2, max_digits=8, null=True
+                    ),
+                ),
                 (
                     "unit",
                     models.CharField(
@@ -112,7 +143,15 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name="ShoppingListItem",
             fields=[
-                ("id", models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name="ID")),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
                 ("name", models.CharField(max_length=200)),
                 ("checked", models.BooleanField(default=False)),
                 ("created_at", models.DateTimeField(auto_now_add=True)),
@@ -279,7 +318,9 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name="recipe",
             name="servings",
-            field=models.PositiveIntegerField(default=4, help_text="Number of servings"),
+            field=models.PositiveIntegerField(
+                default=4, help_text="Number of servings"
+            ),
         ),
         # -------------------------------------------------------
         # 6. Other field additions
@@ -293,7 +334,12 @@ class Migration(migrations.Migration):
             model_name="tag",
             name="tag_type",
             field=models.CharField(
-                choices=[("dietary", "Dietary"), ("cuisine", "Cuisine"), ("method", "Method"), ("time", "Time")],
+                choices=[
+                    ("dietary", "Dietary"),
+                    ("cuisine", "Cuisine"),
+                    ("method", "Method"),
+                    ("time", "Time"),
+                ],
                 default="cuisine",
                 max_length=10,
             ),
@@ -305,25 +351,33 @@ class Migration(migrations.Migration):
             model_name="recipeingredient",
             name="recipe",
             field=models.ForeignKey(
-                on_delete=django.db.models.deletion.CASCADE, related_name="recipe_ingredients", to="recipes.recipe"
+                on_delete=django.db.models.deletion.CASCADE,
+                related_name="recipe_ingredients",
+                to="recipes.recipe",
             ),
         ),
         migrations.AddField(
             model_name="cookingnote",
             name="recipe",
             field=models.ForeignKey(
-                on_delete=django.db.models.deletion.CASCADE, related_name="cooking_notes", to="recipes.recipe"
+                on_delete=django.db.models.deletion.CASCADE,
+                related_name="cooking_notes",
+                to="recipes.recipe",
             ),
         ),
         migrations.AddField(
             model_name="cookingnote",
             name="user",
             field=models.ForeignKey(
-                on_delete=django.db.models.deletion.CASCADE, related_name="cooking_notes", to=settings.AUTH_USER_MODEL
+                on_delete=django.db.models.deletion.CASCADE,
+                related_name="cooking_notes",
+                to=settings.AUTH_USER_MODEL,
             ),
         ),
         migrations.AddIndex(
             model_name="cookingnote",
-            index=models.Index(fields=["user", "-cooked_date"], name="recipes_coo_user_id_1a62cf_idx"),
+            index=models.Index(
+                fields=["user", "-cooked_date"], name="recipes_coo_user_id_1a62cf_idx"
+            ),
         ),
     ]

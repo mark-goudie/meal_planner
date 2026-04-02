@@ -1,5 +1,3 @@
-from datetime import date
-
 from django.contrib import messages as django_messages
 from django.contrib.auth.decorators import login_required
 from django.db.models import Q
@@ -19,10 +17,15 @@ def _parse_cooking_steps(recipe):
     if recipe.cooking_mode_steps:
         # Structured JSON steps
         steps = []
-        all_ingredients = {ri.pk: ri for ri in recipe.recipe_ingredients.select_related("ingredient").all()}
+        all_ingredients = {
+            ri.pk: ri
+            for ri in recipe.recipe_ingredients.select_related("ingredient").all()
+        }
         for step_data in recipe.cooking_mode_steps:
             ingredient_ids = step_data.get("ingredient_ids", [])
-            step_ingredients = [all_ingredients[pk] for pk in ingredient_ids if pk in all_ingredients]
+            step_ingredients = [
+                all_ingredients[pk] for pk in ingredient_ids if pk in all_ingredients
+            ]
             steps.append(
                 {
                     "text": step_data.get("text", ""),

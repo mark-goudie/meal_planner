@@ -13,7 +13,9 @@ from recipes.models.push import PushSubscription
 
 class PushSubscriptionModelTest(TestCase):
     def setUp(self):
-        self.user = User.objects.create_user(username="testuser", password="testpass123")
+        self.user = User.objects.create_user(
+            username="testuser", password="testpass123"
+        )
 
     def test_create_subscription(self):
         sub = PushSubscription.objects.create(
@@ -41,10 +43,14 @@ class PushSubscriptionModelTest(TestCase):
             )
 
 
-@override_settings(VAPID_PUBLIC_KEY="test-public-key", VAPID_PRIVATE_KEY="test-private-key")
+@override_settings(
+    VAPID_PUBLIC_KEY="test-public-key", VAPID_PRIVATE_KEY="test-private-key"
+)
 class PushViewsTest(TestCase):
     def setUp(self):
-        self.user = User.objects.create_user(username="testuser", password="testpass123")
+        self.user = User.objects.create_user(
+            username="testuser", password="testpass123"
+        )
         self.subscription_data = {
             "endpoint": "https://push.example.com/sub/456",
             "keys": {
@@ -163,8 +169,12 @@ class PushViewsTest(TestCase):
 )
 class SendDinnerRemindersTest(TestCase):
     def setUp(self):
-        self.user = User.objects.create_user(username="testuser", password="testpass123")
-        self.household = Household.objects.create(name="Test Home", code="ABC123", created_by=self.user)
+        self.user = User.objects.create_user(
+            username="testuser", password="testpass123"
+        )
+        self.household = Household.objects.create(
+            name="Test Home", code="ABC123", created_by=self.user
+        )
         HouseholdMembership.objects.create(user=self.user, household=self.household)
         self.recipe = Recipe.objects.create(
             title="Test Recipe",
@@ -210,7 +220,10 @@ class SendDinnerRemindersTest(TestCase):
 
         mock_webpush.assert_called_once()
         call_args = mock_webpush.call_args
-        self.assertEqual(call_args[1]["subscription_info"]["endpoint"], "https://push.example.com/sub/1")
+        self.assertEqual(
+            call_args[1]["subscription_info"]["endpoint"],
+            "https://push.example.com/sub/1",
+        )
         payload = json.loads(call_args[1]["data"])
         self.assertEqual(payload["title"], "Tonight's Dinner")
         self.assertIn("Test Recipe", payload["body"])

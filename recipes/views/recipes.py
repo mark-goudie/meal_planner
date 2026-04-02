@@ -1,12 +1,10 @@
 import json
 import logging
-import re
 from decimal import Decimal, InvalidOperation
 
 import requests as http_requests
 from django.conf import settings
 from django.contrib.auth.decorators import login_required
-from django.core.files.base import ContentFile
 from django.core.paginator import Paginator
 from django.db.models import F, Max, Q
 from django.http import JsonResponse
@@ -37,9 +35,9 @@ def _get_sorted_recipes(queryset, sort, user):
     elif sort == "times_cooked":
         return queryset.order_by(F("note_count").desc(), "-created_at")
     elif sort == "recently_cooked":
-        return queryset.annotate(last_cooked=Max("cooking_notes__cooked_date")).order_by(
-            F("last_cooked").desc(nulls_last=True), "-created_at"
-        )
+        return queryset.annotate(
+            last_cooked=Max("cooking_notes__cooked_date")
+        ).order_by(F("last_cooked").desc(nulls_last=True), "-created_at")
     else:  # 'newest' or default
         return queryset.order_by("-created_at")
 
@@ -49,7 +47,10 @@ def recipe_list_view(request):
     """Recipe Collection -- full page view with search, filter, sort."""
     household = get_household(request.user)
     recipes = (
-        Recipe.objects.filter(Q(user=request.user) | Q(shared=True, user__household_membership__household=household))
+        Recipe.objects.filter(
+            Q(user=request.user)
+            | Q(shared=True, user__household_membership__household=household)
+        )
         .distinct()
         .with_related()
         .with_stats()
@@ -97,7 +98,10 @@ def recipe_search(request):
     """HTMX partial -- returns filtered recipe cards without page wrapper."""
     household = get_household(request.user)
     recipes = (
-        Recipe.objects.filter(Q(user=request.user) | Q(shared=True, user__household_membership__household=household))
+        Recipe.objects.filter(
+            Q(user=request.user)
+            | Q(shared=True, user__household_membership__household=household)
+        )
         .distinct()
         .with_related()
         .with_stats()
@@ -227,8 +231,16 @@ def recipe_create_view(request):
             user=request.user,
             title=title,
             description=request.POST.get("description", "").strip(),
-            prep_time=int(request.POST["prep_time"]) if request.POST.get("prep_time") else None,
-            cook_time=int(request.POST["cook_time"]) if request.POST.get("cook_time") else None,
+            prep_time=(
+                int(request.POST["prep_time"])
+                if request.POST.get("prep_time")
+                else None
+            ),
+            cook_time=(
+                int(request.POST["cook_time"])
+                if request.POST.get("cook_time")
+                else None
+            ),
             servings=int(request.POST.get("servings", 4)),
             difficulty=request.POST.get("difficulty", "medium"),
             source=request.POST.get("source", "manual"),
@@ -290,8 +302,12 @@ def recipe_update_view(request, pk):
 
         recipe.title = title
         recipe.description = request.POST.get("description", "").strip()
-        recipe.prep_time = int(request.POST["prep_time"]) if request.POST.get("prep_time") else None
-        recipe.cook_time = int(request.POST["cook_time"]) if request.POST.get("cook_time") else None
+        recipe.prep_time = (
+            int(request.POST["prep_time"]) if request.POST.get("prep_time") else None
+        )
+        recipe.cook_time = (
+            int(request.POST["cook_time"]) if request.POST.get("cook_time") else None
+        )
         recipe.servings = int(request.POST.get("servings", 4))
         recipe.difficulty = request.POST.get("difficulty", "medium")
         recipe.source = request.POST.get("source", "manual")
@@ -372,7 +388,9 @@ def ai_generate_recipe_api(request):
 
     prompt = request.POST.get("ai_prompt", "").strip()
     if not prompt:
-        return JsonResponse({"error": "Please describe what you'd like to cook."}, status=400)
+        return JsonResponse(
+            {"error": "Please describe what you'd like to cook."}, status=400
+        )
 
     try:
         result = AIService.generate_structured_recipe(prompt)

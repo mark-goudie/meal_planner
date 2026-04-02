@@ -79,8 +79,12 @@ class Recipe(models.Model):
     cooking_mode_steps = models.JSONField(null=True, blank=True)
 
     # Recipe details
-    prep_time = models.PositiveIntegerField(null=True, blank=True, help_text="Preparation time in minutes")
-    cook_time = models.PositiveIntegerField(null=True, blank=True, help_text="Cooking time in minutes")
+    prep_time = models.PositiveIntegerField(
+        null=True, blank=True, help_text="Preparation time in minutes"
+    )
+    cook_time = models.PositiveIntegerField(
+        null=True, blank=True, help_text="Cooking time in minutes"
+    )
     servings = models.PositiveIntegerField(default=4, help_text="Number of servings")
     difficulty = models.CharField(
         max_length=10,
@@ -93,7 +97,9 @@ class Recipe(models.Model):
         blank=True,
     )
     image = models.ImageField(upload_to="recipes/", null=True, blank=True)
-    image_url = models.URLField(max_length=500, blank=True, help_text="External image URL (e.g. Unsplash)")
+    image_url = models.URLField(
+        max_length=500, blank=True, help_text="External image URL (e.g. Unsplash)"
+    )
 
     # Sharing
     shared = models.BooleanField(default=False)
@@ -190,7 +196,9 @@ class RecipeIngredient(models.Model):
         on_delete=models.CASCADE,
         related_name="recipe_ingredients",
     )
-    quantity = models.DecimalField(max_digits=8, decimal_places=2, null=True, blank=True)
+    quantity = models.DecimalField(
+        max_digits=8, decimal_places=2, null=True, blank=True
+    )
     unit = models.CharField(max_length=10, choices=UNIT_CHOICES, blank=True)
     preparation_notes = models.CharField(max_length=100, blank=True)
     order = models.PositiveIntegerField(default=0)

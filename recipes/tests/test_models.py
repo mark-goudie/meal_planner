@@ -11,14 +11,19 @@ from recipes.models.household import Household, HouseholdMembership
 
 class RecipeModelTest(TestCase):
     def setUp(self):
-        self.user = User.objects.create_user(username="testuser", email="test@example.com", password="testpass123")
+        self.user = User.objects.create_user(
+            username="testuser", email="test@example.com", password="testpass123"
+        )
         self.tag1, _ = Tag.objects.get_or_create(name="Breakfast")
         self.tag2, _ = Tag.objects.get_or_create(name="Quick")
 
     def test_create_recipe_minimal(self):
         """Test creating a recipe with minimal required fields"""
         recipe = Recipe.objects.create(
-            user=self.user, title="Test Recipe", ingredients_text="Test ingredients", steps="Test steps"
+            user=self.user,
+            title="Test Recipe",
+            ingredients_text="Test ingredients",
+            steps="Test steps",
         )
         self.assertEqual(recipe.title, "Test Recipe")
         self.assertEqual(recipe.user, self.user)
@@ -49,14 +54,20 @@ class RecipeModelTest(TestCase):
     def test_recipe_str_method(self):
         """Test the string representation of Recipe"""
         recipe = Recipe.objects.create(
-            user=self.user, title="String Test Recipe", ingredients_text="ingredients", steps="steps"
+            user=self.user,
+            title="String Test Recipe",
+            ingredients_text="ingredients",
+            steps="steps",
         )
         self.assertEqual(str(recipe), "String Test Recipe")
 
     def test_recipe_user_relationship(self):
         """Test the foreign key relationship with User"""
         recipe = Recipe.objects.create(
-            user=self.user, title="Relationship Test", ingredients_text="ingredients", steps="steps"
+            user=self.user,
+            title="Relationship Test",
+            ingredients_text="ingredients",
+            steps="steps",
         )
         self.assertEqual(recipe.user, self.user)
         self.assertIn(recipe, self.user.recipes.all())
@@ -64,7 +75,10 @@ class RecipeModelTest(TestCase):
     def test_recipe_tag_many_to_many(self):
         """Test the many-to-many relationship with Tags"""
         recipe = Recipe.objects.create(
-            user=self.user, title="Tag Test Recipe", ingredients_text="ingredients", steps="steps"
+            user=self.user,
+            title="Tag Test Recipe",
+            ingredients_text="ingredients",
+            steps="steps",
         )
         recipe.tags.add(self.tag1)
         self.assertEqual(recipe.tags.count(), 1)
@@ -73,7 +87,10 @@ class RecipeModelTest(TestCase):
     def test_recipe_favourited_by_many_to_many(self):
         """Test the favourited_by many-to-many relationship"""
         recipe = Recipe.objects.create(
-            user=self.user, title="Favourite Test", ingredients_text="ingredients", steps="steps"
+            user=self.user,
+            title="Favourite Test",
+            ingredients_text="ingredients",
+            steps="steps",
         )
         recipe.favourited_by.add(self.user)
         self.assertEqual(recipe.favourited_by.count(), 1)
@@ -107,17 +124,26 @@ class TagModelTest(TestCase):
 
 class MealPlanModelTest(TestCase):
     def setUp(self):
-        self.user = User.objects.create_user(username="testuser", email="test@example.com", password="testpass123")
+        self.user = User.objects.create_user(
+            username="testuser", email="test@example.com", password="testpass123"
+        )
         self.household = Household.objects.create(name="Test")
         HouseholdMembership.objects.create(user=self.user, household=self.household)
         self.recipe = Recipe.objects.create(
-            user=self.user, title="Test Recipe", ingredients_text="ingredients", steps="steps"
+            user=self.user,
+            title="Test Recipe",
+            ingredients_text="ingredients",
+            steps="steps",
         )
 
     def test_create_meal_plan(self):
         """Test creating a meal plan"""
         meal_plan = MealPlan.objects.create(
-            household=self.household, added_by=self.user, date=date.today(), meal_type="breakfast", recipe=self.recipe
+            household=self.household,
+            added_by=self.user,
+            date=date.today(),
+            meal_type="breakfast",
+            recipe=self.recipe,
         )
         self.assertEqual(meal_plan.household, self.household)
         self.assertEqual(meal_plan.added_by, self.user)
@@ -128,7 +154,10 @@ class MealPlanModelTest(TestCase):
     def test_meal_plan_default_date(self):
         """Test that meal plan defaults to today's date"""
         meal_plan = MealPlan.objects.create(
-            household=self.household, added_by=self.user, meal_type="lunch", recipe=self.recipe
+            household=self.household,
+            added_by=self.user,
+            meal_type="lunch",
+            recipe=self.recipe,
         )
         self.assertEqual(meal_plan.date, date.today())
 
@@ -154,13 +183,19 @@ class MealPlanModelTest(TestCase):
     def test_meal_plan_household_relationship(self):
         """Test the foreign key relationship with Household"""
         meal_plan = MealPlan.objects.create(
-            household=self.household, added_by=self.user, meal_type="breakfast", recipe=self.recipe
+            household=self.household,
+            added_by=self.user,
+            meal_type="breakfast",
+            recipe=self.recipe,
         )
         self.assertIn(meal_plan, self.household.meal_plans.all())
 
     def test_meal_plan_recipe_relationship(self):
         """Test the foreign key relationship with Recipe"""
         meal_plan = MealPlan.objects.create(
-            household=self.household, added_by=self.user, meal_type="breakfast", recipe=self.recipe
+            household=self.household,
+            added_by=self.user,
+            meal_type="breakfast",
+            recipe=self.recipe,
         )
         self.assertEqual(meal_plan.recipe, self.recipe)

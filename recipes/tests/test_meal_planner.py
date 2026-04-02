@@ -36,7 +36,9 @@ class MealPlannerPreferencesModelTest(TestCase):
         """Test that users can only have one preference object"""
         MealPlannerPreferences.objects.create(user=self.user)
         MealPlannerPreferences.objects.get_or_create(user=self.user)
-        self.assertEqual(MealPlannerPreferences.objects.filter(user=self.user).count(), 1)
+        self.assertEqual(
+            MealPlannerPreferences.objects.filter(user=self.user).count(), 1
+        )
 
 
 class MealPlanningAssistantServiceTest(TestCase):
@@ -85,7 +87,9 @@ class MealPlanningAssistantServiceTest(TestCase):
 
     def test_calculate_recipe_happiness_score_neutral(self):
         """Test happiness score calculation with no notes (neutral)"""
-        score = MealPlanningAssistantService.calculate_recipe_happiness_score(self.recipe3, self.user)
+        score = MealPlanningAssistantService.calculate_recipe_happiness_score(
+            self.recipe3, self.user
+        )
         self.assertEqual(score, Decimal("50.0"))
 
     def test_calculate_recipe_happiness_score_high(self):
@@ -97,7 +101,9 @@ class MealPlanningAssistantServiceTest(TestCase):
             rating=5,
             would_make_again=True,
         )
-        score = MealPlanningAssistantService.calculate_recipe_happiness_score(self.recipe1, self.user)
+        score = MealPlanningAssistantService.calculate_recipe_happiness_score(
+            self.recipe1, self.user
+        )
         self.assertEqual(score, Decimal("100.0"))
 
     def test_calculate_recipe_happiness_score_low(self):
@@ -109,7 +115,9 @@ class MealPlanningAssistantServiceTest(TestCase):
             rating=1,
             would_make_again=False,
         )
-        score = MealPlanningAssistantService.calculate_recipe_happiness_score(self.recipe2, self.user)
+        score = MealPlanningAssistantService.calculate_recipe_happiness_score(
+            self.recipe2, self.user
+        )
         self.assertLessEqual(score, Decimal("25"))
 
     def test_get_recently_cooked_recipes(self):
@@ -129,7 +137,9 @@ class MealPlanningAssistantServiceTest(TestCase):
         )
 
         # Get recipes from last 14 days
-        recent_ids = MealPlanningAssistantService.get_recently_cooked_recipes(self.user, 14)
+        recent_ids = MealPlanningAssistantService.get_recently_cooked_recipes(
+            self.user, 14
+        )
 
         self.assertIn(self.recipe1.id, recent_ids)
         self.assertNotIn(self.recipe2.id, recent_ids)
@@ -139,7 +149,9 @@ class MealPlanningAssistantServiceTest(TestCase):
         recipes = [self.recipe1, self.recipe2, self.recipe3]
 
         # Filter for max 45 minutes
-        filtered = MealPlanningAssistantService.filter_recipes_by_time_constraint(recipes, 45)
+        filtered = MealPlanningAssistantService.filter_recipes_by_time_constraint(
+            recipes, 45
+        )
 
         self.assertIn(self.recipe1, filtered)  # 30 min total
         self.assertIn(self.recipe3, filtered)  # 25 min total
@@ -147,10 +159,14 @@ class MealPlanningAssistantServiceTest(TestCase):
 
     def test_generate_weekly_plan(self):
         """Test generating a weekly meal plan creates MealPlan entries"""
-        MealPlanningAssistantService.generate_weekly_plan(user=self.user, meals_per_day=["dinner"])
+        MealPlanningAssistantService.generate_weekly_plan(
+            user=self.user, meals_per_day=["dinner"]
+        )
 
         # Should have created 7 dinner entries
-        meal_plans = MealPlan.objects.filter(household=self.household, meal_type="dinner")
+        meal_plans = MealPlan.objects.filter(
+            household=self.household, meal_type="dinner"
+        )
         self.assertEqual(meal_plans.count(), 7)
 
         # Each entry should have a recipe
@@ -159,7 +175,9 @@ class MealPlanningAssistantServiceTest(TestCase):
 
     def test_generate_plan_multiple_meals(self):
         """Test generating plan with multiple meals per day"""
-        MealPlanningAssistantService.generate_weekly_plan(user=self.user, meals_per_day=["breakfast", "dinner"])
+        MealPlanningAssistantService.generate_weekly_plan(
+            user=self.user, meals_per_day=["breakfast", "dinner"]
+        )
 
         # Should have 14 entries (7 days * 2 meals)
         meal_plans = MealPlan.objects.filter(household=self.household)
@@ -178,7 +196,10 @@ class MealPlannerViewsTest(TestCase):
 
         # Create a test recipe
         self.recipe = Recipe.objects.create(
-            user=self.user, title="Test Recipe", ingredients_text="Test ingredients", steps="Test steps"
+            user=self.user,
+            title="Test Recipe",
+            ingredients_text="Test ingredients",
+            steps="Test steps",
         )
 
     def test_meal_planner_preferences_view_get(self):
@@ -208,7 +229,10 @@ class MealPlannerViewsTest(TestCase):
     def test_smart_meal_planner_view_post(self):
         """Test POST request to smart planner redirects to /week/"""
         tomorrow = date.today() + timedelta(days=1)
-        data = {"week_start": tomorrow.strftime("%Y-%m-%d"), "meals_to_plan": ["dinner"]}
+        data = {
+            "week_start": tomorrow.strftime("%Y-%m-%d"),
+            "meals_to_plan": ["dinner"],
+        }
         response = self.client.post(reverse("smart_meal_planner"), data)
         self.assertEqual(response.status_code, 302)
         self.assertEqual(response.url, "/week/")

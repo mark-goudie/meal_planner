@@ -3,7 +3,9 @@ from django.db import models
 
 
 class MealPlanTemplate(models.Model):
-    household = models.ForeignKey("Household", on_delete=models.CASCADE, related_name="meal_templates")
+    household = models.ForeignKey(
+        "Household", on_delete=models.CASCADE, related_name="meal_templates"
+    )
     name = models.CharField(max_length=100)
     created_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -16,7 +18,9 @@ class MealPlanTemplate(models.Model):
 
 
 class MealPlanTemplateEntry(models.Model):
-    template = models.ForeignKey(MealPlanTemplate, on_delete=models.CASCADE, related_name="entries")
+    template = models.ForeignKey(
+        MealPlanTemplate, on_delete=models.CASCADE, related_name="entries"
+    )
     day_of_week = models.IntegerField(help_text="0=Monday, 6=Sunday")
     meal_type = models.CharField(max_length=10, default="dinner")
     recipe = models.ForeignKey("Recipe", on_delete=models.CASCADE)

@@ -19,7 +19,9 @@ class RecipeListViewTest(TestCase):
 
     def setUp(self):
         self.client = Client()
-        self.user = User.objects.create_user(username="testuser", password="testpass123")
+        self.user = User.objects.create_user(
+            username="testuser", password="testpass123"
+        )
         self.recipe = Recipe.objects.create(
             user=self.user,
             title="Spaghetti Carbonara",
@@ -43,7 +45,9 @@ class RecipeListViewTest(TestCase):
 
     def test_recipe_list_does_not_show_other_user_recipes(self):
         """Recipe list should not show recipes from other users."""
-        other_user = User.objects.create_user(username="otheruser", password="testpass123")
+        other_user = User.objects.create_user(
+            username="otheruser", password="testpass123"
+        )
         Recipe.objects.create(
             user=other_user,
             title="Secret Recipe",
@@ -83,7 +87,9 @@ class RecipeSearchViewTest(TestCase):
 
     def setUp(self):
         self.client = Client()
-        self.user = User.objects.create_user(username="testuser", password="testpass123")
+        self.user = User.objects.create_user(
+            username="testuser", password="testpass123"
+        )
         self.recipe1 = Recipe.objects.create(
             user=self.user,
             title="Thai Green Curry",
@@ -156,7 +162,9 @@ class RecipeDetailViewTest(TestCase):
 
     def setUp(self):
         self.client = Client()
-        self.user = User.objects.create_user(username="testuser", password="testpass123")
+        self.user = User.objects.create_user(
+            username="testuser", password="testpass123"
+        )
         self.recipe = Recipe.objects.create(
             user=self.user,
             title="Spaghetti Carbonara",
@@ -237,7 +245,9 @@ class RecipeCreateViewTest(TestCase):
 
     def setUp(self):
         self.client = Client()
-        self.user = User.objects.create_user(username="testuser", password="testpass123")
+        self.user = User.objects.create_user(
+            username="testuser", password="testpass123"
+        )
         self.client.login(username="testuser", password="testpass123")
 
     def test_create_get_returns_200(self):
@@ -259,7 +269,9 @@ class RecipeCreateViewTest(TestCase):
             },
         )
         self.assertEqual(response.status_code, 302)
-        self.assertTrue(Recipe.objects.filter(title="New Recipe", user=self.user).exists())
+        self.assertTrue(
+            Recipe.objects.filter(title="New Recipe", user=self.user).exists()
+        )
 
     def test_create_recipe_with_structured_ingredients(self):
         """POST with ingredient fields should create RecipeIngredients."""
@@ -333,7 +345,9 @@ class RecipeUpdateViewTest(TestCase):
 
     def setUp(self):
         self.client = Client()
-        self.user = User.objects.create_user(username="testuser", password="testpass123")
+        self.user = User.objects.create_user(
+            username="testuser", password="testpass123"
+        )
         self.recipe = Recipe.objects.create(
             user=self.user,
             title="Original Title",
@@ -412,7 +426,9 @@ class RecipeDeleteViewTest(TestCase):
 
     def setUp(self):
         self.client = Client()
-        self.user = User.objects.create_user(username="testuser", password="testpass123")
+        self.user = User.objects.create_user(
+            username="testuser", password="testpass123"
+        )
         self.recipe = Recipe.objects.create(
             user=self.user,
             title="To Delete",
@@ -448,7 +464,9 @@ class ToggleFavouriteViewTest(TestCase):
 
     def setUp(self):
         self.client = Client()
-        self.user = User.objects.create_user(username="testuser", password="testpass123")
+        self.user = User.objects.create_user(
+            username="testuser", password="testpass123"
+        )
         self.recipe = Recipe.objects.create(
             user=self.user,
             title="Favourite Test",
@@ -478,7 +496,9 @@ class ToggleFavouriteViewTest(TestCase):
 
     def test_toggle_only_for_own_recipe(self):
         """Should return 404 for recipes not owned by the user."""
-        other_user = User.objects.create_user(username="otheruser", password="testpass123")
+        other_user = User.objects.create_user(
+            username="otheruser", password="testpass123"
+        )
         other_recipe = Recipe.objects.create(
             user=other_user,
             title="Not Mine",

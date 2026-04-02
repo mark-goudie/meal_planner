@@ -32,7 +32,7 @@ from .recipes import (
 )
 from .settings import settings_view
 from .shop import shop_add, shop_generate, shop_toggle, shop_update_qty, shop_view
-from .week import (
+from .week import (  # noqa: F401
     apply_template,
     day_comment,
     delete_template,

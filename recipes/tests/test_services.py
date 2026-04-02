@@ -26,14 +26,22 @@ class RecipeServiceTest(TestCase):
 
     def setUp(self):
         self.user = User.objects.create_user(username="testuser", password="testpass")
-        self.other_user = User.objects.create_user(username="otheruser", password="testpass")
+        self.other_user = User.objects.create_user(
+            username="otheruser", password="testpass"
+        )
 
         self.recipe1 = Recipe.objects.create(
-            user=self.user, title="Test Recipe 1", ingredients_text="ingredient 1\ningredient 2", steps="step 1\nstep 2"
+            user=self.user,
+            title="Test Recipe 1",
+            ingredients_text="ingredient 1\ningredient 2",
+            steps="step 1\nstep 2",
         )
 
         self.recipe2 = Recipe.objects.create(
-            user=self.user, title="Test Recipe 2", ingredients_text="ingredient 3\ningredient 4", steps="step 3\nstep 4"
+            user=self.user,
+            title="Test Recipe 2",
+            ingredients_text="ingredient 3\ningredient 4",
+            steps="step 3\nstep 4",
         )
 
         self.tag1 = Tag.objects.create(name="Dinner")
@@ -69,7 +77,11 @@ class RecipeServiceTest(TestCase):
 
     def test_create_recipe(self):
         """Test creating a recipe"""
-        recipe_data = {"title": "New Recipe", "ingredients_text": "New ingredients", "steps": "New steps"}
+        recipe_data = {
+            "title": "New Recipe",
+            "ingredients_text": "New ingredients",
+            "steps": "New steps",
+        }
         recipe = RecipeService.create_recipe(self.user, recipe_data)
         self.assertEqual(recipe.title, "New Recipe")
         self.assertEqual(recipe.user, self.user)
@@ -116,14 +128,21 @@ class MealPlanServiceTest(TestCase):
         self.household = Household.objects.create(name="Test")
         HouseholdMembership.objects.create(user=self.user, household=self.household)
         self.recipe = Recipe.objects.create(
-            user=self.user, title="Test Recipe", ingredients_text="ingredients", steps="steps"
+            user=self.user,
+            title="Test Recipe",
+            ingredients_text="ingredients",
+            steps="steps",
         )
         self.today = date.today()
 
     def test_get_meal_plans_for_user(self):
         """Test getting meal plans for a user"""
         MealPlan.objects.create(
-            household=self.household, added_by=self.user, recipe=self.recipe, date=self.today, meal_type="breakfast"
+            household=self.household,
+            added_by=self.user,
+            recipe=self.recipe,
+            date=self.today,
+            meal_type="breakfast",
         )
         plans = MealPlanService.get_meal_plans_for_user(self.user)
         self.assertEqual(plans.count(), 1)
@@ -172,12 +191,18 @@ class MealPlanServiceTest(TestCase):
 
         # Create new recipe for update
         new_recipe = Recipe.objects.create(
-            user=self.user, title="New Recipe", ingredients_text="new ingredients", steps="new steps"
+            user=self.user,
+            title="New Recipe",
+            ingredients_text="new ingredients",
+            steps="new steps",
         )
 
         # Update the meal plan
         meal_plan, created = MealPlanService.create_or_update_meal_plan(
-            user=self.user, recipe=new_recipe, plan_date=self.today, meal_type="breakfast"
+            user=self.user,
+            recipe=new_recipe,
+            plan_date=self.today,
+            meal_type="breakfast",
         )
 
         self.assertFalse(created)
@@ -245,7 +270,9 @@ class AIServiceTest(TestCase):
 
         mock_text_block = MagicMock()
         mock_text_block.type = "text"
-        mock_text_block.text = "Title: Test Recipe\nIngredients: Test ingredients\nSteps: Test steps"
+        mock_text_block.text = (
+            "Title: Test Recipe\nIngredients: Test ingredients\nSteps: Test steps"
+        )
         mock_response = MagicMock()
         mock_response.content = [mock_text_block]
         mock_client.messages.create.return_value = mock_response

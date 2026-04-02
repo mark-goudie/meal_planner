@@ -8,7 +8,9 @@ class CookingNote(models.Model):
         on_delete=models.CASCADE,
         related_name="cooking_notes",
     )
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="cooking_notes")
+    user = models.ForeignKey(
+        User, on_delete=models.CASCADE, related_name="cooking_notes"
+    )
     cooked_date = models.DateField()
     rating = models.IntegerField(
         null=True,

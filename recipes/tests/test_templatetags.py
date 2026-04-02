@@ -6,19 +6,31 @@ from django.test import TestCase
 
 from recipes.models import MealPlan, Recipe
 from recipes.models.household import Household, HouseholdMembership
-from recipes.templatetags.recipe_extras import ai_generate_surprise_recipe, get, get_meal
+from recipes.templatetags.recipe_extras import (
+    ai_generate_surprise_recipe,
+    get,
+    get_meal,
+)
 
 
 class RecipeExtrasTemplateTagsTest(TestCase):
     def setUp(self):
-        self.user = User.objects.create_user(username="testuser", email="test@example.com", password="testpass123")
+        self.user = User.objects.create_user(
+            username="testuser", email="test@example.com", password="testpass123"
+        )
         self.household = Household.objects.create(name="Test")
         HouseholdMembership.objects.create(user=self.user, household=self.household)
         self.recipe1 = Recipe.objects.create(
-            user=self.user, title="Breakfast Recipe", ingredients_text="Breakfast ingredients", steps="Breakfast steps"
+            user=self.user,
+            title="Breakfast Recipe",
+            ingredients_text="Breakfast ingredients",
+            steps="Breakfast steps",
         )
         self.recipe2 = Recipe.objects.create(
-            user=self.user, title="Lunch Recipe", ingredients_text="Lunch ingredients", steps="Lunch steps"
+            user=self.user,
+            title="Lunch Recipe",
+            ingredients_text="Lunch ingredients",
+            steps="Lunch steps",
         )
         self.meal_plan1 = MealPlan.objects.create(
             household=self.household,
@@ -120,14 +132,20 @@ class RecipeExtrasTemplateTagsTest(TestCase):
 
     def test_get_filter_with_nested_values(self):
         """Test get filter with complex nested values"""
-        test_dict = {"simple": "value", "complex": {"nested": "nested_value"}, "list": [1, 2, 3]}
+        test_dict = {
+            "simple": "value",
+            "complex": {"nested": "nested_value"},
+            "list": [1, 2, 3],
+        }
 
         self.assertEqual(get(test_dict, "simple"), "value")
         self.assertEqual(get(test_dict, "complex"), {"nested": "nested_value"})
         self.assertEqual(get(test_dict, "list"), [1, 2, 3])
 
     @patch("recipes.templatetags.recipe_extras.anthropic.Anthropic")
-    @patch("recipes.templatetags.recipe_extras.settings.ANTHROPIC_API_KEY", "test-api-key")
+    @patch(
+        "recipes.templatetags.recipe_extras.settings.ANTHROPIC_API_KEY", "test-api-key"
+    )
     def test_ai_generate_surprise_recipe_success(self, mock_anthropic):
         """Test ai_generate_surprise_recipe function with successful API call"""
         # Mock Anthropic response
@@ -142,7 +160,10 @@ class RecipeExtrasTemplateTagsTest(TestCase):
 
         result = ai_generate_surprise_recipe()
 
-        self.assertEqual(result, "Title: Surprise Recipe\nIngredients: Surprise ingredients\nSteps: Surprise steps")
+        self.assertEqual(
+            result,
+            "Title: Surprise Recipe\nIngredients: Surprise ingredients\nSteps: Surprise steps",
+        )
 
         # Verify Anthropic was called correctly
         mock_anthropic.assert_called_once_with(api_key="test-api-key")
@@ -154,7 +175,9 @@ class RecipeExtrasTemplateTagsTest(TestCase):
         self.assertEqual(len(call_args[1]["messages"]), 1)
 
     @patch("recipes.templatetags.recipe_extras.anthropic.Anthropic")
-    @patch("recipes.templatetags.recipe_extras.settings.ANTHROPIC_API_KEY", "test-api-key")
+    @patch(
+        "recipes.templatetags.recipe_extras.settings.ANTHROPIC_API_KEY", "test-api-key"
+    )
     def test_ai_generate_surprise_recipe_empty_content(self, mock_anthropic):
         """Test ai_generate_surprise_recipe function with empty content"""
         # Mock Anthropic response with no text blocks
@@ -168,7 +191,9 @@ class RecipeExtrasTemplateTagsTest(TestCase):
         self.assertIsNone(result)
 
     @patch("recipes.templatetags.recipe_extras.anthropic.Anthropic")
-    @patch("recipes.templatetags.recipe_extras.settings.ANTHROPIC_API_KEY", "test-api-key")
+    @patch(
+        "recipes.templatetags.recipe_extras.settings.ANTHROPIC_API_KEY", "test-api-key"
+    )
     def test_ai_generate_surprise_recipe_whitespace_content(self, mock_anthropic):
         """Test ai_generate_surprise_recipe function with whitespace-only content"""
         # Mock Anthropic response with whitespace content
@@ -185,7 +210,9 @@ class RecipeExtrasTemplateTagsTest(TestCase):
         self.assertEqual(result, "")  # Should be stripped to empty string
 
     @patch("recipes.templatetags.recipe_extras.anthropic.Anthropic")
-    @patch("recipes.templatetags.recipe_extras.settings.ANTHROPIC_API_KEY", "test-api-key")
+    @patch(
+        "recipes.templatetags.recipe_extras.settings.ANTHROPIC_API_KEY", "test-api-key"
+    )
     def test_ai_generate_surprise_recipe_strips_whitespace(self, mock_anthropic):
         """Test ai_generate_surprise_recipe function strips leading/trailing whitespace"""
         # Mock Anthropic response with content that has whitespace
@@ -193,7 +220,9 @@ class RecipeExtrasTemplateTagsTest(TestCase):
         mock_anthropic.return_value = mock_client
         mock_text_block = Mock()
         mock_text_block.type = "text"
-        mock_text_block.text = "  \n  Title: Clean Recipe\nIngredients: Clean ingredients  \n  "
+        mock_text_block.text = (
+            "  \n  Title: Clean Recipe\nIngredients: Clean ingredients  \n  "
+        )
         mock_response = Mock()
         mock_response.content = [mock_text_block]
         mock_client.messages.create.return_value = mock_response
@@ -202,7 +231,9 @@ class RecipeExtrasTemplateTagsTest(TestCase):
         self.assertEqual(result, "Title: Clean Recipe\nIngredients: Clean ingredients")
 
     @patch("recipes.templatetags.recipe_extras.anthropic.Anthropic")
-    @patch("recipes.templatetags.recipe_extras.settings.ANTHROPIC_API_KEY", "test-api-key")
+    @patch(
+        "recipes.templatetags.recipe_extras.settings.ANTHROPIC_API_KEY", "test-api-key"
+    )
     def test_ai_generate_surprise_recipe_prompt_content(self, mock_anthropic):
         """Test that ai_generate_surprise_recipe sends correct prompt"""
         mock_client = Mock()
@@ -236,7 +267,9 @@ class TemplateTagIntegrationTest(TestCase):
     """Test template tags working together in realistic scenarios"""
 
     def setUp(self):
-        self.user = User.objects.create_user(username="testuser2", email="test2@example.com", password="testpass123")
+        self.user = User.objects.create_user(
+            username="testuser2", email="test2@example.com", password="testpass123"
+        )
         self.household = Household.objects.create(name="Test2")
         HouseholdMembership.objects.create(user=self.user, household=self.household)
 
@@ -244,10 +277,16 @@ class TemplateTagIntegrationTest(TestCase):
         """Test get_meal filter with realistic meal plan data structure"""
         # Create meal plans for different meals
         breakfast_recipe = Recipe.objects.create(
-            user=self.user, title="Pancakes", ingredients_text="Flour, eggs, milk", steps="Mix and cook"
+            user=self.user,
+            title="Pancakes",
+            ingredients_text="Flour, eggs, milk",
+            steps="Mix and cook",
         )
         lunch_recipe = Recipe.objects.create(
-            user=self.user, title="Sandwich", ingredients_text="Bread, meat, cheese", steps="Assemble and serve"
+            user=self.user,
+            title="Sandwich",
+            ingredients_text="Bread, meat, cheese",
+            steps="Assemble and serve",
         )
 
         meal_plans = [
@@ -280,13 +319,23 @@ class TemplateTagIntegrationTest(TestCase):
         """Test get filter with typical template context data"""
         # Simulate template context data structure
         context_data = {
-            "week_days": [{"date": date.today(), "name": "Monday", "breakfast": None, "lunch": None, "dinner": None}],
+            "week_days": [
+                {
+                    "date": date.today(),
+                    "name": "Monday",
+                    "breakfast": None,
+                    "lunch": None,
+                    "dinner": None,
+                }
+            ],
             "meal_types": ["breakfast", "lunch", "dinner"],
             "user": self.user,
         }
 
         # Test accessing various context data
-        self.assertEqual(get(context_data, "meal_types"), ["breakfast", "lunch", "dinner"])
+        self.assertEqual(
+            get(context_data, "meal_types"), ["breakfast", "lunch", "dinner"]
+        )
         self.assertEqual(get(context_data, "user"), self.user)
         self.assertIsInstance(get(context_data, "week_days"), list)
         self.assertIsNone(get(context_data, "nonexistent_key"))

@@ -19,7 +19,9 @@ class ShopViewTest(TestCase):
 
     def setUp(self):
         self.client = Client()
-        self.user = User.objects.create_user(username="testuser", password="testpass123")
+        self.user = User.objects.create_user(
+            username="testuser", password="testpass123"
+        )
         self.household = Household.objects.create(name="Test")
         HouseholdMembership.objects.create(user=self.user, household=self.household)
         self.recipe = Recipe.objects.create(
@@ -71,7 +73,9 @@ class ShopViewTest(TestCase):
 
     def test_shop_toggle_toggles_checked(self):
         """Toggle should switch checked state of a shopping item."""
-        item = ShoppingListItem.objects.create(household=self.household, added_by=self.user, name="Milk", checked=False)
+        item = ShoppingListItem.objects.create(
+            household=self.household, added_by=self.user, name="Milk", checked=False
+        )
         response = self.client.post(reverse("shop_toggle", args=[item.pk]))
         self.assertEqual(response.status_code, 200)
         item.refresh_from_db()
@@ -98,7 +102,11 @@ class ShopViewTest(TestCase):
             data={"name": "Bananas"},
         )
         self.assertEqual(response.status_code, 200)
-        self.assertTrue(ShoppingListItem.objects.filter(household=self.household, name="Bananas").exists())
+        self.assertTrue(
+            ShoppingListItem.objects.filter(
+                household=self.household, name="Bananas"
+            ).exists()
+        )
 
     def test_shop_add_empty_name_returns_empty(self):
         """Adding with empty name should return empty response."""
@@ -107,20 +115,36 @@ class ShopViewTest(TestCase):
             data={"name": ""},
         )
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(ShoppingListItem.objects.filter(household=self.household).count(), 0)
+        self.assertEqual(
+            ShoppingListItem.objects.filter(household=self.household).count(), 0
+        )
 
     def test_shop_generate_clears_generated_items(self):
         """Regenerate should clear generated items but keep manual items."""
         ShoppingListItem.objects.create(
-            household=self.household, added_by=self.user, name="Generated", is_generated=True
+            household=self.household,
+            added_by=self.user,
+            name="Generated",
+            is_generated=True,
         )
         ShoppingListItem.objects.create(
-            household=self.household, added_by=self.user, name="Manual Item", is_generated=False
+            household=self.household,
+            added_by=self.user,
+            name="Manual Item",
+            is_generated=False,
         )
         response = self.client.post(reverse("shop_generate"))
         self.assertEqual(response.status_code, 302)
-        self.assertFalse(ShoppingListItem.objects.filter(household=self.household, is_generated=True).exists())
-        self.assertTrue(ShoppingListItem.objects.filter(household=self.household, name="Manual Item").exists())
+        self.assertFalse(
+            ShoppingListItem.objects.filter(
+                household=self.household, is_generated=True
+            ).exists()
+        )
+        self.assertTrue(
+            ShoppingListItem.objects.filter(
+                household=self.household, name="Manual Item"
+            ).exists()
+        )
 
     def test_shop_generate_with_selected_meals(self):
         """Regenerate with selected meals should only include those meals."""
@@ -133,13 +157,21 @@ class ShopViewTest(TestCase):
         )
         response = self.client.post(reverse("shop_generate"), {"meals": [meal.pk]})
         self.assertEqual(response.status_code, 302)
-        self.assertTrue(ShoppingListItem.objects.filter(household=self.household, is_generated=True).exists())
+        self.assertTrue(
+            ShoppingListItem.objects.filter(
+                household=self.household, is_generated=True
+            ).exists()
+        )
 
     def test_shop_toggle_other_user_returns_404(self):
         """Toggling another user's item should return 404."""
-        other_user = User.objects.create_user(username="otheruser", password="testpass123")
+        other_user = User.objects.create_user(
+            username="otheruser", password="testpass123"
+        )
         other_household = Household.objects.create(name="Other")
         HouseholdMembership.objects.create(user=other_user, household=other_household)
-        item = ShoppingListItem.objects.create(household=other_household, added_by=other_user, name="Secret Item")
+        item = ShoppingListItem.objects.create(
+            household=other_household, added_by=other_user, name="Secret Item"
+        )
         response = self.client.post(reverse("shop_toggle", args=[item.pk]))
         self.assertEqual(response.status_code, 404)

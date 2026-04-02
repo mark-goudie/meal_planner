@@ -31,14 +31,18 @@ class Migration(migrations.Migration):
             model_name="mealplan",
             name="household",
             field=models.ForeignKey(
-                on_delete=django.db.models.deletion.CASCADE, related_name="meal_plans", to="recipes.household"
+                on_delete=django.db.models.deletion.CASCADE,
+                related_name="meal_plans",
+                to="recipes.household",
             ),
         ),
         migrations.AlterField(
             model_name="shoppinglistitem",
             name="household",
             field=models.ForeignKey(
-                on_delete=django.db.models.deletion.CASCADE, related_name="shopping_items", to="recipes.household"
+                on_delete=django.db.models.deletion.CASCADE,
+                related_name="shopping_items",
+                to="recipes.household",
             ),
         ),
         migrations.AlterUniqueTogether(
@@ -47,11 +51,16 @@ class Migration(migrations.Migration):
         ),
         migrations.AddIndex(
             model_name="mealplan",
-            index=models.Index(fields=["household", "date"], name="recipes_mea_househo_ce8d4f_idx"),
+            index=models.Index(
+                fields=["household", "date"], name="recipes_mea_househo_ce8d4f_idx"
+            ),
         ),
         migrations.AddIndex(
             model_name="mealplan",
-            index=models.Index(fields=["household", "date", "meal_type"], name="recipes_mea_househo_d1bbf2_idx"),
+            index=models.Index(
+                fields=["household", "date", "meal_type"],
+                name="recipes_mea_househo_d1bbf2_idx",
+            ),
         ),
         migrations.RemoveField(
             model_name="mealplan",

@@ -16,16 +16,28 @@ class Command(BaseCommand):
     help = "Run performance tests on the meal planner application"
 
     def add_arguments(self, parser):
-        parser.add_argument("--iterations", type=int, default=10, help="Number of iterations to run for each test")
+        parser.add_argument(
+            "--iterations",
+            type=int,
+            default=10,
+            help="Number of iterations to run for each test",
+        )
         parser.add_argument(
             "--endpoints",
             nargs="*",
             default=["/recipes/", "/recipes/meal-plans/", "/recipes/shopping-list/"],
             help="Endpoints to test",
         )
-        parser.add_argument("--warm-cache", action="store_true", help="Warm the cache before running tests")
         parser.add_argument(
-            "--output-format", choices=["json", "table"], default="table", help="Output format for results"
+            "--warm-cache",
+            action="store_true",
+            help="Warm the cache before running tests",
+        )
+        parser.add_argument(
+            "--output-format",
+            choices=["json", "table"],
+            default="table",
+            help="Output format for results",
         )
 
     def handle(self, *args, **options):
@@ -55,7 +67,12 @@ class Command(BaseCommand):
     def get_or_create_test_user(self):
         """Create or get test user"""
         user, created = User.objects.get_or_create(
-            username="perf_test_user", defaults={"email": "test@example.com", "is_staff": False, "is_superuser": False}
+            username="perf_test_user",
+            defaults={
+                "email": "test@example.com",
+                "is_staff": False,
+                "is_superuser": False,
+            },
         )
         if created:
             user.set_password("testpass123")
@@ -104,7 +121,9 @@ class Command(BaseCommand):
                 "max": max(response_times),
                 "mean": statistics.mean(response_times),
                 "median": statistics.median(response_times),
-                "stdev": statistics.stdev(response_times) if len(response_times) > 1 else 0,
+                "stdev": (
+                    statistics.stdev(response_times) if len(response_times) > 1 else 0
+                ),
             },
             "query_counts": {
                 "min": min(query_counts),
@@ -172,7 +191,9 @@ class Command(BaseCommand):
         # Check query count
         if qc["mean"] > 20:
             issues.append(f"High query count: {qc['mean']:.1f} average")
-            recommendations.append("Consider using select_related() or prefetch_related()")
+            recommendations.append(
+                "Consider using select_related() or prefetch_related()"
+            )
 
         # Check consistency
         if rt["stdev"] > rt["mean"] * 0.5:

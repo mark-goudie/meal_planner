@@ -53,17 +53,23 @@ class HouseholdMembershipTests(TestCase):
     def setUp(self):
         self.user1 = User.objects.create_user("alice", password="pass")
         self.user2 = User.objects.create_user("bob", password="pass")
-        self.household = Household.objects.create(name="Test Kitchen", created_by=self.user1)
+        self.household = Household.objects.create(
+            name="Test Kitchen", created_by=self.user1
+        )
 
     def test_membership_creation(self):
-        m = HouseholdMembership.objects.create(user=self.user1, household=self.household)
+        m = HouseholdMembership.objects.create(
+            user=self.user1, household=self.household
+        )
         self.assertEqual(m.user, self.user1)
         self.assertEqual(m.household, self.household)
 
     def test_one_to_one_constraint(self):
         HouseholdMembership.objects.create(user=self.user1, household=self.household)
         with self.assertRaises(IntegrityError):
-            HouseholdMembership.objects.create(user=self.user1, household=self.household)
+            HouseholdMembership.objects.create(
+                user=self.user1, household=self.household
+            )
 
     def test_household_members_count(self):
         HouseholdMembership.objects.create(user=self.user1, household=self.household)
@@ -74,7 +80,9 @@ class HouseholdMembershipTests(TestCase):
 class DayCommentTests(TestCase):
     def setUp(self):
         self.user = User.objects.create_user("alice", password="pass")
-        self.household = Household.objects.create(name="Test Kitchen", created_by=self.user)
+        self.household = Household.objects.create(
+            name="Test Kitchen", created_by=self.user
+        )
 
     def test_day_comment_creation(self):
         comment = DayComment.objects.create(
@@ -140,7 +148,9 @@ class RecipeSharedFieldTests(TestCase):
 class MealPlanHouseholdTests(TestCase):
     def setUp(self):
         self.user = User.objects.create_user("alice", password="pass")
-        self.household = Household.objects.create(name="Test Kitchen", created_by=self.user)
+        self.household = Household.objects.create(
+            name="Test Kitchen", created_by=self.user
+        )
         self.recipe = Recipe.objects.create(
             user=self.user,
             title="Test Recipe",
@@ -173,7 +183,9 @@ class MealPlanHouseholdTests(TestCase):
 class ShoppingListItemHouseholdTests(TestCase):
     def setUp(self):
         self.user = User.objects.create_user("alice", password="pass")
-        self.household = Household.objects.create(name="Test Kitchen", created_by=self.user)
+        self.household = Household.objects.create(
+            name="Test Kitchen", created_by=self.user
+        )
 
     def test_shopping_item_with_household(self):
         item = ShoppingListItem.objects.create(
@@ -191,7 +203,9 @@ class HouseholdSharingTests(TestCase):
     def setUp(self):
         self.alice = User.objects.create_user("alice", password="pass")
         self.bob = User.objects.create_user("bob", password="pass")
-        self.household = Household.objects.create(name="Shared Kitchen", created_by=self.alice)
+        self.household = Household.objects.create(
+            name="Shared Kitchen", created_by=self.alice
+        )
         HouseholdMembership.objects.create(user=self.alice, household=self.household)
         HouseholdMembership.objects.create(user=self.bob, household=self.household)
         self.recipe = Recipe.objects.create(
@@ -291,20 +305,33 @@ class DayCommentViewTest(TestCase):
 
     def test_add_day_comment(self):
         today_str = date.today().strftime("%Y-%m-%d")
-        response = self.client.post(reverse("day_comment", args=[today_str]), {"text": "Work dinner"})
+        response = self.client.post(
+            reverse("day_comment", args=[today_str]), {"text": "Work dinner"}
+        )
         self.assertEqual(response.status_code, 200)
         self.assertTrue(DayComment.objects.filter(household=self.household).exists())
 
     def test_comment_shows_on_week_view(self):
-        DayComment.objects.create(household=self.household, user=self.user, date=date.today(), text="Out tonight")
+        DayComment.objects.create(
+            household=self.household,
+            user=self.user,
+            date=date.today(),
+            text="Out tonight",
+        )
         response = self.client.get(reverse("week"))
         self.assertContains(response, "Out tonight")
 
     def test_empty_text_deletes_comment(self):
-        DayComment.objects.create(household=self.household, user=self.user, date=date.today(), text="Old note")
+        DayComment.objects.create(
+            household=self.household, user=self.user, date=date.today(), text="Old note"
+        )
         today_str = date.today().strftime("%Y-%m-%d")
         self.client.post(reverse("day_comment", args=[today_str]), {"text": ""})
-        self.assertFalse(DayComment.objects.filter(household=self.household, date=date.today()).exists())
+        self.assertFalse(
+            DayComment.objects.filter(
+                household=self.household, date=date.today()
+            ).exists()
+        )
 
 
 class HouseholdViewIntegrationTest(TestCase):
@@ -314,7 +341,9 @@ class HouseholdViewIntegrationTest(TestCase):
         self.user2 = User.objects.create_user("lisa", password="testpass123")
         HouseholdMembership.objects.create(user=self.user1, household=self.household)
         HouseholdMembership.objects.create(user=self.user2, household=self.household)
-        self.recipe = Recipe.objects.create(user=self.user1, title="Shared Dinner", steps="cook", shared=True)
+        self.recipe = Recipe.objects.create(
+            user=self.user1, title="Shared Dinner", steps="cook", shared=True
+        )
         self.client1 = Client()
         self.client1.login(username="mark", password="testpass123")
         self.client2 = Client()
@@ -325,13 +354,19 @@ class HouseholdViewIntegrationTest(TestCase):
         self.assertContains(response, "Shared Dinner")
 
     def test_user2_does_not_see_unshared_recipe(self):
-        Recipe.objects.create(user=self.user1, title="Private Meal", steps="cook", shared=False)
+        Recipe.objects.create(
+            user=self.user1, title="Private Meal", steps="cook", shared=False
+        )
         response = self.client2.get(reverse("recipe_list"))
         self.assertNotContains(response, "Private Meal")
 
     def test_both_users_see_same_meal_plan(self):
         MealPlan.objects.create(
-            household=self.household, added_by=self.user1, date=date.today(), meal_type="dinner", recipe=self.recipe
+            household=self.household,
+            added_by=self.user1,
+            date=date.today(),
+            meal_type="dinner",
+            recipe=self.recipe,
         )
         resp1 = self.client1.get(reverse("week"))
         resp2 = self.client2.get(reverse("week"))
@@ -339,7 +374,9 @@ class HouseholdViewIntegrationTest(TestCase):
         self.assertContains(resp2, "Shared Dinner")
 
     def test_both_users_see_same_shopping_items(self):
-        ShoppingListItem.objects.create(household=self.household, added_by=self.user1, name="Eggs")
+        ShoppingListItem.objects.create(
+            household=self.household, added_by=self.user1, name="Eggs"
+        )
         resp1 = self.client1.get(reverse("shop"))
         resp2 = self.client2.get(reverse("shop"))
         self.assertContains(resp1, "Eggs")

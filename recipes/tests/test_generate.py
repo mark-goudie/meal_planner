@@ -138,4 +138,6 @@ class GeneratePreferencesTest(TestCase):
         self.assertContains(response, "Skipped")
         self.assertEqual(self.client.session["gen_completed"], 1)
         # No new recipe should have been created
-        self.assertEqual(Recipe.objects.filter(user=self.user).count(), recipe_count_before)
+        self.assertEqual(
+            Recipe.objects.filter(user=self.user).count(), recipe_count_before
+        )

@@ -12,7 +12,16 @@ from .models import (
 class RecipeForm(forms.ModelForm):
     class Meta:
         model = Recipe
-        fields = ["title", "author", "description", "ingredients_text", "steps", "notes", "is_ai_generated", "tags"]
+        fields = [
+            "title",
+            "author",
+            "description",
+            "ingredients_text",
+            "steps",
+            "notes",
+            "is_ai_generated",
+            "tags",
+        ]
         widgets = {
             "description": forms.Textarea(attrs={"rows": 4, "cols": 40}),
             "ingredients_text": forms.Textarea(attrs={"rows": 4, "cols": 40}),
@@ -52,7 +61,9 @@ class RecipeForm(forms.ModelForm):
 
 
 class MealPlanForm(forms.ModelForm):
-    recipe = forms.ModelChoiceField(queryset=Recipe.objects.none())  # Correctly define the field
+    recipe = forms.ModelChoiceField(
+        queryset=Recipe.objects.none()
+    )  # Correctly define the field
 
     class Meta:
         model = MealPlan
@@ -67,7 +78,9 @@ class MealPlanForm(forms.ModelForm):
 
 
 class CustomUserCreationForm(UserCreationForm):
-    email = forms.EmailField(required=True, widget=forms.EmailInput(attrs={"class": "form-control"}))
+    email = forms.EmailField(
+        required=True, widget=forms.EmailInput(attrs={"class": "form-control"})
+    )
 
     class Meta:
         model = User
@@ -95,7 +108,9 @@ class MealPlannerPreferencesForm(forms.ModelForm):
             "avoid_repeat_days": forms.NumberInput(
                 attrs={"class": "form-control", "min": "7", "max": "90", "step": "7"}
             ),
-            "reminder_time": forms.TimeInput(attrs={"class": "form-control", "type": "time"}),
+            "reminder_time": forms.TimeInput(
+                attrs={"class": "form-control", "type": "time"}
+            ),
         }
         labels = {
             "max_weeknight_time": "Max Weeknight Cooking Time (minutes)",

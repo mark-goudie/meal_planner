@@ -1,4 +1,4 @@
-from datetime import date, timedelta
+from datetime import timedelta
 
 from django.contrib import messages as django_messages
 from django.contrib.auth.decorators import login_required
@@ -106,7 +106,9 @@ def shop_view(request):
     today = timezone.localdate()
 
     # Auto-generate if no generated items exist, or regenerate if stale
-    has_generated = ShoppingListItem.objects.filter(household=household, is_generated=True).exists()
+    has_generated = ShoppingListItem.objects.filter(
+        household=household, is_generated=True
+    ).exists()
     shop_start, shop_end = _get_shop_date_range()
     has_upcoming_meals = MealPlan.objects.filter(
         household=household, date__range=[today, shop_end]
