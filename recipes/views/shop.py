@@ -49,10 +49,8 @@ def _generate_shopping_items(household, user, meal_ids=None):
     Args:
         household: The household to generate for
         user: The user triggering the generation
-        meal_ids: List of MealPlan IDs to include. If None, includes today and future meals this week.
+        meal_ids: List of MealPlan IDs to include. If None, includes today and future meals.
     """
-    monday, sunday = _get_week_range()
-
     if meal_ids is not None:
         meals = MealPlan.objects.filter(
             household=household,
@@ -78,19 +76,19 @@ def _generate_shopping_items(household, user, meal_ids=None):
 
     for item in generated_items:
         qty_parts = []
-        if item["total_quantity"]:
+        if item.get("total_quantity"):
             qty_parts.append(f"{float(item['total_quantity']):g}")
-        if item["unit"]:
+        if item.get("unit"):
             qty_parts.append(item["unit"])
         quantity_str = " ".join(qty_parts)
 
         ShoppingListItem.objects.create(
             household=household,
             added_by=user,
-            name=item["ingredient"].name,
+            name=item["ingredient_name"],
             quantity=quantity_str,
-            category=item["category"] or "other",
-            recipe_sources=", ".join(sorted(item["recipes"])),
+            category=item.get("category") or "other",
+            recipe_sources=", ".join(sorted(item.get("recipes", set()))),
             is_generated=True,
         )
 
@@ -104,18 +102,25 @@ def shop_view(request):
 
     monday, sunday = _get_week_range()
     today = timezone.localdate()
-
-    # Auto-generate if no generated items exist, or regenerate if stale
-    has_generated = ShoppingListItem.objects.filter(
-        household=household, is_generated=True
-    ).exists()
     shop_start, shop_end = _get_shop_date_range()
-    has_upcoming_meals = MealPlan.objects.filter(
-        household=household, date__range=[today, shop_end]
-    ).exists()
 
-    if not has_generated and has_upcoming_meals:
-        _generate_shopping_items(household, request.user)
+    # Check if we have a stored selection from a previous generate action
+    selected_meal_ids = request.session.get("shop_selected_meals", None)
+
+    # Auto-generate from current meals (always regenerate to stay fresh)
+    if selected_meal_ids is None:
+        # No explicit selection — generate from all upcoming meals
+        upcoming_meal_ids = list(
+            MealPlan.objects.filter(
+                household=household, date__range=[today, shop_end]
+            ).values_list("pk", flat=True)
+        )
+        if upcoming_meal_ids:
+            _generate_shopping_items(household, request.user, meal_ids=upcoming_meal_ids)
+        else:
+            ShoppingListItem.objects.filter(
+                household=household, is_generated=True
+            ).delete()
 
     # Get all items
     all_items = (
@@ -148,7 +153,6 @@ def shop_view(request):
             )
 
     # Build meal selector: today through end of next week
-    shop_start, shop_end = _get_shop_date_range()
     next_monday = monday + timedelta(days=7)
 
     upcoming_meals = (
@@ -156,8 +160,6 @@ def shop_view(request):
         .select_related("recipe")
         .order_by("date")
     )
-    # Check if we have a stored selection from a previous generate action
-    selected_meal_ids = request.session.pop("shop_selected_meals", None)
 
     meal_selector = []
     for meal in upcoming_meals:

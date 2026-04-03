@@ -1,4 +1,4 @@
-from datetime import date
+from datetime import date, timedelta
 
 from django.contrib.auth.models import User
 from django.test import Client, TestCase
@@ -175,3 +175,163 @@ class ShopViewTest(TestCase):
         )
         response = self.client.post(reverse("shop_toggle", args=[item.pk]))
         self.assertEqual(response.status_code, 404)
+
+    def test_shop_regenerates_when_meals_added_after_initial_generation(self):
+        """Shopping list should include new meals added after initial generation."""
+        # First visit: one meal exists, auto-generates
+        MealPlan.objects.create(
+            household=self.household,
+            added_by=self.user,
+            date=date.today(),
+            meal_type="dinner",
+            recipe=self.recipe,
+        )
+        response = self.client.get(reverse("shop"))
+        self.assertContains(response, "carrots")
+
+        # Add a second meal with a different recipe
+        recipe2 = Recipe.objects.create(
+            user=self.user, title="Pasta", steps="Boil.", cook_time=20
+        )
+        onion = Ingredient.objects.create(name="onion", category="produce")
+        RecipeIngredient.objects.create(
+            recipe=recipe2, ingredient=onion, quantity=2, unit="piece", order=0
+        )
+        MealPlan.objects.create(
+            household=self.household,
+            added_by=self.user,
+            date=date.today() + timedelta(days=1),
+            meal_type="dinner",
+            recipe=recipe2,
+        )
+
+        # Second visit: should now include BOTH meals' ingredients
+        response = self.client.get(reverse("shop"))
+        self.assertContains(response, "carrots")
+        self.assertContains(response, "onion")
+
+    def test_shop_includes_text_only_ingredients(self):
+        """Recipes with only ingredients_text (no structured ingredients) should appear."""
+        text_recipe = Recipe.objects.create(
+            user=self.user,
+            title="Simple Salad",
+            steps="Mix it.",
+            cook_time=10,
+            ingredients_text="2 tomatoes\n1 cucumber\n100g feta cheese",
+        )
+        MealPlan.objects.create(
+            household=self.household,
+            added_by=self.user,
+            date=date.today(),
+            meal_type="dinner",
+            recipe=text_recipe,
+        )
+        response = self.client.get(reverse("shop"))
+        self.assertContains(response, "tomatoes")
+        self.assertContains(response, "cucumber")
+        self.assertContains(response, "feta cheese")
+
+    def test_shop_meal_count_matches_upcoming_meals(self):
+        """The meal_count context should reflect actual upcoming meals."""
+        MealPlan.objects.create(
+            household=self.household,
+            added_by=self.user,
+            date=date.today(),
+            meal_type="dinner",
+            recipe=self.recipe,
+        )
+        recipe2 = Recipe.objects.create(
+            user=self.user, title="Pasta", steps="Boil.", cook_time=20
+        )
+        MealPlan.objects.create(
+            household=self.household,
+            added_by=self.user,
+            date=date.today() + timedelta(days=1),
+            meal_type="dinner",
+            recipe=recipe2,
+        )
+        response = self.client.get(reverse("shop"))
+        self.assertEqual(response.context["meal_count"], 2)
+
+    def test_shop_generate_updates_list_to_match_selection(self):
+        """Posting shop_generate with specific meals should show only those ingredients."""
+        recipe2 = Recipe.objects.create(
+            user=self.user, title="Pasta", steps="Boil.", cook_time=20
+        )
+        garlic = Ingredient.objects.create(name="garlic", category="produce")
+        RecipeIngredient.objects.create(
+            recipe=recipe2, ingredient=garlic, quantity=3, unit="clove", order=0
+        )
+        MealPlan.objects.create(
+            household=self.household,
+            added_by=self.user,
+            date=date.today(),
+            meal_type="dinner",
+            recipe=self.recipe,
+        )
+        meal2 = MealPlan.objects.create(
+            household=self.household,
+            added_by=self.user,
+            date=date.today() + timedelta(days=1),
+            meal_type="dinner",
+            recipe=recipe2,
+        )
+
+        # Generate for only meal2
+        self.client.post(reverse("shop_generate"), {"meals": [meal2.pk]})
+
+        # Should have garlic but not carrots
+        self.assertTrue(
+            ShoppingListItem.objects.filter(
+                household=self.household, name="garlic", is_generated=True
+            ).exists()
+        )
+        self.assertFalse(
+            ShoppingListItem.objects.filter(
+                household=self.household, name="carrots", is_generated=True
+            ).exists()
+        )
+
+    def test_shop_weekend_meals_included(self):
+        """Meals on Saturday and Sunday of current week should appear in shopping list."""
+        today = date.today()
+        # Find next Saturday from today
+        days_to_sat = (5 - today.weekday()) % 7
+        if days_to_sat == 0 and today.weekday() != 5:
+            days_to_sat = 7
+        saturday = today + timedelta(days=days_to_sat)
+        sunday = saturday + timedelta(days=1)
+
+        recipe_sat = Recipe.objects.create(
+            user=self.user, title="Saturday Roast", steps="Roast it.", cook_time=60
+        )
+        lamb = Ingredient.objects.create(name="lamb", category="meat")
+        RecipeIngredient.objects.create(
+            recipe=recipe_sat, ingredient=lamb, quantity=1, unit="kg", order=0
+        )
+        MealPlan.objects.create(
+            household=self.household,
+            added_by=self.user,
+            date=saturday,
+            meal_type="dinner",
+            recipe=recipe_sat,
+        )
+
+        recipe_sun = Recipe.objects.create(
+            user=self.user, title="Sunday Stew", steps="Stew it.", cook_time=90
+        )
+        beef = Ingredient.objects.create(name="beef", category="meat")
+        RecipeIngredient.objects.create(
+            recipe=recipe_sun, ingredient=beef, quantity=500, unit="g", order=0
+        )
+        MealPlan.objects.create(
+            household=self.household,
+            added_by=self.user,
+            date=sunday,
+            meal_type="dinner",
+            recipe=recipe_sun,
+        )
+
+        response = self.client.get(reverse("shop"))
+        self.assertContains(response, "lamb")
+        self.assertContains(response, "beef")

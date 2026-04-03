@@ -159,12 +159,18 @@ class RecipeService:
 
     @staticmethod
     def generate_structured_shopping_list(recipes):
-        """Generate a shopping list with summed quantities from structured ingredients."""
+        """Generate a shopping list from structured ingredients, with text fallback.
+
+        For recipes with structured RecipeIngredient rows, quantities are summed
+        and grouped by ingredient+unit. For recipes with only ingredients_text,
+        each line becomes a separate shopping item.
+        """
         from collections import defaultdict
 
         aggregated = defaultdict(
             lambda: {
                 "ingredient": None,
+                "ingredient_name": "",
                 "category": "",
                 "total_quantity": Decimal("0"),
                 "unit": "",
@@ -172,17 +178,41 @@ class RecipeService:
             }
         )
 
-        for recipe in recipes:
-            for ri in recipe.recipe_ingredients.select_related("ingredient").all():
-                key = (ri.ingredient_id, ri.unit)
-                entry = aggregated[key]
-                entry["ingredient"] = ri.ingredient
-                entry["category"] = ri.ingredient.category
-                if ri.quantity:
-                    entry["total_quantity"] += ri.quantity
-                entry["unit"] = ri.unit
-                entry["recipes"].add(recipe.title)
+        text_items = []
 
-        return sorted(
-            aggregated.values(), key=lambda x: (x["category"], x["ingredient"].name)
+        for recipe in recipes:
+            structured = recipe.recipe_ingredients.select_related("ingredient").all()
+            if structured:
+                for ri in structured:
+                    key = (ri.ingredient_id, ri.unit)
+                    entry = aggregated[key]
+                    entry["ingredient"] = ri.ingredient
+                    entry["ingredient_name"] = ri.ingredient.name
+                    entry["category"] = ri.ingredient.category
+                    if ri.quantity:
+                        entry["total_quantity"] += ri.quantity
+                    entry["unit"] = ri.unit
+                    entry["recipes"].add(recipe.title)
+            elif recipe.ingredients_text and recipe.ingredients_text.strip():
+                # Fallback: parse ingredients_text line by line
+                for line in recipe.ingredients_text.strip().split("\n"):
+                    line = line.strip().lstrip("•-* ")
+                    if line:
+                        text_items.append(
+                            {
+                                "ingredient": None,
+                                "ingredient_name": line,
+                                "category": "other",
+                                "total_quantity": None,
+                                "unit": "",
+                                "recipes": {recipe.title},
+                            }
+                        )
+
+        result = sorted(
+            aggregated.values(),
+            key=lambda x: (x["category"], x["ingredient_name"]),
         )
+        # Append text items at the end, sorted by name
+        result.extend(sorted(text_items, key=lambda x: x["ingredient_name"].lower()))
+        return result
