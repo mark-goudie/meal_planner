@@ -1,0 +1,10 @@
+{% include "shop/partials/item.html" %}
+
+<div id="shop-progress" hx-swap-oob="innerHTML">
+  <div class="flex justify-between items-center mb-xs">
+    <span class="text-sm text-muted">{{ checked_items }} of {{ total_items }} items</span>
+  </div>
+  <div class="cook-progress">
+    <div class="cook-progress__fill" style="width: {% widthratio checked_items total_items 100 %}%;"></div>
+  </div>
+</div>

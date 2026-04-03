@@ -292,6 +292,61 @@ class ShopViewTest(TestCase):
             ).exists()
         )
 
+    def test_shop_includes_all_ingredients_when_structured_is_partial(self):
+        """If a recipe has some structured ingredients but more in text, include both."""
+        recipe = Recipe.objects.create(
+            user=self.user,
+            title="Yakitori Bowl",
+            steps="Make it.",
+            cook_time=30,
+            ingredients_text="500g chicken breast\n2 tbsp soy sauce\n1 tbsp sugar\n1 tbsp mirin\nsteamed rice",
+        )
+        # Only 2 of 5 ingredients are structured
+        chicken = Ingredient.objects.create(name="chicken breast", category="meat")
+        RecipeIngredient.objects.create(
+            recipe=recipe, ingredient=chicken, quantity=500, unit="g", order=0
+        )
+        sugar = Ingredient.objects.create(name="sugar", category="pantry")
+        RecipeIngredient.objects.create(
+            recipe=recipe, ingredient=sugar, quantity=1, unit="tbsp", order=1
+        )
+        MealPlan.objects.create(
+            household=self.household,
+            added_by=self.user,
+            date=date.today(),
+            meal_type="dinner",
+            recipe=recipe,
+        )
+        response = self.client.get(reverse("shop"))
+        # Structured ingredients should appear
+        self.assertContains(response, "chicken breast")
+        self.assertContains(response, "sugar")
+        # Text-only ingredients should also appear
+        self.assertContains(response, "soy sauce")
+        self.assertContains(response, "mirin")
+        self.assertContains(response, "steamed rice")
+
+    def test_shop_toggle_updates_progress_counter(self):
+        """Toggling an item should return updated progress info."""
+        item = ShoppingListItem.objects.create(
+            household=self.household,
+            added_by=self.user,
+            name="Milk",
+            is_generated=True,
+            checked=False,
+        )
+        ShoppingListItem.objects.create(
+            household=self.household,
+            added_by=self.user,
+            name="Bread",
+            is_generated=True,
+            checked=False,
+        )
+        response = self.client.post(reverse("shop_toggle", args=[item.pk]))
+        self.assertEqual(response.status_code, 200)
+        # Should contain the progress partial with updated count
+        self.assertContains(response, "1 of 2 items")
+
     def test_shop_weekend_meals_included(self):
         """Meals on Saturday and Sunday of current week should appear in shopping list."""
         today = date.today()

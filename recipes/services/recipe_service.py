@@ -181,33 +181,42 @@ class RecipeService:
         text_items = []
 
         for recipe in recipes:
-            structured = recipe.recipe_ingredients.select_related("ingredient").all()
-            if structured:
-                for ri in structured:
-                    key = (ri.ingredient_id, ri.unit)
-                    entry = aggregated[key]
-                    entry["ingredient"] = ri.ingredient
-                    entry["ingredient_name"] = ri.ingredient.name
-                    entry["category"] = ri.ingredient.category
-                    if ri.quantity:
-                        entry["total_quantity"] += ri.quantity
-                    entry["unit"] = ri.unit
-                    entry["recipes"].add(recipe.title)
-            elif recipe.ingredients_text and recipe.ingredients_text.strip():
-                # Fallback: parse ingredients_text line by line
+            structured = list(
+                recipe.recipe_ingredients.select_related("ingredient").all()
+            )
+            structured_names = set()
+
+            for ri in structured:
+                key = (ri.ingredient_id, ri.unit)
+                entry = aggregated[key]
+                entry["ingredient"] = ri.ingredient
+                entry["ingredient_name"] = ri.ingredient.name
+                entry["category"] = ri.ingredient.category
+                if ri.quantity:
+                    entry["total_quantity"] += ri.quantity
+                entry["unit"] = ri.unit
+                entry["recipes"].add(recipe.title)
+                structured_names.add(ri.ingredient.name.lower())
+
+            # Include text ingredients not already covered by structured data
+            if recipe.ingredients_text and recipe.ingredients_text.strip():
                 for line in recipe.ingredients_text.strip().split("\n"):
                     line = line.strip().lstrip("•-* ")
-                    if line:
-                        text_items.append(
-                            {
-                                "ingredient": None,
-                                "ingredient_name": line,
-                                "category": "other",
-                                "total_quantity": None,
-                                "unit": "",
-                                "recipes": {recipe.title},
-                            }
-                        )
+                    if not line:
+                        continue
+                    # Skip if this line matches an existing structured ingredient
+                    if any(name in line.lower() for name in structured_names):
+                        continue
+                    text_items.append(
+                        {
+                            "ingredient": None,
+                            "ingredient_name": line,
+                            "category": "other",
+                            "total_quantity": None,
+                            "unit": "",
+                            "recipes": {recipe.title},
+                        }
+                    )
 
         result = sorted(
             aggregated.values(),

@@ -239,7 +239,21 @@ def shop_toggle(request, pk):
     item = get_object_or_404(ShoppingListItem, pk=pk, household=household)
     item.checked = not item.checked
     item.save()
-    return render(request, "shop/partials/item.html", {"item": item})
+
+    # Calculate updated progress for OOB swap
+    all_items = ShoppingListItem.objects.filter(household=household)
+    total_items = all_items.count()
+    checked_items = all_items.filter(checked=True).count()
+
+    return render(
+        request,
+        "shop/partials/item_with_progress.html",
+        {
+            "item": item,
+            "total_items": total_items,
+            "checked_items": checked_items,
+        },
+    )
 
 
 @login_required
