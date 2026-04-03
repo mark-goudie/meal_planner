@@ -5,6 +5,7 @@ from django.contrib.auth.decorators import login_required
 from django.shortcuts import redirect, render
 
 from ..models import Ingredient, Recipe, RecipeIngredient, Tag
+from ..models.recipe import normalize_category
 from ..services.ai_service import AIService, AIServiceException
 from ..utils.units import normalize_unit
 
@@ -179,9 +180,10 @@ def generate_next(request):
             name = ing_data.get("name", "").lower().strip()
             if not name:
                 continue  # Skip empty ingredient names
+            category = normalize_category(ing_data.get("category", "other"))
             ingredient, _ = Ingredient.objects.get_or_create(
                 name=name,
-                defaults={"category": ing_data.get("category", "other")},
+                defaults={"category": category},
             )
             qty = ing_data.get("quantity")
             RecipeIngredient.objects.create(

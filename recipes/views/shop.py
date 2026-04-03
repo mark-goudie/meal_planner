@@ -8,6 +8,7 @@ from django.utils import timezone
 from django.views.decorators.http import require_POST
 
 from ..models import INGREDIENT_CATEGORY_CHOICES, MealPlan, ShoppingListItem
+from ..models.recipe import VALID_CATEGORIES
 from ..models.household import get_household
 from ..services import RecipeService
 
@@ -136,7 +137,9 @@ def shop_view(request):
     manual_items = []
     for item in all_items:
         if item.is_generated:
-            categories_map[item.category].append(item)
+            # Ensure items with unrecognized categories show in "other"
+            cat = item.category if item.category in VALID_CATEGORIES else "other"
+            categories_map[cat].append(item)
         else:
             manual_items.append(item)
 

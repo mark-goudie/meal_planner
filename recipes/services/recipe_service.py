@@ -159,11 +159,11 @@ class RecipeService:
 
     @staticmethod
     def generate_structured_shopping_list(recipes):
-        """Generate a shopping list from structured ingredients, with text fallback.
+        """Generate a shopping list from recipe ingredients.
 
-        For recipes with structured RecipeIngredient rows, quantities are summed
-        and grouped by ingredient+unit. For recipes with only ingredients_text,
-        each line becomes a separate shopping item.
+        Uses structured RecipeIngredient rows when available (with quantities,
+        units, and categories). Falls back to ingredients_text lines for any
+        recipe that has no structured ingredients at all.
         """
         from collections import defaultdict
 
@@ -186,6 +186,7 @@ class RecipeService:
             )
             structured_names = set()
 
+            # Always include structured ingredients
             for ri in structured:
                 key = (ri.ingredient_id, ri.unit)
                 entry = aggregated[key]
@@ -198,14 +199,16 @@ class RecipeService:
                 entry["recipes"].add(recipe.title)
                 structured_names.add(ri.ingredient.name.lower())
 
-            # Include text ingredients not already covered by structured data
+            # Also include text ingredients not covered by structured data
             if recipe.ingredients_text and recipe.ingredients_text.strip():
                 for line in recipe.ingredients_text.strip().split("\n"):
                     line = line.strip().lstrip("•-* ")
                     if not line:
                         continue
-                    # Skip if this line matches an existing structured ingredient
-                    if any(name in line.lower() for name in structured_names):
+                    # Skip only if a structured ingredient name is an exact
+                    # match for this line (ignoring quantities/units prefix)
+                    line_lower = line.lower()
+                    if line_lower in structured_names:
                         continue
                     text_items.append(
                         {
@@ -222,6 +225,5 @@ class RecipeService:
             aggregated.values(),
             key=lambda x: (x["category"], x["ingredient_name"]),
         )
-        # Append text items at the end, sorted by name
         result.extend(sorted(text_items, key=lambda x: x["ingredient_name"].lower()))
         return result

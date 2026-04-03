@@ -347,6 +347,32 @@ class ShopViewTest(TestCase):
         # Should contain the progress partial with updated count
         self.assertContains(response, "1 of 2 items")
 
+    def test_shop_shows_items_with_nonstandard_categories(self):
+        """Items with AI-generated categories not in our choices should show in Other."""
+        recipe = Recipe.objects.create(
+            user=self.user, title="Stir Fry", steps="Fry it.", cook_time=15
+        )
+        # Simulate AI-generated ingredient with non-standard category
+        soy = Ingredient.objects.create(name="soy sauce", category="condiment")
+        RecipeIngredient.objects.create(
+            recipe=recipe, ingredient=soy, quantity=2, unit="tbsp", order=0
+        )
+        ginger = Ingredient.objects.create(name="ginger", category="vegetable")
+        RecipeIngredient.objects.create(
+            recipe=recipe, ingredient=ginger, quantity=1, unit="piece", order=1
+        )
+        MealPlan.objects.create(
+            household=self.household,
+            added_by=self.user,
+            date=date.today(),
+            meal_type="dinner",
+            recipe=recipe,
+        )
+        response = self.client.get(reverse("shop"))
+        # Both should appear (in "Other" category since their categories are non-standard)
+        self.assertContains(response, "soy sauce")
+        self.assertContains(response, "ginger")
+
     def test_shop_weekend_meals_included(self):
         """Meals on Saturday and Sunday of current week should appear in shopping list."""
         today = date.today()

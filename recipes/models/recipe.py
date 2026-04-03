@@ -34,6 +34,52 @@ INGREDIENT_CATEGORY_CHOICES = [
     ("other", "Other"),
 ]
 
+VALID_CATEGORIES = {key for key, _ in INGREDIENT_CATEGORY_CHOICES}
+
+# Map common AI-returned category names to our valid keys
+CATEGORY_ALIASES = {
+    "vegetable": "produce",
+    "vegetables": "produce",
+    "fruit": "produce",
+    "fruits": "produce",
+    "grain": "pantry",
+    "grains": "pantry",
+    "pasta": "pantry",
+    "noodle": "pantry",
+    "noodles": "pantry",
+    "rice": "pantry",
+    "sauce": "pantry",
+    "sauces": "pantry",
+    "condiment": "pantry",
+    "condiments": "pantry",
+    "oil": "pantry",
+    "oils": "pantry",
+    "seasoning": "spices",
+    "seasonings": "spices",
+    "spice": "spices",
+    "herb": "spices",
+    "herbs": "spices",
+    "protein": "meat",
+    "poultry": "meat",
+    "seafood": "meat",
+    "fish": "meat",
+    "bread": "bakery",
+    "cheese": "dairy",
+    "milk": "dairy",
+    "egg": "dairy",
+    "eggs": "dairy",
+}
+
+
+def normalize_category(category):
+    """Normalize an AI-returned category to a valid INGREDIENT_CATEGORY_CHOICES key."""
+    if not category:
+        return "other"
+    cat = category.lower().strip()
+    if cat in VALID_CATEGORIES:
+        return cat
+    return CATEGORY_ALIASES.get(cat, "other")
+
 
 class Ingredient(models.Model):
     name = models.CharField(max_length=100, unique=True)
