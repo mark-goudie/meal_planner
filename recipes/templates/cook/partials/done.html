@@ -7,40 +7,7 @@
 
   <form method="post" action="{% url 'cook_done' recipe.pk %}">
     {% csrf_token %}
-
-    <!-- Star rating -->
-    <div style="margin-bottom: var(--space-lg);">
-      <label class="form-label">Rating</label>
-      <div style="display: flex; gap: var(--space-sm); justify-content: center; font-size: 32px;"
-           x-data="{ rating: 0 }">
-        {% for i in "12345" %}
-        <label style="cursor: pointer;">
-          <input type="radio" name="rating" value="{{ forloop.counter }}" style="display: none;"
-                 x-on:click="rating = {{ forloop.counter }}">
-          <span :style="rating >= {{ forloop.counter }} ? 'color: var(--accent)' : 'color: var(--text-dim)'"
-                style="transition: color 0.2s;"><i class="bi" :class="rating >= {{ forloop.counter }} ? 'bi-star-fill' : 'bi-star'"></i></span>
-        </label>
-        {% endfor %}
-      </div>
-    </div>
-
-    <!-- Note -->
-    <div style="margin-bottom: var(--space-lg);">
-      <label for="note" class="form-label">Notes</label>
-      <textarea id="note" name="note" rows="3" class="form-input"
-                placeholder="Any thoughts on this cook?"></textarea>
-    </div>
-
-    <!-- Would make again -->
-    <div style="margin-bottom: var(--space-xl);">
-      <label style="display: flex; align-items: center; gap: var(--space-sm); cursor: pointer;">
-        <input type="checkbox" name="would_make_again" value="1" checked
-               style="width: 20px; height: 20px; accent-color: var(--primary);">
-        <span style="color: var(--text-main); font-size: var(--text-base);">Would make again</span>
-      </label>
-    </div>
-
-    <!-- Submit -->
+    {% include "shared/partials/rating_fields.html" %}
     <button type="submit" class="btn btn-primary btn-full btn-lg">Save &amp; Finish</button>
   </form>
 </div>
