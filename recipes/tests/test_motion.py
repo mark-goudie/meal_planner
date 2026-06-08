@@ -30,3 +30,14 @@ class MotionAttributeTests(TestCase):
     def test_recipe_search_input_uses_transition(self):
         response = self.client.get(reverse("recipe_list"))
         self.assertContains(response, "transition:true")
+
+    def test_week_nav_uses_directional_transition(self):
+        response = self.client.get(reverse("week"))
+        self.assertContains(response, "transition:true")
+        self.assertContains(response, 'data-vt-dir="back"')
+        self.assertContains(response, 'data-vt-dir="forward"')
+
+    def test_cook_step_uses_directional_transition(self):
+        response = self.client.get(reverse("cook", args=[self.recipe.pk]))
+        self.assertContains(response, "transition:true")
+        self.assertContains(response, "data-vt-dir")

@@ -1,4 +1,4 @@
-const CACHE_NAME = 'meal-planner-v3';
+const CACHE_NAME = 'meal-planner-v4';
 const STATIC_ASSETS = [
     '/static/recipes/css/app.css',
     '/static/recipes/js/app.js',

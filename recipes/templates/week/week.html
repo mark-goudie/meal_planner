@@ -15,7 +15,8 @@
        aria-label="Previous week"
        hx-get="?offset={{ offset|add:"-1" }}"
        hx-target="#main-content"
-       hx-swap="innerHTML"
+       hx-swap="innerHTML transition:true"
+       data-vt-dir="back"
        hx-push-url="true">&lsaquo;</a>
 
     <div class="week-header__center">
@@ -32,7 +33,8 @@
        aria-label="Next week"
        hx-get="?offset={{ offset|add:"1" }}"
        hx-target="#main-content"
-       hx-swap="innerHTML"
+       hx-swap="innerHTML transition:true"
+       data-vt-dir="forward"
        hx-push-url="true">&rsaquo;</a>
   </header>
 

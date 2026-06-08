@@ -1974,6 +1974,37 @@ body.light-mode .cook-step-number {
   view-transition-name: vt-nav;
 }
 
+/* Directional slide for the paginated flows (week nav, cook steps). */
+@keyframes vt-slide-out-left {
+  from { transform: translateX(0); opacity: 1; }
+  to   { transform: translateX(-30px); opacity: 0; }
+}
+@keyframes vt-slide-in-right {
+  from { transform: translateX(30px); opacity: 0; }
+  to   { transform: translateX(0); opacity: 1; }
+}
+@keyframes vt-slide-out-right {
+  from { transform: translateX(0); opacity: 1; }
+  to   { transform: translateX(30px); opacity: 0; }
+}
+@keyframes vt-slide-in-left {
+  from { transform: translateX(-30px); opacity: 0; }
+  to   { transform: translateX(0); opacity: 1; }
+}
+
+html[data-vt-dir="forward"]::view-transition-old(root) {
+  animation: vt-slide-out-left 0.25s ease both;
+}
+html[data-vt-dir="forward"]::view-transition-new(root) {
+  animation: vt-slide-in-right 0.25s ease both;
+}
+html[data-vt-dir="back"]::view-transition-old(root) {
+  animation: vt-slide-out-right 0.25s ease both;
+}
+html[data-vt-dir="back"]::view-transition-new(root) {
+  animation: vt-slide-in-left 0.25s ease both;
+}
+
 /* ============================================================
    29. REDUCED MOTION
    ============================================================ */
