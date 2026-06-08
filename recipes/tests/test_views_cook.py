@@ -255,3 +255,16 @@ class CookLogRatingTests(TestCase):
             reverse("rating_save", args=[note.pk]), {"rating": "5"}
         )
         self.assertEqual(response.status_code, 404)
+
+    def test_cook_step_allows_household_member_on_shared_recipe(self):
+        """Household member should be able to advance steps on a partner's shared recipe."""
+        response = self.client.get(reverse("cook_step", args=[self.recipe.pk, 1]))
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, "cook/partials/step.html")
+
+    def test_cook_step_rejects_non_household_user_on_shared_recipe(self):
+        """A user outside the household must not access cook_step on another's recipe."""
+        User.objects.create_user(username="outsider", password="pw")
+        self.client.login(username="outsider", password="pw")
+        response = self.client.get(reverse("cook_step", args=[self.recipe.pk, 1]))
+        self.assertEqual(response.status_code, 404)

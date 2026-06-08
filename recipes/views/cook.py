@@ -86,13 +86,14 @@ def cook_view(request, pk):
 @login_required
 def cook_step(request, pk, step):
     """HTMX partial for a single cooking step."""
+    # Access-check via shared helper, then re-fetch with prefetches for cook mode.
+    _recipe_for_user(request.user, pk)
     recipe = get_object_or_404(
         Recipe.objects.select_related("user").prefetch_related(
             "recipe_ingredients__ingredient",
             "cooking_notes",
         ),
         pk=pk,
-        user=request.user,
     )
     steps = _parse_cooking_steps(recipe)
     total_steps = len(steps)
