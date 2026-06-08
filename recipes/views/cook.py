@@ -4,6 +4,7 @@ from django.db.models import Q
 from django.http import Http404
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
+from django.views.decorators.http import require_POST
 
 from ..models import CookingNote, Recipe
 from ..models.household import get_household
@@ -119,6 +120,33 @@ def cook_step(request, pk, step):
             "total_steps": total_steps,
             "cooking_notes": cooking_notes,
         },
+    )
+
+
+def _recipe_for_user(user, pk):
+    """Recipe accessible to user: own, shared in household, or planned in household."""
+    household = get_household(user)
+    access = Q(user=user)
+    if household:
+        access |= Q(shared=True, user__household_membership__household=household)
+        access |= Q(mealplan__household=household)
+    return get_object_or_404(Recipe.objects.filter(access).distinct(), pk=pk)
+
+
+@login_required
+@require_POST
+def cook_log(request, pk):
+    """Log a cook (creates a CookingNote) and return the rating sheet."""
+    recipe = _recipe_for_user(request.user, pk)
+    note = CookingNote.objects.create(
+        recipe=recipe,
+        user=request.user,
+        cooked_date=timezone.localdate(),
+        rating=None,
+        would_make_again=True,
+    )
+    return render(
+        request, "shared/partials/rating_sheet.html", {"recipe": recipe, "note": note}
     )
 
 

@@ -1,5 +1,5 @@
 from .auth import offline_view, register_view
-from .cook import cook_done, cook_step, cook_view
+from .cook import cook_done, cook_log, cook_step, cook_view
 from .generate import generate_next, generate_preferences, generate_progress
 from .legacy import (
     ai_generate_recipe,
@@ -32,6 +32,7 @@ from .recipes import (
 )
 from .settings import settings_view
 from .shop import shop_add, shop_generate, shop_toggle, shop_update_qty, shop_view
+from .tonight import tonight_accept, tonight_swap, tonight_view
 from .week import (  # noqa: F401
     apply_template,
     day_comment,
@@ -57,6 +58,7 @@ __all__ = [
     "vapid_public_key",
     # Cook
     "cook_done",
+    "cook_log",
     "cook_step",
     "cook_view",
     # Generate
@@ -109,4 +111,8 @@ __all__ = [
     "week_slot",
     "week_suggest",
     "week_view",
+    # Tonight
+    "tonight_view",
+    "tonight_swap",
+    "tonight_accept",
 ]

@@ -1,0 +1,23 @@
+<div class="rating-overlay" x-data="{ show: true }" x-show="show"
+     style="position: fixed; inset: 0; background: rgba(0,0,0,0.55); z-index: 250;
+            display: flex; align-items: flex-end; justify-content: center;">
+  <div style="background: var(--bg); border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+              width: 100%; max-width: 600px; padding: var(--space-lg) var(--space-lg) var(--space-2xl);">
+    <div class="flex justify-between items-center mb-md">
+      <div>
+        <h2 style="margin:0; font-size: var(--text-lg); font-weight:800;">How was it?</h2>
+        <p class="text-muted text-sm">{{ recipe.title }} &middot; logged <i class="bi bi-check2" style="color: var(--primary);"></i></p>
+      </div>
+      <button class="btn btn-ghost btn-sm" @click="show=false; $el.closest('.rating-overlay').remove()">
+        <i class="bi bi-x-lg"></i>
+      </button>
+    </div>
+
+    <form hx-post="{% url 'rating_save' note.pk %}"
+          hx-target=".rating-overlay" hx-swap="outerHTML">
+      {% csrf_token %}
+      {% include "shared/partials/rating_fields.html" %}
+      <button type="submit" class="btn btn-accent btn-full btn-lg">Save</button>
+    </form>
+  </div>
+</div>

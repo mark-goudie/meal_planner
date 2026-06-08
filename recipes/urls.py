@@ -6,6 +6,7 @@ from .views import (
     ai_generate_recipe_api,
     apply_template,
     cook_done,
+    cook_log,
     cook_step,
     cook_view,
     day_comment,
@@ -38,6 +39,9 @@ from .views import (
     shop_update_qty,
     shop_view,
     toggle_favourite_view,
+    tonight_accept,
+    tonight_swap,
+    tonight_view,
     vapid_public_key,
     week_accept_suggestion,
     week_assign,
@@ -52,7 +56,9 @@ urlpatterns = [
     # --- Offline fallback ---
     path("offline/", offline_view, name="offline"),
     # --- Redesign: This Week (home) ---
-    path("", week_view, name="home"),
+    path("", tonight_view, name="home"),
+    path("tonight/swap/", tonight_swap, name="tonight_swap"),
+    path("tonight/accept/", tonight_accept, name="tonight_accept"),
     path("week/", week_view, name="week"),
     path("week/slot/<str:date_str>/<str:meal_type>/", week_slot, name="week_slot"),
     path(
@@ -82,6 +88,7 @@ urlpatterns = [
     path("cook/<int:pk>/", cook_view, name="cook"),
     path("cook/<int:pk>/step/<int:step>/", cook_step, name="cook_step"),
     path("cook/<int:pk>/done/", cook_done, name="cook_done"),
+    path("cook/<int:pk>/log/", cook_log, name="cook_log"),
     # --- Redesign: Shopping list ---
     path("shop/", shop_view, name="shop"),
     path("shop/generate/", shop_generate, name="shop_generate"),

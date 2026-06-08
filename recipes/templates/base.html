@@ -60,9 +60,9 @@
 
     {% if user.is_authenticated %}
     <nav class="bottom-nav" aria-label="Main navigation">
-        <a href="{% url 'week' %}" class="nav-tab {% block nav_week %}{% endblock %}">
-            <span class="nav-icon"><i class="bi bi-calendar-week"></i></span>
-            <span class="nav-label">This Week</span>
+        <a href="{% url 'home' %}" class="nav-tab {% block nav_week %}{% endblock %}">
+            <span class="nav-icon"><i class="bi bi-stars"></i></span>
+            <span class="nav-label">Tonight</span>
         </a>
         <a href="{% url 'recipe_list' %}" class="nav-tab {% block nav_recipes %}{% endblock %}">
             <span class="nav-icon"><i class="bi bi-book"></i></span>

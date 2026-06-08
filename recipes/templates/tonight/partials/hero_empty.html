@@ -1,0 +1,53 @@
+{% load recipe_extras %}
+<div id="tonight-hero-inner">
+{% if suggestion %}
+  <div class="tonight-hero day-card day-card--has-meal"
+       {% if suggestion.recipe.display_image_url %}
+       style="--card-bg-image: url('{{ suggestion.recipe.display_image_url }}');"
+       {% else %}
+       style="--card-bg-gradient: {{ suggestion.recipe.title|recipe_gradient }};"
+       {% endif %}>
+    <div class="day-card__content">
+      <span class="chip chip--accent" style="font-size: var(--text-xs);">Suggested for you</span>
+      <div class="day-card__title" style="font-size: var(--text-xl); margin-top: var(--space-xs);">
+        {{ suggestion.recipe.title }}
+      </div>
+
+      <div class="day-card__tags" style="margin-top: var(--space-sm);">
+        {% for reason in suggestion.reasons %}
+        <span class="chip chip--muted"><i class="bi {{ reason.icon }}"></i> {{ reason.text }}</span>
+        {% endfor %}
+      </div>
+
+      <form hx-post="{% url 'tonight_accept' %}" hx-target="#tonight-hero" hx-swap="innerHTML"
+            style="margin-top: var(--space-md);">
+        {% csrf_token %}
+        <input type="hidden" name="recipe_id" value="{{ suggestion.recipe.pk }}">
+        <button type="submit" class="btn btn-accent btn-full btn-lg">
+          <i class="bi bi-check-lg"></i> Looks good &mdash; plan tonight
+        </button>
+      </form>
+
+      <div class="flex gap-sm" style="margin-top: var(--space-sm);">
+        <button class="btn btn-outline btn-sm flex-1"
+                hx-get="{% url 'tonight_swap' %}?{% for id in exclude_for_swap %}exclude={{ id }}&{% endfor %}"
+                hx-target="#tonight-hero" hx-swap="innerHTML">
+          <i class="bi bi-arrow-repeat"></i> Swap
+        </button>
+        <a href="{% url 'recipe_list' %}" class="btn btn-outline btn-sm flex-1">
+          <i class="bi bi-search"></i> Browse
+        </a>
+      </div>
+    </div>
+  </div>
+{% else %}
+  <div class="day-card day-card--empty">
+    <div class="day-card__content" style="text-align: center; padding: var(--space-lg);">
+      <p class="text-muted" style="margin-bottom: var(--space-md);">Nothing planned and no suggestions yet.</p>
+      <a href="{% url 'recipe_create' %}" class="btn btn-accent btn-full">
+        <i class="bi bi-plus-lg"></i> Add your first recipe
+      </a>
+    </div>
+  </div>
+{% endif %}
+</div>

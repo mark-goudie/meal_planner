@@ -1,0 +1,33 @@
+{% load recipe_extras %}
+<div class="tonight-hero day-card day-card--has-meal"
+     {% if today_day.meal.recipe.display_image_url %}
+     style="--card-bg-image: url('{{ today_day.meal.recipe.display_image_url }}');"
+     {% else %}
+     style="--card-bg-gradient: {{ today_day.meal.recipe.title|recipe_gradient }};"
+     {% endif %}>
+  <div class="day-card__content">
+    <a href="{% url 'recipe_detail' today_day.meal.recipe.pk %}"
+       class="day-card__title" style="display:block; color: inherit; font-size: var(--text-xl);">
+      {{ today_day.meal.recipe.title }}
+    </a>
+
+    {% if memory %}
+    <div class="text-sm text-muted" style="margin-top: var(--space-xs);">
+      {% if memory.rating %}<i class="bi bi-star-fill" style="color: var(--accent);"></i> {{ memory.rating }} · {% endif %}
+      {% if memory.note %}Last time: &ldquo;{{ memory.note }}&rdquo;{% endif %}
+    </div>
+    {% endif %}
+
+    <a href="{% url 'cook' today_day.meal.recipe.pk %}"
+       class="btn btn-accent btn-full btn-lg" style="margin-top: var(--space-md);">
+      <i class="bi bi-play-fill"></i> Start Cooking
+    </a>
+
+    <button class="btn btn-outline btn-full"
+            style="margin-top: var(--space-sm);"
+            hx-post="{% url 'cook_log' today_day.meal.recipe.pk %}"
+            hx-target="body" hx-swap="beforeend">
+      <i class="bi bi-check2-circle"></i> Cooked it &middot; rate
+    </button>
+  </div>
+</div>

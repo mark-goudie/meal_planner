@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block title %}Tonight - Meal Planner{% endblock %}
+{% block nav_week %}active{% endblock %}
+
+{% block content %}
+<div class="screen">
+  {% csrf_token %}
+
+  <div class="tonight-label label" style="margin-bottom: var(--space-sm);">Tonight</div>
+
+  <div id="tonight-hero">
+    {% if no_household %}
+      <p class="text-muted">No household found.</p>
+    {% elif today_day and today_day.meal %}
+      {% include "tonight/partials/hero_planned.html" %}
+    {% else %}
+      {% include "tonight/partials/hero_empty.html" %}
+    {% endif %}
+  </div>
+
+  {% if days %}
+  <div style="margin-top: var(--space-xl);">
+    {% include "tonight/partials/week_strip.html" %}
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

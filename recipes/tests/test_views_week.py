@@ -36,11 +36,11 @@ class WeekViewTest(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, "week/week.html")
 
-    def test_home_url_returns_week_view(self):
-        """The root URL should serve the week view."""
+    def test_home_url_returns_tonight_view(self):
+        """The root URL now serves the Tonight view."""
         response = self.client.get(reverse("home"))
         self.assertEqual(response.status_code, 200)
-        self.assertTemplateUsed(response, "week/week.html")
+        self.assertTemplateUsed(response, "tonight/tonight.html")
 
     def test_week_view_shows_planned_meal(self):
         """A meal planned for this week should appear in the view."""
