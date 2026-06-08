@@ -36,6 +36,25 @@ class WeekViewTest(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, "week/week.html")
 
+    def test_week_htmx_returns_content_partial_without_nav(self):
+        """HTMX nav requests get only the content partial — not a full page.
+
+        Prevents the swap into #main-content from re-injecting base.html's nav
+        and wrapper as a nested duplicate.
+        """
+        response = self.client.get(reverse("week"), HTTP_HX_REQUEST="true")
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, "week/partials/week_content.html")
+        self.assertTemplateNotUsed(response, "base.html")
+        self.assertNotContains(response, "bottom-nav")
+        self.assertNotContains(response, 'id="main-content"')
+
+    def test_week_full_page_includes_nav(self):
+        """A normal (non-HTMX) load returns the full page with the nav."""
+        response = self.client.get(reverse("week"))
+        self.assertTemplateUsed(response, "week/week.html")
+        self.assertContains(response, "bottom-nav")
+
     def test_home_url_returns_tonight_view(self):
         """The root URL now serves the Tonight view."""
         response = self.client.get(reverse("home"))

@@ -67,7 +67,12 @@ def _build_week_context(user, household, offset=0):
 
 @login_required
 def week_view(request):
-    """This Week -- full page weekly meal plan view."""
+    """This Week -- weekly meal plan.
+
+    Returns the full page for normal loads, but just the content partial for
+    HTMX requests (week prev/next nav) so the swap into #main-content does not
+    re-inject base.html's nav/wrapper as a nested duplicate.
+    """
     household = get_household(request.user)
     if not household:
         return render(
@@ -75,7 +80,12 @@ def week_view(request):
         )
     offset = int(request.GET.get("offset", 0))
     context = _build_week_context(request.user, household, offset)
-    return render(request, "week/week.html", context)
+    template = (
+        "week/partials/week_content.html"
+        if request.headers.get("HX-Request")
+        else "week/week.html"
+    )
+    return render(request, template, context)
 
 
 @login_required
