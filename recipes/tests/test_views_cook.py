@@ -1,3 +1,5 @@
+from datetime import date
+
 from django.contrib.auth.models import User
 from django.test import Client, TestCase
 from django.urls import reverse
@@ -8,6 +10,7 @@ from recipes.models import (
     Recipe,
     RecipeIngredient,
 )
+from recipes.models.household import Household, HouseholdMembership
 
 
 class CookViewTest(TestCase):
@@ -193,3 +196,62 @@ class CookViewWithStructuredStepsTest(TestCase):
 
         response2 = self.client.get(reverse("cook_step", args=[self.recipe.pk, 2]))
         self.assertContains(response2, "eggs")
+
+
+class CookLogRatingTests(TestCase):
+    def setUp(self):
+        self.client = Client()
+        self.household = Household.objects.create(name="Home")
+        self.alice = User.objects.create_user(username="alice", password="pw")
+        self.bob = User.objects.create_user(username="bob", password="pw")
+        HouseholdMembership.objects.create(user=self.alice, household=self.household)
+        HouseholdMembership.objects.create(user=self.bob, household=self.household)
+        # Bob owns a SHARED recipe; Alice cooks it.
+        self.recipe = Recipe.objects.create(
+            user=self.bob, title="Shared Stew", steps="Stew.", shared=True
+        )
+        self.client.login(username="alice", password="pw")
+
+    def test_cook_log_creates_note_on_shared_recipe(self):
+        response = self.client.post(reverse("cook_log", args=[self.recipe.pk]))
+        self.assertEqual(response.status_code, 200)
+        note = CookingNote.objects.get(recipe=self.recipe, user=self.alice)
+        self.assertIsNone(note.rating)  # logged, not yet rated
+
+    def test_cook_log_returns_rating_sheet(self):
+        response = self.client.post(reverse("cook_log", args=[self.recipe.pk]))
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, "shared/partials/rating_sheet.html")
+
+    def test_rating_save_updates_note(self):
+        note = CookingNote.objects.create(
+            recipe=self.recipe, user=self.alice, cooked_date=date.today()
+        )
+        response = self.client.post(
+            reverse("rating_save", args=[note.pk]),
+            {"rating": "4", "note": "great", "would_make_again": "1"},
+        )
+        self.assertEqual(response.status_code, 200)
+        note.refresh_from_db()
+        self.assertEqual(note.rating, 4)
+        self.assertEqual(note.note, "great")
+        self.assertTrue(note.would_make_again)
+
+    def test_rating_save_returns_saved_partial(self):
+        note = CookingNote.objects.create(
+            recipe=self.recipe, user=self.alice, cooked_date=date.today()
+        )
+        response = self.client.post(
+            reverse("rating_save", args=[note.pk]), {"rating": "5"}
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, "shared/partials/rating_saved.html")
+
+    def test_rating_save_rejects_other_users_note(self):
+        note = CookingNote.objects.create(
+            recipe=self.recipe, user=self.bob, cooked_date=date.today()
+        )
+        response = self.client.post(
+            reverse("rating_save", args=[note.pk]), {"rating": "5"}
+        )
+        self.assertEqual(response.status_code, 404)

@@ -1,5 +1,6 @@
 from django.contrib.auth.decorators import login_required
 from django.db.models import Q
+from django.http import Http404
 from django.shortcuts import get_object_or_404, render
 from django.utils import timezone
 from django.views.decorators.http import require_POST
@@ -81,6 +82,8 @@ def tonight_swap(request):
 def tonight_accept(request):
     """HTMX POST: assign the suggested recipe to tonight, return planned hero."""
     household = get_household(request.user)
+    if not household:
+        raise Http404("No household found.")
     today = timezone.localdate()
     access = Q(user=request.user) | Q(
         shared=True, user__household_membership__household=household

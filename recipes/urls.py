@@ -23,6 +23,7 @@ from .views import (
     offline_view,
     push_subscribe,
     push_unsubscribe,
+    rating_save,
     recipe_create_from_ai,
     recipe_create_view,
     recipe_delete_view,
@@ -89,6 +90,7 @@ urlpatterns = [
     path("cook/<int:pk>/step/<int:step>/", cook_step, name="cook_step"),
     path("cook/<int:pk>/done/", cook_done, name="cook_done"),
     path("cook/<int:pk>/log/", cook_log, name="cook_log"),
+    path("rating/<int:note_pk>/", rating_save, name="rating_save"),
     # --- Redesign: Shopping list ---
     path("shop/", shop_view, name="shop"),
     path("shop/generate/", shop_generate, name="shop_generate"),

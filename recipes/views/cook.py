@@ -52,16 +52,10 @@ def _parse_cooking_steps(recipe):
 @login_required
 def cook_view(request, pk):
     """Full-page cooking mode for a recipe."""
-    household = get_household(request.user)
-    access_filter = Q(user=request.user)
-    if household:
-        access_filter |= Q(shared=True, user__household_membership__household=household)
-        access_filter |= Q(mealplan__household=household)
+    # Access-check via shared helper, then re-fetch with prefetches for cook mode.
+    _recipe_for_user(request.user, pk)
     recipe = get_object_or_404(
-        Recipe.objects.filter(access_filter)
-        .distinct()
-        .select_related("user")
-        .prefetch_related(
+        Recipe.objects.select_related("user").prefetch_related(
             "recipe_ingredients__ingredient",
             "cooking_notes",
         ),
@@ -151,9 +145,26 @@ def cook_log(request, pk):
 
 
 @login_required
+@require_POST
+def rating_save(request, note_pk):
+    """Update the current user's CookingNote with rating/note/would-make-again."""
+    note = get_object_or_404(CookingNote, pk=note_pk, user=request.user)
+    rating = request.POST.get("rating")
+    note.rating = int(rating) if rating else None
+    note.note = request.POST.get("note", "").strip()
+    note.would_make_again = "would_make_again" in request.POST
+    note.save()
+    return render(
+        request,
+        "shared/partials/rating_saved.html",
+        {"recipe": note.recipe, "note": note},
+    )
+
+
+@login_required
 def cook_done(request, pk):
     """Completion screen with rating form (GET) or save note (POST)."""
-    recipe = get_object_or_404(Recipe, pk=pk, user=request.user)
+    recipe = _recipe_for_user(request.user, pk)
     steps = _parse_cooking_steps(recipe)
     total_steps = len(steps) if steps else 1
 

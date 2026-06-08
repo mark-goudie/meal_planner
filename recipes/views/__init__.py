@@ -1,5 +1,5 @@
 from .auth import offline_view, register_view
-from .cook import cook_done, cook_log, cook_step, cook_view
+from .cook import cook_done, cook_log, cook_step, cook_view, rating_save
 from .generate import generate_next, generate_preferences, generate_progress
 from .legacy import (
     ai_generate_recipe,
@@ -61,6 +61,7 @@ __all__ = [
     "cook_log",
     "cook_step",
     "cook_view",
+    "rating_save",
     # Generate
     "generate_next",
     "generate_preferences",

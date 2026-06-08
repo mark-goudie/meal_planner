@@ -2,8 +2,16 @@
 
 from django.db import migrations
 
-
-VALID_CATEGORIES = {"produce", "dairy", "meat", "pantry", "spices", "frozen", "bakery", "other"}
+VALID_CATEGORIES = {
+    "produce",
+    "dairy",
+    "meat",
+    "pantry",
+    "spices",
+    "frozen",
+    "bakery",
+    "other",
+}
 
 CATEGORY_ALIASES = {
     "vegetable": "produce",

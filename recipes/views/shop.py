@@ -8,8 +8,8 @@ from django.utils import timezone
 from django.views.decorators.http import require_POST
 
 from ..models import INGREDIENT_CATEGORY_CHOICES, MealPlan, ShoppingListItem
-from ..models.recipe import VALID_CATEGORIES
 from ..models.household import get_household
+from ..models.recipe import VALID_CATEGORIES
 from ..services import RecipeService
 
 CATEGORY_ICONS = {
@@ -117,7 +117,9 @@ def shop_view(request):
             ).values_list("pk", flat=True)
         )
         if upcoming_meal_ids:
-            _generate_shopping_items(household, request.user, meal_ids=upcoming_meal_ids)
+            _generate_shopping_items(
+                household, request.user, meal_ids=upcoming_meal_ids
+            )
         else:
             ShoppingListItem.objects.filter(
                 household=household, is_generated=True

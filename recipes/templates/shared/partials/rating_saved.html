@@ -1,0 +1,8 @@
+<div x-data="{ show: true }" x-show="show" x-init="setTimeout(() => show = false, 1500)"
+     style="position: fixed; inset: 0; background: rgba(0,0,0,0.55); z-index: 250;
+            display: flex; align-items: center; justify-content: center;">
+  <div style="background: var(--bg); border-radius: var(--radius-lg); padding: var(--space-xl); text-align:center;">
+    <div style="font-size: 40px; color: var(--accent);"><i class="bi bi-check-circle-fill"></i></div>
+    <p style="margin-top: var(--space-sm); color: var(--text-main);">Saved &mdash; thanks!</p>
+  </div>
+</div>
