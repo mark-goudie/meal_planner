@@ -39,6 +39,18 @@ class MealPlanningAssistantService:
         return preferences
 
     @staticmethod
+    def _household_user_ids(user: User) -> List[int]:
+        """User IDs of everyone in this user's household, or [user.id] if none."""
+        household = get_household(user)
+        if not household:
+            return [user.id]
+        return list(
+            User.objects.filter(household_membership__household=household).values_list(
+                "id", flat=True
+            )
+        )
+
+    @staticmethod
     def calculate_recipe_score(
         recipe: Recipe,
         user: User,
@@ -48,10 +60,9 @@ class MealPlanningAssistantService:
 
         Returns: Score from 0-100
         """
+        user_ids = MealPlanningAssistantService._household_user_ids(user)
         notes = CookingNote.objects.filter(
-            recipe=recipe,
-            user=user,
-            rating__isnull=False,
+            recipe=recipe, user__in=user_ids, rating__isnull=False
         )
 
         if not notes.exists():
@@ -73,10 +84,9 @@ class MealPlanningAssistantService:
         Returns: Score from 0-100.  Neutral 50 if no notes exist.
         Penalised if the latest note has would_make_again=False.
         """
+        user_ids = MealPlanningAssistantService._household_user_ids(user)
         notes = CookingNote.objects.filter(
-            recipe=recipe,
-            user=user,
-            rating__isnull=False,
+            recipe=recipe, user__in=user_ids, rating__isnull=False
         )
 
         if not notes.exists():
@@ -88,10 +98,7 @@ class MealPlanningAssistantService:
 
         # Penalise if the latest note says would_make_again=False
         latest_note = (
-            CookingNote.objects.filter(
-                recipe=recipe,
-                user=user,
-            )
+            CookingNote.objects.filter(recipe=recipe, user__in=user_ids)
             .order_by("-cooked_date")
             .first()
         )
@@ -106,10 +113,11 @@ class MealPlanningAssistantService:
         days: int = 14,
     ) -> List[int]:
         """Get recipe IDs cooked within the last N days."""
+        user_ids = MealPlanningAssistantService._household_user_ids(user)
         cutoff_date = timezone.localdate() - timedelta(days=days)
         return list(
             CookingNote.objects.filter(
-                user=user,
+                user__in=user_ids,
                 cooked_date__gte=cutoff_date,
             )
             .order_by()
