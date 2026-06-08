@@ -18,10 +18,10 @@ class UrlsTest(TestCase):
     # --- Redesign URLs ---
 
     def test_home_url(self):
-        """Test home URL resolves to week_view"""
+        """Test home URL resolves to tonight_view"""
         url = reverse("home")
         self.assertEqual(url, "/")
-        self.assertEqual(resolve(url).func, views.week_view)
+        self.assertEqual(resolve(url).func, views.tonight_view)
 
     def test_week_url(self):
         """Test week URL resolves correctly"""
