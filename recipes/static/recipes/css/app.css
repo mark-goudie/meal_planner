@@ -1969,8 +1969,11 @@ body.light-mode .cook-step-number {
 /* ============================================================
    VIEW TRANSITIONS
    ============================================================ */
-/* Keep the bottom nav fixed while the rest of the page transitions. */
-.bottom-nav {
+/* Keep the bottom nav fixed while the rest of the page transitions.
+   Scope to the real top-level nav: the week swap injects a full page into
+   #main-content, nesting a second .bottom-nav — naming both would make the
+   view-transition-name non-unique and abort the transition. */
+body > .bottom-nav {
   view-transition-name: vt-nav;
 }
 
