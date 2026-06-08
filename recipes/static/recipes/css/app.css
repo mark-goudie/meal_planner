@@ -1967,6 +1967,14 @@ body.light-mode .cook-step-number {
 }
 
 /* ============================================================
+   VIEW TRANSITIONS
+   ============================================================ */
+/* Keep the bottom nav fixed while the rest of the page transitions. */
+.bottom-nav {
+  view-transition-name: vt-nav;
+}
+
+/* ============================================================
    29. REDUCED MOTION
    ============================================================ */
 @media (prefers-reduced-motion: reduce) {
@@ -1980,6 +1988,12 @@ body.light-mode .cook-step-number {
 
   html {
     scroll-behavior: auto;
+  }
+
+  ::view-transition-group(*),
+  ::view-transition-old(*),
+  ::view-transition-new(*) {
+    animation: none !important;
   }
 }
 

@@ -18,7 +18,7 @@
         {% endfor %}
       </div>
 
-      <form hx-post="{% url 'tonight_accept' %}" hx-target="#tonight-hero" hx-swap="innerHTML"
+      <form hx-post="{% url 'tonight_accept' %}" hx-target="#tonight-hero" hx-swap="innerHTML transition:true"
             style="margin-top: var(--space-md);">
         {% csrf_token %}
         <input type="hidden" name="recipe_id" value="{{ suggestion.recipe.pk }}">
@@ -30,7 +30,7 @@
       <div class="flex gap-sm" style="margin-top: var(--space-sm);">
         <button class="btn btn-outline btn-sm flex-1"
                 hx-get="{% url 'tonight_swap' %}?{% for id in exclude_for_swap %}exclude={{ id }}&{% endfor %}"
-                hx-target="#tonight-hero" hx-swap="innerHTML">
+                hx-target="#tonight-hero" hx-swap="innerHTML transition:true">
           <i class="bi bi-arrow-repeat"></i> Swap
         </button>
         <a href="{% url 'recipe_list' %}" class="btn btn-outline btn-sm flex-1">
