@@ -210,6 +210,25 @@ small {
   padding-bottom: var(--space-2xl);
 }
 
+/* Tonight screen — fill the tall viewport gracefully:
+   hero centred in the available space, week strip anchored as a footer. */
+.tonight-screen {
+  display: flex;
+  flex-direction: column;
+}
+
+.tonight-screen__hero {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.tonight-screen__week {
+  flex: 0 0 auto;
+  margin-top: var(--space-lg);
+}
+
 /* ============================================================
    5. BOTTOM NAVIGATION
    ============================================================ */

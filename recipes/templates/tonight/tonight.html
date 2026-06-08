@@ -3,12 +3,12 @@
 {% block nav_week %}active{% endblock %}
 
 {% block content %}
-<div class="screen">
+<div class="screen tonight-screen">
   {% csrf_token %}
 
   <div class="day-card__label" style="margin-bottom: var(--space-sm);">Tonight</div>
 
-  <div id="tonight-hero">
+  <div id="tonight-hero" class="tonight-screen__hero">
     {% if no_household %}
       <p class="text-muted">No household found.</p>
     {% elif today_day and today_day.meal %}
@@ -19,7 +19,7 @@
   </div>
 
   {% if days %}
-  <div style="margin-top: var(--space-xl);">
+  <div class="tonight-screen__week">
     {% include "tonight/partials/week_strip.html" %}
   </div>
   {% endif %}
