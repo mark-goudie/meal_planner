@@ -144,6 +144,18 @@ class TonightAcceptTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, "tonight/partials/hero_planned.html")
 
+    def test_accept_refreshes_week_strip_oob(self):
+        """Accepting tonight returns an out-of-band week-strip refresh so
+        today's dot fills in without a full page reload."""
+        response = self.client.post(
+            reverse("tonight_accept"), {"recipe_id": self.recipe.pk}
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'id="tonight-week"')
+        self.assertContains(response, 'hx-swap-oob="true"')
+        # today's strip cell now shows a filled dot rather than the empty "+"
+        self.assertContains(response, "bi-circle-fill")
+
     def test_accept_contains_recipe_title(self):
         response = self.client.post(
             reverse("tonight_accept"), {"recipe_id": self.recipe.pk}

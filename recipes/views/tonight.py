@@ -97,16 +97,11 @@ def tonight_accept(request):
         meal_type="dinner",
         defaults={"recipe": recipe, "added_by": request.user},
     )
-    meal = (
-        MealPlan.objects.with_related()
-        .for_household(household)
-        .filter(date=today, meal_type="dinner")
-        .first()
-    )
-    today_day = {"date": today, "is_today": True, "meal": meal}
+    ctx = _build_week_context(request.user, household, offset=0)
+    today_day = _today_day(ctx)
     memory = SuggestionService.latest_household_note(recipe, request.user)
     return render(
         request,
-        "tonight/partials/hero_planned.html",
-        {"today_day": today_day, "memory": memory},
+        "tonight/partials/accept_response.html",
+        {**ctx, "today_day": today_day, "memory": memory},
     )

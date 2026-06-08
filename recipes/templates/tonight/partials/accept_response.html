@@ -1,0 +1,8 @@
+{% comment %}
+Response for tonight_accept: the planned hero swaps into #tonight-hero, and the
+week strip is refreshed out-of-band so today's dot fills in without a reload.
+{% endcomment %}
+{% include "tonight/partials/hero_planned.html" %}
+{% if days %}<div class="tonight-screen__week" id="tonight-week" hx-swap-oob="true">
+  {% include "tonight/partials/week_strip.html" %}
+</div>{% endif %}
