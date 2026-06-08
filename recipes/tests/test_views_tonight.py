@@ -37,10 +37,14 @@ class TonightViewTests(TestCase):
         self.assertContains(response, "Start Cooking")
 
     def test_empty_tonight_shows_suggestion_with_reason(self):
-        # No meal planned today -> a confirm-or-swap suggestion should appear.
+        # No meal planned today -> a confirm-or-swap suggestion should appear,
+        # including at least one reason chip (e.g. "Never tried" for an uncooked recipe).
         response = self.client.get(reverse("home"))
         self.assertContains(response, "Spaghetti Carbonara")
         self.assertContains(response, "plan tonight")  # accept button label
+        self.assertContains(
+            response, "Never tried"
+        )  # reason chip for an uncooked recipe
 
     def test_memory_cue_shows_last_note(self):
         MealPlan.objects.create(
@@ -99,7 +103,7 @@ class TonightSwapTests(TestCase):
         )
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "Burger")
-        self.assertNotContains(response, ">Pasta<")
+        self.assertNotContains(response, "Pasta")
 
     def test_swap_requires_login(self):
         self.client.logout()

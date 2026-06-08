@@ -66,14 +66,14 @@ class PlaywrightTestCase(StaticLiveServerTestCase):
         self.page.close()
 
     def login(self):
-        """Log in as the test user and wait for the week/home page to load."""
+        """Log in as the test user and wait for the Tonight home page to load."""
         self.page.goto(f"{self.live_server_url}/accounts/login/")
         self.page.fill('input[name="username"]', "testuser")
         self.page.fill('input[name="password"]', "testpass123")
         self.page.click('button[type="submit"]')
-        # After login, Django redirects to LOGIN_REDIRECT_URL = "/" (week view)
-        # Wait for the day-card selector which appears on the week page
-        self.page.wait_for_selector(".day-card", timeout=5000)
+        # After login, Django redirects to LOGIN_REDIRECT_URL = "/" (tonight view)
+        # Wait for the tonight-label which is unique to the tonight home screen
+        self.page.wait_for_selector(".tonight-label", timeout=5000)
 
     def url(self, path):
         return f"{self.live_server_url}{path}"
@@ -164,12 +164,16 @@ class WeekViewE2ETest(PlaywrightTestCase):
     def test_week_view_shows_seven_days(self):
         """Week view displays 7 day cards."""
         self.login()
+        self.page.goto(self.url("/week/"))
+        self.page.wait_for_selector(".day-card", timeout=5000)
         cards = self.page.locator(".day-card")
         assert cards.count() == 7
 
     def test_week_view_shows_empty_slots(self):
         """Empty day cards show 'Tap to add a meal'."""
         self.login()
+        self.page.goto(self.url("/week/"))
+        self.page.wait_for_selector(".day-card", timeout=5000)
         assert self.page.locator("text=Tap to add a meal...").count() > 0
 
     def test_week_view_shows_planned_meal(self):
@@ -187,6 +191,8 @@ class WeekViewE2ETest(PlaywrightTestCase):
     def test_assign_meal_via_picker(self):
         """Click empty slot, picker overlay opens, click a recipe, meal is assigned."""
         self.login()
+        self.page.goto(self.url("/week/"))
+        self.page.wait_for_selector(".day-card--empty", timeout=5000)
         # Click an empty day slot to trigger HTMX picker overlay
         self.page.locator(".day-card--empty .day-card__empty").first.click()
         # Wait for the picker overlay to appear (loaded via HTMX)
@@ -204,6 +210,8 @@ class WeekViewE2ETest(PlaywrightTestCase):
     def test_week_navigation(self):
         """Click next week arrow, verify title changes."""
         self.login()
+        self.page.goto(self.url("/week/"))
+        self.page.wait_for_selector(".week-header__title", timeout=5000)
         # Verify we start on "This Week"
         assert self.page.locator(
             ".week-header__title", has_text="This Week"
@@ -220,6 +228,8 @@ class WeekViewE2ETest(PlaywrightTestCase):
     def test_day_comment_add(self):
         """Click Note button, fill text, submit, verify comment saved."""
         self.login()
+        self.page.goto(self.url("/week/"))
+        self.page.wait_for_selector(".day-card__note-btn", timeout=5000)
         # Click the Note button on the first day card to expand comment form (Alpine.js)
         self.page.locator(".day-card__note-btn").first.click()
         # Wait for the comment form to become visible
@@ -498,9 +508,9 @@ class NavigationE2ETest(PlaywrightTestCase):
         self.page.click('.nav-tab:has-text("More")')
         self.page.wait_for_url(f"{self.live_server_url}/settings/", timeout=5000)
         assert self.page.locator("h1", has_text="Settings").is_visible()
-        # Back to This Week
-        self.page.click('.nav-tab:has-text("This Week")')
-        self.page.wait_for_url(f"{self.live_server_url}/week/", timeout=5000)
+        # Back to Tonight (home tab renamed from "This Week" to "Tonight")
+        self.page.click('.nav-tab:has-text("Tonight")')
+        self.page.wait_for_url(f"{self.live_server_url}/", timeout=5000)
 
 
 class HouseholdSharingE2ETest(PlaywrightTestCase):
@@ -519,12 +529,12 @@ class HouseholdSharingE2ETest(PlaywrightTestCase):
         )
 
     def _login_as(self, username, password):
-        """Log in as a given user and wait for the week page."""
+        """Log in as a given user and wait for the tonight home page."""
         self.page.goto(self.url("/accounts/login/"))
         self.page.fill('input[name="username"]', username)
         self.page.fill('input[name="password"]', password)
         self.page.click('button[type="submit"]')
-        self.page.wait_for_selector(".day-card", timeout=5000)
+        self.page.wait_for_selector(".tonight-label", timeout=5000)
 
     def test_both_users_see_shared_meal_plan(self):
         """Both household members see the same meal plan."""
