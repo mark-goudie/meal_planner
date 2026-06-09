@@ -59,7 +59,10 @@
     </main>
 
     {% if user.is_authenticated %}
-    <nav class="bottom-nav" aria-label="Main navigation">
+    {# Boosted nav: swap only #main-content (hx-select avoids re-nesting the nav,
+       keeps htmx/Alpine/fonts loaded) so tab switches don't do a full page reload. #}
+    <nav class="bottom-nav" aria-label="Main navigation"
+         hx-boost="true" hx-target="#main-content" hx-select="#main-content" hx-swap="innerHTML">
         <a href="{% url 'home' %}" class="nav-tab {% block nav_week %}{% endblock %}">
             <span class="nav-icon"><i class="bi bi-stars"></i></span>
             <span class="nav-label">Tonight</span>

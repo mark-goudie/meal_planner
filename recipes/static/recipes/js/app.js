@@ -27,3 +27,13 @@ document.body.addEventListener('htmx:beforeRequest', (e) => {
 document.body.addEventListener('htmx:afterSettle', () => {
     delete document.documentElement.dataset.vtDir;
 });
+
+// Bottom nav: highlight the tapped tab immediately (instant feedback + keeps the
+// active tab correct after a boosted #main-content swap, which doesn't re-render
+// the nav). Delegated so it survives content swaps.
+document.addEventListener('click', (e) => {
+    const tab = e.target.closest('.bottom-nav .nav-tab');
+    if (!tab) return;
+    document.querySelectorAll('.bottom-nav .nav-tab').forEach((t) => t.classList.remove('active'));
+    tab.classList.add('active');
+});

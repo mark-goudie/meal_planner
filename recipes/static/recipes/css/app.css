@@ -263,10 +263,20 @@ small {
   transition: color var(--transition);
   padding: var(--space-xs) var(--space-sm);
   position: relative;
+  touch-action: manipulation;
 }
 
 .nav-tab:hover {
   color: var(--text-muted);
+}
+
+/* Instant tap feedback so the press is acknowledged immediately, before the
+   (boosted) navigation completes — otherwise users re-tap thinking it failed. */
+.nav-tab:active {
+  background: var(--bg-card-hover);
+  color: var(--primary);
+  transform: scale(0.92);
+  border-radius: var(--radius-md);
 }
 
 .nav-tab.active {
